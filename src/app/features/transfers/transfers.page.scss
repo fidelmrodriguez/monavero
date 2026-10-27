@@ -1,0 +1,35 @@
+.transfer-form {
+  display: grid;
+  gap: 16px;
+}
+
+.inner-grid {
+  gap: 14px;
+}
+
+.summary-box {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.summary-box span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.security-note {
+  margin-top: 22px;
+  padding: 18px;
+  border-radius: 20px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+}
+
+.security-note p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}

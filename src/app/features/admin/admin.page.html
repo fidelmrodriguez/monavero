@@ -1,0 +1,57 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Administração</p>
+      <h1>Gestão de acessos e alçadas</h1>
+      <p class="muted">Área de demonstração exibida para o perfil admin selecionado no login.</p>
+    </div>
+  </header>
+
+  <div class="grid grid-3">
+    @for (item of policies; track item.title) {
+      <article class="card policy-card">
+        <span class="policy-icon">{{ item.icon }}</span>
+        <h2>{{ item.title }}</h2>
+        <p>{{ item.description }}</p>
+        <button class="btn btn-secondary" type="button" (click)="simulateAction(item.title)">Revisar</button>
+      </article>
+    }
+  </div>
+
+  <article class="card">
+    <p class="eyebrow">Alçadas</p>
+    <h2>Regras operacionais</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Operação</th>
+            <th>Cliente</th>
+            <th>Gerente</th>
+            <th>Admin</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-label="Operação">Transferência até R$ 50 mil</td>
+            <td data-label="Cliente">Liberado</td>
+            <td data-label="Gerente">Liberado</td>
+            <td data-label="Admin">Liberado</td>
+          </tr>
+          <tr>
+            <td data-label="Operação">Auditoria</td>
+            <td data-label="Cliente">Bloqueado</td>
+            <td data-label="Gerente">Consulta</td>
+            <td data-label="Admin">Consulta e gestão</td>
+          </tr>
+          <tr>
+            <td data-label="Operação">Administração de perfis</td>
+            <td data-label="Cliente">Bloqueado</td>
+            <td data-label="Gerente">Bloqueado</td>
+            <td data-label="Admin">Liberado</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>

@@ -1,0 +1,109 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Transferências</p>
+      <h1>Transferência entre contas</h1>
+      <p class="muted">Simule uma transferência com validação de saldo, limite, destino e data, sem movimentação real.</p>
+    </div>
+  </header>
+
+  <div class="grid grid-2">
+    <article class="card">
+      <h2>Nova transferência</h2>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="transfer-form">
+        <div class="field">
+          <label for="originAccount">Conta de origem</label>
+          <select id="originAccount" class="select" formControlName="originAccount">
+            @for (account of accounts(); track account.id) {
+              <option [value]="account.id">{{ account.label }} - {{ account.balance | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="destinationName">Favorecido</label>
+          <input id="destinationName" class="input" type="text" formControlName="destinationName" placeholder="Nome do favorecido" />
+          @if (isInvalid('destinationName')) {
+            <span class="error-text">Informe o favorecido.</span>
+          }
+        </div>
+
+        <div class="grid grid-2 inner-grid">
+          <div class="field">
+            <label for="agency">Agência</label>
+            <input id="agency" class="input" type="text" formControlName="agency" placeholder="0001" />
+            @if (isInvalid('agency')) {
+              <span class="error-text">Agência deve conter 4 números.</span>
+            }
+          </div>
+          <div class="field">
+            <label for="accountNumber">Conta</label>
+            <input id="accountNumber" class="input" type="text" formControlName="accountNumber" placeholder="12345-6" />
+            @if (isInvalid('accountNumber')) {
+              <span class="error-text">Informe a conta de destino.</span>
+            }
+          </div>
+        </div>
+
+        <div class="grid grid-2 inner-grid">
+          <div class="field">
+            <label for="amount">Valor</label>
+            <input id="amount" class="input" type="number" formControlName="amount" min="1" />
+            @if (form.controls.amount.touched && form.controls.amount.hasError('required')) {
+              <span class="error-text">Informe o valor.</span>
+            }
+            @if (form.controls.amount.touched && form.controls.amount.hasError('min')) {
+              <span class="error-text">Valor mínimo de R$ 1,00.</span>
+            }
+            @if (form.controls.amount.touched && form.controls.amount.hasError('limitExceeded')) {
+              <span class="error-text">Limite máximo por operação é R$ 50.000,00.</span>
+            }
+            @if (form.controls.amount.touched && insufficientBalance()) {
+              <span class="error-text">Saldo insuficiente para esta conta.</span>
+            }
+          </div>
+          <div class="field">
+            <label for="executionDate">Data de execução</label>
+            <input id="executionDate" class="input" type="date" formControlName="executionDate" />
+            @if (isInvalid('executionDate')) {
+              <span class="error-text">Informe uma data válida.</span>
+            }
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="description">Descrição</label>
+          <textarea id="description" class="textarea" formControlName="description" placeholder="Motivo da transferência"></textarea>
+        </div>
+
+        <button class="btn btn-primary" type="submit" [disabled]="form.invalid || insufficientBalance()">Confirmar transferência</button>
+      </form>
+    </article>
+
+    <article class="card">
+      <p class="eyebrow">Resumo</p>
+      <h2>Controle operacional</h2>
+      <div class="summary-box">
+        <span>Perfil atual</span>
+        <strong>{{ authStore.role() }}</strong>
+      </div>
+      <div class="summary-box">
+        <span>Conta selecionada</span>
+        <strong>{{ selectedAccount()?.label ?? 'Conta corrente' }}</strong>
+      </div>
+      <div class="summary-box">
+        <span>Saldo disponível</span>
+        <strong>{{ selectedAccount()?.balance ?? 0 | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
+      </div>
+      <div class="summary-box">
+        <span>Limite por operação</span>
+        <strong>R$ 50.000,00</strong>
+      </div>
+
+      <div class="security-note">
+        <strong>Validações ativas</strong>
+        <p>O formulário bloqueia valores acima do limite, saldo insuficiente, agência inválida e dados obrigatórios incompletos.</p>
+      </div>
+    </article>
+  </div>
+</section>

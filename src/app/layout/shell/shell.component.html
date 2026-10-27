@@ -1,0 +1,119 @@
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/app/dashboard" aria-label="Monavero - painel inicial">
+      <span>M</span>
+      <strong>Monavero</strong>
+    </a>
+
+    <nav class="nav-list" aria-label="Navegação principal">
+      @for (item of visibleNavigation(); track item.route) {
+        <a [routerLink]="item.route" routerLinkActive="active">
+          <span>{{ item.icon }}</span>
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+
+    <div class="side-card">
+      <span class="badge">{{ authStore.role() }}</span>
+      <h3>Ambiente demonstrativo</h3>
+      <p>Dados fictícios, perfis simulados e eventos de auditoria locais.</p>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <button class="mobile-toggle" type="button" (click)="toggleMenu()" [class.is-open]="menuOpen()" [attr.aria-label]="menuOpen() ? 'Fechar menu' : 'Abrir menu'">
+      <span></span><span></span><span></span>
+    </button>
+
+    <div class="topbar-title">
+      <strong>Internet Banking</strong>
+      <span>{{ today | date:'EEEE, dd/MM/yyyy':'':'pt-BR' }}</span>
+    </div>
+
+    <div class="topbar-actions">
+      <button class="icon-btn" type="button" (click)="themeStore.toggle()" [attr.aria-label]="themeStore.mode() === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'">
+        {{ themeStore.mode() === 'dark' ? '☀️' : '🌙' }}
+      </button>
+      <div class="notification-area">
+        <button
+          class="icon-btn notification-btn"
+          type="button"
+          aria-label="Abrir notificações"
+          [attr.aria-expanded]="notificationsOpen()"
+          (click)="toggleNotifications()"
+        >
+          🔔
+          @if (notificationStore.unreadCount() > 0) {
+            <span>{{ notificationStore.unreadCount() }}</span>
+          }
+        </button>
+
+        @if (notificationsOpen()) {
+          <section class="notification-dropdown" aria-label="Notificações recentes">
+            <header class="notification-dropdown-header">
+              <div>
+                <strong>Notificações</strong>
+                <small>{{ notificationStore.unreadCount() }} não lida(s)</small>
+              </div>
+              <button class="link-btn notification-close-btn" type="button" (click)="closeNotifications()" aria-label="Fechar notificações">×</button>
+            </header>
+
+            <div class="notification-dropdown-list">
+              @for (notification of recentNotifications(); track notification.id) {
+                <button
+                  class="notification-preview"
+                  type="button"
+                  [class.unread]="!notification.read"
+                  (click)="markNotificationAsRead(notification.id)"
+                >
+                  <span class="notification-preview-icon">
+                    {{ notification.type === 'success' ? '✅' : notification.type === 'warning' ? '⚠️' : notification.type === 'danger' ? '🚫' : 'ℹ️' }}
+                  </span>
+                  <span class="notification-preview-content">
+                    <strong>{{ notification.title }}</strong>
+                    <small>{{ notification.date | date:'dd/MM HH:mm':'':'pt-BR' }}</small>
+                    <p>{{ notification.description }}</p>
+                  </span>
+                </button>
+              }
+            </div>
+
+            <footer class="notification-dropdown-footer">
+              Central completa disponível no menu lateral.
+            </footer>
+          </section>
+        }
+      </div>
+      <div class="user-area">
+        <button class="user-pill" type="button" (click)="toggleUserMenu()" [attr.aria-expanded]="userMenuOpen()" aria-label="Abrir menu do usuário">
+          <i>U</i>
+          <span>{{ authStore.displayName() }}</span>
+        </button>
+
+        @if (userMenuOpen()) {
+          <div class="user-dropdown" aria-label="Menu do usuário">
+            <a routerLink="/app/perfil" (click)="closeUserMenu()">Perfil</a>
+            <button type="button" (click)="logout()">Sair</button>
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (menuOpen()) {
+      <div class="mobile-menu">
+        @for (item of visibleNavigation(); track item.route) {
+          <a [routerLink]="item.route" routerLinkActive="active" (click)="closeMenu()">
+            <span>{{ item.icon }}</span>
+            {{ item.label }}
+          </a>
+        }
+        <button type="button" class="btn btn-danger" (click)="logout()">Sair da conta</button>
+      </div>
+    }
+  </header>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

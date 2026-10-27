@@ -1,0 +1,111 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Extrato</p>
+      <h1>Movimentações financeiras</h1>
+      <p class="muted">Filtre por período, tipo, status, texto e faixa de valor.</p>
+    </div>
+    <button class="btn btn-secondary" type="button" (click)="resetFilters()">Limpar filtros</button>
+  </header>
+
+  <form class="card filters" [formGroup]="form">
+    <div class="field">
+      <label for="text">Buscar</label>
+      <input id="text" class="input" type="search" formControlName="text" placeholder="Descrição ou categoria" />
+    </div>
+
+    <div class="field">
+      <label for="type">Tipo</label>
+      <select id="type" class="select" formControlName="type">
+        <option value="">Todos</option>
+        <option value="entrada">Entrada</option>
+        <option value="saida">Saída</option>
+        <option value="transferencia">Transferência</option>
+        <option value="pagamento">Pagamento</option>
+        <option value="investimento">Investimento</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="status">Status</label>
+      <select id="status" class="select" formControlName="status">
+        <option value="">Todos</option>
+        <option value="concluido">Concluído</option>
+        <option value="pendente">Pendente</option>
+        <option value="recusado">Recusado</option>
+        <option value="agendado">Agendado</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="period">Período</label>
+      <select id="period" class="select" formControlName="period">
+        <option value="7">Últimos 7 dias</option>
+        <option value="15">Últimos 15 dias</option>
+        <option value="30">Últimos 30 dias</option>
+        <option value="90">Últimos 90 dias</option>
+        <option value="all">Todo período</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="minAmount">Valor mínimo</label>
+      <input id="minAmount" class="input" type="number" formControlName="minAmount" placeholder="0,00" />
+    </div>
+
+    <div class="field">
+      <label for="maxAmount">Valor máximo</label>
+      <input id="maxAmount" class="input" type="number" formControlName="maxAmount" placeholder="9999,00" />
+    </div>
+  </form>
+
+  <article class="card">
+    <div class="statement-summary">
+      <div>
+        <span class="muted">Entradas filtradas</span>
+        <strong class="amount-positive">{{ totalIn() | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
+      </div>
+      <div>
+        <span class="muted">Saídas filtradas</span>
+        <strong class="amount-negative">{{ totalOut() | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
+      </div>
+      <div>
+        <span class="muted">Resultado</span>
+        <strong>{{ balance() | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
+      </div>
+    </div>
+
+    @if (filteredTransactions().length > 0) {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Descrição</th>
+              <th>Categoria</th>
+              <th>Tipo</th>
+              <th>Canal</th>
+              <th>Status</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (transaction of filteredTransactions(); track transaction.id) {
+              <tr>
+                <td data-label="Data">{{ transaction.date | date:'dd/MM/yyyy HH:mm':'':'pt-BR' }}</td>
+                <td data-label="Descrição">{{ transaction.description }}</td>
+                <td data-label="Categoria">{{ transaction.category }}</td>
+                <td data-label="Tipo">{{ transaction.type }}</td>
+                <td data-label="Canal">{{ transaction.channel }}</td>
+                <td data-label="Status" [class.status-warning]="transaction.status === 'pendente' || transaction.status === 'agendado'" [class.status-danger]="transaction.status === 'recusado'" [class.status-ok]="transaction.status === 'concluido'">{{ transaction.status }}</td>
+                <td data-label="Valor" [class.amount-positive]="transaction.amount > 0" [class.amount-negative]="transaction.amount < 0">{{ transaction.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <app-empty-state icon="🔎" title="Nenhuma movimentação encontrada" description="Altere os filtros para visualizar outros lançamentos." />
+    }
+  </article>
+</section>

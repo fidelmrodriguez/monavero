@@ -1,0 +1,127 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Dashboard</p>
+      <h1>Olá, {{ authStore.displayName() }}.</h1>
+      <p class="muted">Visão consolidada de contas, investimentos, cartões e movimentações recentes.</p>
+    </div>
+    <a class="btn btn-primary" routerLink="/app/transferencias">Nova transferência</a>
+  </header>
+
+  <div class="grid grid-4">
+    @for (account of overview.accounts; track account.id) {
+      <article class="card compact metric-card">
+        <span class="metric-label">{{ account.label }}</span>
+        <strong>{{ account.balance | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
+        <small>Ag. {{ account.agency }} · Conta {{ account.number }}</small>
+      </article>
+    }
+    <article class="card compact metric-card">
+      <span class="metric-label">Investimentos</span>
+      <strong>{{ totalInvestments() | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
+      <small>Carteira diversificada</small>
+    </article>
+    <article class="card compact metric-card">
+      <span class="metric-label">Cartões</span>
+      <strong>{{ totalCardUsed() | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
+      <small>Uso consolidado no mês</small>
+    </article>
+  </div>
+
+  <div class="grid grid-2">
+    <article class="card">
+      <app-finance-chart eyebrow="Fluxo" title="Evolução financeira" [data]="overview.cashflow" variant="line" />
+    </article>
+    <article class="card">
+      <app-finance-chart eyebrow="Despesas" title="Gastos por categoria" [data]="overview.expensesByCategory" variant="bar" />
+    </article>
+  </div>
+
+  <div class="grid grid-2">
+    <article class="card">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">Investimentos</p>
+          <h2>Carteira</h2>
+        </div>
+        <span class="badge">{{ overview.investments.length }} produtos</span>
+      </div>
+
+      <div class="investment-list">
+        @for (investment of overview.investments; track investment.product) {
+          <div class="investment-item">
+            <div>
+              <strong>{{ investment.product }}</strong>
+              <span>Risco {{ investment.risk }}</span>
+            </div>
+            <div>
+              <strong>{{ investment.value | currency:'BRL':'symbol':'1.0-0':'pt-BR' }}</strong>
+              <span>{{ investment.profitability / 100 | percent:'1.2-2':'pt-BR' }} no período</span>
+            </div>
+          </div>
+        }
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">Cartões</p>
+          <h2>Limites ativos</h2>
+        </div>
+        <span class="badge">{{ overview.cards.length }} cartões</span>
+      </div>
+
+      <div class="card-list">
+        @for (card of overview.cards; track card.id) {
+          <article class="bank-card">
+            <div>
+              <span>{{ card.brand }}</span>
+              <strong>•••• {{ card.finalDigits }}</strong>
+            </div>
+            <p>{{ card.used | currency:'BRL':'symbol':'1.0-0':'pt-BR' }} usado de {{ card.limit | currency:'BRL':'symbol':'1.0-0':'pt-BR' }}</p>
+            <div class="progress"><i [style.width.%]="(card.used / card.limit) * 100"></i></div>
+            <small>Vencimento dia {{ card.dueDay }} · {{ card.status }}</small>
+          </article>
+        }
+      </div>
+    </article>
+  </div>
+
+  <article class="card">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow">Últimas movimentações</p>
+        <h2>Extrato recente</h2>
+      </div>
+      <a class="btn btn-secondary" routerLink="/app/extrato">Ver extrato completo</a>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Descrição</th>
+            <th>Categoria</th>
+            <th>Status</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (transaction of overview.transactions.slice(0, 6); track transaction.id) {
+            <tr>
+              <td data-label="Data">{{ transaction.date | date:'dd/MM/yyyy HH:mm':'':'pt-BR' }}</td>
+              <td data-label="Descrição">{{ transaction.description }}</td>
+              <td data-label="Categoria">{{ transaction.category }}</td>
+              <td data-label="Status">{{ transaction.status }}</td>
+              <td data-label="Valor" [class.amount-positive]="transaction.amount > 0" [class.amount-negative]="transaction.amount < 0">
+                {{ transaction.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>
