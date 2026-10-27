@@ -26,7 +26,9 @@ Chrome/Chromium é necessário para os testes; o workflow configura o caminho do
 
 A aplicação usa `pt-BR` para exibir datas e valores em reais. O registro dos dados de localização é centralizado em `frontend/src/locale.ts` e carregado tanto na inicialização da aplicação (browser/SSR) quanto no ambiente Jasmine/Karma por meio dos `polyfills` do alvo `test` em `frontend/angular.json`.
 
-Esse carregamento evita o erro `NG0701: Missing locale data for the locale "pt-BR"` observado no primeiro workflow, no qual 10 dos 20 testes falharam ao renderizar `DatePipe` e `CurrencyPipe`. Os testes em `src/app/core/utils/locale.spec.ts` cobrem explicitamente as formatações de data e moeda. A aprovação completa deve ser confirmada no próximo GitHub Actions.
+O primeiro workflow falhou com `NG0701: Missing locale data for the locale "pt-BR"` em componentes que utilizam `DatePipe` e `CurrencyPipe`. Após registrar o locale nos `polyfills`, uma nova execução falhou **antes dos testes**, porque o arquivo `src/locale.ts` não estava incluído na compilação TypeScript do Karma (`missing from the TypeScript compilation`). O arquivo `frontend/tsconfig.spec.json` passou a declarar `src/locale.ts` em `files`, de modo que o módulo de localização faça parte do programa de testes, além de ser carregado pelos `polyfills`.
+
+Os testes em `src/app/core/utils/locale.spec.ts` cobrem explicitamente as formatações de data e moeda. A correção de configuração foi verificada estaticamente; a execução completa ainda precisa ser aprovada pelo GitHub Actions.
 
 O layout principal também deve ser conferido no Netlify: em telas desktop, a topbar deve começar exatamente na borda direita da sidebar, sem faixa vazia; em telas menores, o menu móvel continua ocupando toda a largura.
 
