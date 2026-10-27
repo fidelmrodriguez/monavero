@@ -1,35 +1,42 @@
-# Publicação do frontend no Netlify
+# Deploy do frontend Angular no Netlify
 
-## Configuração para o monorepositório
+O Netlify publica o frontend demonstrativo do Monavero. **Não há backend Java em produção nesta fase.** A renderização no servidor usa Angular SSR e `@netlify/angular-runtime`.
 
-O arquivo `netlify.toml` permanece na raiz do GitHub e define os caminhos referentes ao diretório `frontend/`:
+## Configuração versionada
+
+O arquivo `netlify.toml` fica na raiz do repositório:
 
 ```toml
 [build]
   base = "frontend"
   command = "npm run build"
   publish = "dist/monavero/browser"
+
+[build.environment]
+  NODE_VERSION = "22"
 ```
 
-- **Base directory:** `frontend`
-- **Build command:** `npm run build`
-- **Publish directory:** `dist/monavero/browser`, relativo a `frontend` (caminho completo no repositório: `frontend/dist/monavero/browser`).
-- **Node.js:** 22, declarado em `frontend/.nvmrc`.
-- **Framework:** Angular 19 com SSR; o `@netlify/angular-runtime` participa da integração de renderização.
+A base `frontend` determina onde as dependências são instaladas e o comando de build é executado; `publish` é relativo a essa base, apontando portanto para `frontend/dist/monavero/browser`. O frontend também possui `.nvmrc` com a versão principal do Node.js.
 
-O arquivo de configuração versionado tem precedência sobre as opções de build correspondentes na interface Netlify. Caso tenha configurado manualmente outra pasta, confira os valores após o commit de reorganização.
+## Publicação e validação
 
-## Passos de validação
+1. Conecte o repositório Monavero à branch `main` no Netlify.
+2. Confirme que a configuração adotada é a do `netlify.toml` da raiz, com base `frontend` e Node.js 22. O arquivo versionado prevalece sobre opções equivalentes da interface.
+3. Inicie um deploy e revise o log de instalação e de compilação Angular/SSR.
+4. Confira o login com credenciais fictícias, o dashboard e as demais páginas.
+5. Atualize diretamente `/app/dashboard` e outras rotas internas para verificar a resposta do runtime SSR, em vez de confiar apenas na navegação client-side.
+6. Teste menu mobile, responsividade e tema claro/escuro.
+7. Confira o resultado do workflow em `Actions > Frontend Angular CI`; uma compilação aprovada no Netlify não substitui os testes do CI.
 
-1. Conecte o repositório à branch `main` do site no Netlify.
-2. Execute o deploy usando a configuração do repositório.
-3. Confira no log que as dependências foram instaladas em `frontend/` e que a saída browser foi criada.
-4. Acesse a página de login e teste as credenciais de demonstração.
-5. Teste a navegação e recarregue uma rota interna; verifique o comportamento SSR e os redirects gerenciados pelo runtime.
-6. Confira o site em larguras de tela pequenas e maiores e em tema claro/escuro.
+Não adicione um redirecionamento global para `/index.html` sem verificar seu impacto no SSR; o runtime Angular é responsável pela integração da renderização.
 
-Se o build falhar ou houver rota 404, consulte primeiro o log do Netlify. Não crie um redirecionamento SPA genérico para `/index.html` sem verificar sua compatibilidade com a renderização SSR existente.
+## Problemas comuns
 
-## Limites
+- **Build executado na raiz:** verifique se `base` está sendo interpretado como `frontend` e se não há configuração conflitante de diretório de pacote no painel do Netlify.
+- **Diretório publicado inexistente:** confira a saída em `frontend/dist/monavero/browser` após o build.
+- **404 ao recarregar:** examine se o deploy inclui o runtime SSR e se suas rotas estão configuradas corretamente.
+- **Falha de autenticação:** o acesso atual depende da API pública DummyJSON; ausência ou bloqueio da API não implica problema de build Java.
 
-Esta publicação distribui apenas o frontend. O login continua usando DummyJSON e as demais operações financeiras são simuladas; não há configuração de API Java ou credenciais reais nesta etapa.
+## Limites atuais
+
+Transferências e pagamentos continuam simulados; não existe configuração de banco PostgreSQL, endpoint Spring Boot ou secrets bancários para o frontend nesta etapa.

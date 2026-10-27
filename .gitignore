@@ -1,24 +1,21 @@
-# Dependências e ferramentas
-/node_modules/
-/.angular/
-/.cache/
+# Dependências, caches e artefatos do monorepositório
+**/node_modules/
+**/.angular/
+**/.cache/
+**/dist/
+**/coverage/
+**/out-tsc/
+**/target/
 
-# Artefatos de build, testes e cobertura
-/dist/
-/coverage/
-/out-tsc/
+# Configurações locais e credenciais
+**/.env
+**/.env.*
+!**/.env.example
 
-# Credenciais e configurações locais
-.env
-.env.*
-!.env.example
-
-# IDE e sistema operacional
+# Ferramentas, sistema e arquivos temporários
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
-
-# Logs e arquivos temporários
 *.log
 *.tsbuildinfo

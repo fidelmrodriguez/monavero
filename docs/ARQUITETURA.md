@@ -1,55 +1,86 @@
-# Arquitetura do frontend
+# Arquitetura · Monavero
 
-O Monavero utiliza Angular 19 com componentes standalone, navegação por rotas e renderização no servidor (SSR). A aplicação é organizada por domínio de interface, mantendo a infraestrutura compartilhada separada das páginas.
+O Monavero é um monorepositório organizado em **frontend Angular** e **backend Java planejado**. Neste estágio, somente o Angular está implementado. A integração com a API própria será adicionada progressivamente, sem descartar a experiência demonstrativa já existente.
 
-## Estrutura das responsabilidades
+## Arquitetura atual
 
-| Local | Responsabilidade |
+```text
+Navegador
+   │
+   ▼
+Netlify — Angular 19 (SSR + hidratação)
+   │
+   ├── Sessão demonstrativa no navegador
+   ├── Guards e estados de interface
+   ├── Dados financeiros fictícios / fallback local
+   │
+   └── HTTPS → DummyJSON (autenticação e recursos públicos)
+```
+
+A DummyJSON fornece recursos públicos que a interface transforma em dados financeiros fictícios. Ela **não** é um serviço bancário nem mantém contas Monavero. As transferências apenas notificam o usuário; os pagamentos agendados existem em memória durante a execução da aplicação.
+
+## Estrutura atual do Angular
+
+| Pasta ou arquivo | Responsabilidade |
 | --- | --- |
-| `src/app/core/models/` | Tipos da sessão, contas, transações, investimentos e pagamentos. |
-| `src/app/core/services/auth-api.service.ts` | Integração do login demonstrativo com a DummyJSON. |
-| `src/app/core/services/banking.service.ts` | Consulta e adaptação de dados externos para o modelo visual, fallback e agendamentos em memória. |
-| `src/app/core/state/` | Signals e estado dos fluxos de autenticação, notificações, tema e auditoria local. |
-| `src/app/core/interceptors/` | Cabeçalho de autorização para requisições destinadas à DummyJSON e tratamento de erros HTTP. |
-| `src/app/core/guards/` | Redirecionamento de login e restrições de navegação por sessão e perfil demonstrativo. |
-| `src/app/core/resolvers/` | Carregamento do panorama financeiro antes de abrir o dashboard. |
-| `src/app/features/` | Páginas isoladas por função, carregadas sob demanda. |
-| `src/app/layout/` | Navegação lateral, topbar, menu mobile e estrutura de páginas autenticadas. |
-| `src/app/shared/` | Elementos reutilizáveis, incluindo gráficos financeiros SVG e estados vazios. |
+| `frontend/src/app/core/models/` | Tipos e contratos usados pela interface. |
+| `frontend/src/app/core/services/auth-api.service.ts` | Login demonstrativo na DummyJSON. |
+| `frontend/src/app/core/services/banking.service.ts` | Adaptação e fallback de dados financeiros fictícios e pagamentos em memória. |
+| `frontend/src/app/core/state/` | Sessão, notificações, auditoria local e preferências de tema. |
+| `frontend/src/app/core/guards/` | Proteção de rotas com base na sessão e no perfil visual. |
+| `frontend/src/app/core/resolvers/` | Carregamento de dados antes do dashboard. |
+| `frontend/src/app/features/` | Páginas de login, dashboard, extrato, transferências, pagamentos e gestão. |
+| `frontend/src/app/layout/` e `shared/` | Navegação e componentes reutilizáveis. |
+| `frontend/src/app/app.config.ts` | Angular Router, hidratação, HttpClient e locale pt-BR. |
+| `frontend/server.ts` | Integração SSR com o runtime Angular do Netlify. |
 
-## Fluxo de autenticação
+A navegação usa componentes standalone, lazy loading, Angular Router, formulários reativos, Signals e RxJS. A autenticação de demonstração utiliza a chave `monavero-session` em `localStorage` e não é adequada a dados reais.
 
-1. O formulário apresenta as credenciais `User` / `1234`, que podem ser editadas.
-2. `AuthApiService` converte esse par de demonstração para uma conta pública de teste e executa `POST /auth/login` na DummyJSON.
-3. `AuthStore` guarda os dados da sessão no navegador sob a chave `monavero-session`.
-4. Os guards controlam a navegação. O perfil (`cliente`, `gerente`, `admin`) é escolhido na tela e não é atestado pela API externa.
-5. O logout remove a sessão local e redireciona para o login.
+## Fluxos atuais
 
-Esse fluxo não representa controle de acesso bancário confiável. Em um backend real, o servidor deverá ser a autoridade de identidade, permissões e expiração de sessão.
+### Autenticação
 
-## Dados financeiros
+1. O usuário vê `User` / `1234` pré-preenchidos e pode editar ambos os campos.
+2. `AuthApiService` converte esse par demonstrativo para uma conta pública de teste e faz login na DummyJSON.
+3. `AuthStore` mantém o token de teste e o papel visual (`cliente`, `gerente`, `admin`) no navegador.
+4. Os guards habilitam a navegação de acordo com o estado local; o servidor externo **não certifica papéis bancários**.
+5. O logout remove a sessão do navegador.
 
-O `BankingService` consulta recursos públicos `/users`, `/products` e `/carts` da DummyJSON e converte os resultados em contas, investimentos, cartões, extrato e gráficos de demonstração. Os saldos e parte dos indicadores são valores definidos no serviço, e não informações financeiras fornecidas pela API.
+### Dados financeiros
 
-O dashboard recebe seu `DashboardOverview` pelo resolver. Outras telas consomem o mesmo serviço. Um fallback local é usado caso a consulta externa falhe, de modo que a interface possa continuar exibindo dados fictícios. A lista de agendamentos permanece em memória e é reiniciada ao recarregar a aplicação.
+`BankingService` consome dados públicos da DummyJSON (`/users`, `/products`, `/carts`) e monta contas, cartões, investimentos e transações fictícias. A consulta dispõe de fallback local. O saldo exibido não é modificado pela transferência demonstrativa. Agendamentos de pagamento não sobrevivem a uma reinicialização da aplicação.
 
-As transferências são validadas e geram feedback e eventos locais; **não alteram saldos, não criam lançamentos persistentes e não transferem recursos**.
+## Arquitetura-alvo
 
-## Estado e renderização
+```text
+Navegador
+   │
+   ▼
+Netlify — Angular
+   │ HTTPS / JSON (a partir da integração)
+   ▼
+API Monavero — Java + Spring Boot / Spring Modulith
+   ├── identidade e autorização
+   ├── contas e lançamentos
+   ├── transferências e pagamentos demonstrativos
+   └── auditoria e observabilidade
+   │ JDBC / TLS
+   ▼
+PostgreSQL — banco de demonstração
+```
 
-- Signals e `computed()` sustentam estado de interface e exibição de elementos dependentes da sessão.
-- RxJS compõe chamadas HTTP, trata erros e integra fluxos assíncronos.
-- Os formulários reativos validam campos antes das ações simuladas.
-- A renderização SSR é configurada em `app.config.server.ts`, `main.server.ts` e `server.ts`.
-- Sessão e tema são acessados apenas em contexto de navegador, evitando o uso direto de `localStorage` durante SSR.
-- `src/app/app.config.ts` habilita hidratação, event replay, HttpClient com `fetch` e o locale `pt-BR`.
+O servidor Java deverá decidir identidade, permissões e titularidade, validar valores e manter a consistência dos dados financeiros. O Angular continuará responsável por apresentação, estados visuais e feedback. O modelo de dados, os contratos HTTP e os módulos serão introduzidos apenas quando suas respectivas etapas forem implementadas.
 
-## Segurança e cuidados
+## Segurança e isolamento
 
-O código atual é um protótipo funcional de interface. Há tokens mantidos em `localStorage`, permissões de rota avaliadas no cliente, eventos de auditoria em memória e notificações artificiais. Esses comportamentos precisam ser substituídos ou redesenhados antes de qualquer uso com usuários ou informações financeiras reais.
+**Estado atual:** token externo de teste no navegador, guards avaliados no cliente e eventos locais. Não usar a aplicação para transações reais nem senhas pessoais.
 
-Não inserir segredos, senhas de produção, chaves privadas ou dados pessoais reais no código, no console ou no repositório.
+**Estado previsto:** Spring Security, isolamento por usuário, restrições por papel, registro de alterações críticas, migrações Flyway, testes automatizados e operações transacionais. Dados sensíveis não devem ser incluídos em logs, README, commits ou variáveis públicas do frontend.
 
-## Organização por módulos no monorepositório
+## Deploy e verificação
 
-A partir da Etapa 1, o Angular reside integralmente em `frontend/`, enquanto `docs/`, `.github/` e `netlify.toml` ficam na raiz. O diretório `backend/` contém apenas documentação do trabalho Java futuro, sem APIs implementadas. A referência de caminhos da aplicação Angular, para comandos e arquivos, parte de `frontend/`.
+- O Netlify compila o projeto em `frontend/` e publica `dist/monavero/browser`; a configuração fica em `netlify.toml`.
+- O workflow do frontend fica em `.github/workflows/frontend-ci.yml` e valida TypeScript, build e testes quando executado pelo GitHub Actions.
+- `backend/` contém apenas documentação até o início da Etapa 2; não há URL de API Java para configurar no Angular.
+
+Consulte [Frontend](../frontend/README.md), [Backend](../backend/README.md), [Testes](TESTES.md) e [Roadmap](ROADMAP.md).

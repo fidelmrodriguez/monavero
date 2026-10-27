@@ -6,6 +6,7 @@
     "ng": "ng",
     "dev": "ng serve",
     "start": "ng serve",
+    "typecheck": "tsc --noEmit --project tsconfig.app.json",
     "build": "ng build",
     "serve:ssr": "node dist/monavero/server/server.mjs",
     "test": "ng test --watch=false --browsers=ChromeHeadlessNoSandbox"

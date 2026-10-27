@@ -1,39 +1,39 @@
 # Roadmap do Monavero
 
-O desenvolvimento será incremental. Cada etapa precisa de código revisado, documentação atualizada, testes aplicáveis e validação em nuvem antes de ser considerada concluída. Funcionalidades descritas aqui são **planejadas** e não devem ser interpretadas como prontas.
+O Monavero evolui de um frontend Angular demonstrativo para um sistema full stack de simulação bancária. O status **entregue** indica código preparado; **validada** exige execução dos testes e verificação nos ambientes publicados.
 
-| Etapa | Escopo | Situação |
+| Etapa | Entrega | Status |
 | --- | --- | --- |
-| 0 | Versão inicial Angular, GitHub e primeiro deploy Netlify | Base publicada no GitHub; validação do deploy pendente |
-| 1 | Monorepositório, base Angular, CI e testes | Implementação entregue; validação automatizada e deploy pendentes |
-| 2 | API Java/Spring Boot com módulos, OpenAPI e endpoint de saúde | Planejada |
-| 3 | PostgreSQL, JPA, Flyway e modelo de domínio bancário | Planejada |
-| 4 | Cadastro, login, sessões e permissões verificadas no backend | Planejada |
+| 0 | Frontend Angular inicial e publicação GitHub/Netlify | GitHub publicado; validação do Netlify pendente |
+| 1 | Monorepositório limpo, documentação por camada, CI, testes e Netlify | Consolidação preparada; validação do CI e Netlify pendente |
+| 2 | API Java/Spring Boot, módulos, documentação HTTP, endpoint de saúde | Planejada |
+| 3 | PostgreSQL, Spring Data JPA e migrações Flyway | Planejada |
+| 4 | Autenticação própria, cadastro, sessão e autorização no servidor | Planejada |
 | 5 | Contas, saldos, dashboard e extrato persistidos | Planejada |
-| 6 | Transferências internas consistentes, idempotentes e concorrentes | Planejada |
-| 7 | Agendamento confiável de transferências | Planejada |
-| 8 | Pagamentos e agendamentos demonstrativos persistidos | Planejada |
-| 9 | Administração, perfis e auditoria de operações | Planejada |
-| 10 | Notificações, perfil e módulos complementares integrados | Planejada |
-| 11 | Segurança, testes de integração, CI e observabilidade ampliados | Planejada |
-| 12 | Revisão geral, documentação completa e release 1.0 | Planejada |
+| 6 | Transferências internas, lançamentos atômicos, idempotência e concorrência | Planejada |
+| 7 | Agendamento seguro de transferências | Planejada |
+| 8 | Pagamentos demonstrativos e agendamentos persistidos | Planejada |
+| 9 | Administração, autorização e auditoria de operações | Planejada |
+| 10 | Notificações, perfil e módulos complementares | Planejada |
+| 11 | Testes integrados, segurança e observabilidade | Planejada |
+| 12 | Revisão, documentação final, publicação e release 1.0 | Planejada |
 
 ## Critérios de conclusão
 
-- **Etapa 0:** acesso à aplicação, navegação, login demonstrativo e rotas internas verificados no Netlify.
-- **Etapa 1:** Angular compila, testes unitários passam no CI, estrutura de pastas é válida e o deploy pelo novo caminho funciona.
-- **Etapa 2:** serviço Java publicado, health check e documentação OpenAPI acessíveis, projeto organizado em módulos sem quebra da interface.
-- **Etapa 3:** migrações do esquema reproduzíveis e persistência confiável após reinicialização.
-- **Etapa 4:** cadastro/login/logout/relogin e autorização por titularidade/perfil validados no backend.
-- **Etapa 5:** dashboard e extrato derivados de dados do banco, isolados por usuário.
-- **Etapa 6:** transferências atômicas, sem gasto duplo ou duplicação, testadas com concorrência e falhas.
-- **Etapa 7:** agendamentos disparados uma vez, com estados e cancelamento consistentes.
-- **Etapa 8:** pagamentos de teste persistidos e processados com regras claras.
-- **Etapa 9:** ações administrativas autorizadas, alterações críticas auditáveis sem dados sensíveis.
-- **Etapa 10:** telas integradas e estados de notificação/perfil persistidos quando necessário.
-- **Etapa 11:** cobertura dos fluxos críticos e automações estáveis no GitHub.
-- **Etapa 12:** versionamento, documentação, testes e ambientes revisados para a release.
+- **0:** app acessível no Netlify, login demonstrativo e rotas internas funcionando.
+- **1:** não restam cópias Angular na raiz; build e testes aprovados no GitHub Actions; deploy Netlify validado.
+- **2:** API Java com build e testes, health check e documentação HTTP acessíveis em nuvem, sem quebra do frontend.
+- **3:** migrações reproduzíveis, conexão e persistência em banco de demonstração.
+- **4:** cadastro, login, logout e novo login, além de autorização e isolamento por titularidade.
+- **5:** dashboard, saldos e extrato refletem dados persistidos e isolados por usuário.
+- **6:** transferências atômicas, sem duplicações nem saldo inválido sob concorrência.
+- **7:** agendamentos disparados apenas uma vez, com cancelamento e estados consistentes.
+- **8:** pagamentos fictícios persistidos e com ciclo de processamento verificável.
+- **9:** permissões efetivas e registros auditáveis de operações críticas.
+- **10:** telas existentes integradas à API com comportamento consistente.
+- **11:** bateria de testes e automações confiáveis, logs e monitoração adequados.
+- **12:** fluxos ponta a ponta verificados, documentação e release final publicadas.
 
-## Limites da demonstração
+## Limites do produto
 
-Não estão previstas movimentações financeiras reais, conexão a bancos, Pix real, cobrança verdadeira de boletos ou credenciamento como instituição financeira.
+Monavero é demonstrativo. Não implementará Pix real, integração com instituições financeiras, compensação real de boletos ou movimentação de dinheiro de verdade.

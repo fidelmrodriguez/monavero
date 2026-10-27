@@ -1,56 +1,62 @@
 # Monavero
 
-Monavero é uma aplicação demonstrativa de banco digital com frontend desenvolvido em **Angular 19**, **TypeScript** e **Angular SSR**. O projeto reúne navegação por perfil, dashboard financeiro, extrato, formulários de transferência e pagamento, notificações e áreas de gestão. A evolução prevista é integrar essas experiências a uma API Java/Spring Boot própria.
+**Monavero** é uma aplicação web de banco digital demonstrativo. A experiência de frontend é construída com **Angular 19 e TypeScript**, enquanto o repositório está preparado para receber uma **API Java com Spring Boot**. O projeto explora a evolução de uma interface financeira funcional para um sistema full stack com autenticação própria, dados persistidos, consistência transacional e auditoria.
 
-> **Projeto demonstrativo.** Não é uma instituição financeira ou serviço de pagamentos. Os saldos, cartões, investimentos e movimentações são fictícios. A autenticação atual utiliza a API pública DummyJSON. Não utilize senhas ou dados bancários reais.
+[**Frontend · Angular**](frontend/README.md) · [**Backend · Java (planejado)**](backend/README.md) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/ROADMAP.md) · [Testes](docs/TESTES.md)
 
-## Funcionalidades disponíveis
+[![Frontend Angular CI](https://img.shields.io/github/actions/workflow/status/fidelmrodriguez/monavero/frontend-ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=Frontend%20CI)](https://github.com/fidelmrodriguez/monavero/actions/workflows/frontend-ci.yml)
 
-- **Autenticação demonstrativa:** acesso com credenciais de teste, sessão no navegador e seleção local de perfil (`cliente`, `gerente`, `admin`). As permissões ainda não são verificadas por um backend bancário.
-- **Dashboard:** contas, investimentos, cartões, gráfico de fluxo financeiro, categorias de despesas e movimentações recentes.
-- **Extrato:** listagem, filtros de período, tipo, status e valores e totalizadores.
-- **Transferências:** formulário com validação de dados, limite e saldo; produz notificações fictícias, **sem transferência efetiva de recursos**.
-- **Pagamentos:** agendamentos simulados mantidos apenas na memória da aplicação.
-- **Notificações e auditoria:** eventos de interface e registros demonstrativos durante a sessão.
-- **Experiência:** interface responsiva, componentes standalone, lazy loading, tema claro/escuro e formulários reativos.
+> **Ambiente de demonstração:** Monavero não é um banco nem realiza operações financeiras reais. Contas, saldos, extratos, pagamentos, cartões e investimentos são fictícios. O login usa temporariamente a API pública DummyJSON; não informe senhas pessoais ou dados bancários reais.
+
+## Funcionalidades existentes
+
+- **Acesso demonstrativo:** login e logout, restauração de sessão no navegador e seleção visual entre cliente, gerente e administrador. A escolha de perfil ainda não é autorizada por servidor bancário.
+- **Dashboard:** visão de contas, indicadores financeiros, gráfico SVG, cartões, investimentos e movimentações recentes.
+- **Extrato:** pesquisa, filtros por período, tipo, status e valores, com totalização das movimentações exibidas.
+- **Transferências:** formulários e validações de saldo, limite, favorecido e destino, com notificações e registro local de auditoria. **Nenhum valor é debitado ou creditado.**
+- **Pagamentos:** registro demonstrativo de agendamentos em memória, sem processamento financeiro nem persistência.
+- **Gestão:** telas de notificações, auditoria, administração e perfil; tema claro/escuro e navegação responsiva.
+
+Os componentes e comportamentos de interface são detalhados no [README do frontend](frontend/README.md) e no [catálogo de funcionalidades](docs/FUNCIONALIDADES.md).
 
 ## Tecnologias
 
-| Área | Tecnologia |
+| Área | Implementado / previsto |
 | --- | --- |
-| Frontend | Angular 19, TypeScript, SCSS, Signals, RxJS, Reactive Forms |
-| Renderização | Angular SSR, hidratação e event replay |
-| Navegação | Angular Router, guards e resolver |
-| API temporária | DummyJSON, via HttpClient |
-| Testes | Jasmine e Karma |
-| CI | GitHub Actions (build e testes frontend) |
-| Hospedagem do frontend | Netlify, Angular Runtime |
-| Backend previsto | Java, Spring Boot, Spring Security, PostgreSQL e Flyway |
+| Frontend implementado | Angular 19, TypeScript, SCSS, Signals, RxJS, Reactive Forms |
+| Renderização implementada | Angular SSR, hidratação e event replay |
+| Integração temporária | HttpClient com DummyJSON e fallback de dados fictícios |
+| Testes frontend | Jasmine, Karma e Chrome Headless |
+| Automação frontend | GitHub Actions (verificação de TypeScript, build e testes; execução a validar) |
+| Publicação frontend | Netlify, com build a partir de `frontend/` |
+| Backend planejado | Java, Spring Boot, Spring Security e Spring Modulith |
+| Persistência planejada | PostgreSQL, Spring Data JPA e Flyway |
 
-## Estrutura do repositório
+## Arquitetura e estrutura
 
 ```text
 monavero/
-├── .github/workflows/       Verificações automáticas do frontend
-├── frontend/               Aplicação Angular, SSR e testes
-│   ├── public/
+├── .github/workflows/       # Integração contínua do frontend
+├── frontend/                # Angular, SSR, testes e recursos públicos
 │   ├── src/app/
-│   │   ├── core/           Serviços, estado, modelos e guards
-│   │   ├── features/       Páginas por funcionalidade
-│   │   ├── layout/         Navegação e estrutura principal
-│   │   └── shared/         Componentes reutilizáveis
-│   ├── angular.json
+│   │   ├── core/            # Modelos, serviços, estado, guards e interceptors
+│   │   ├── features/        # Telas do produto
+│   │   ├── layout/          # Estrutura de navegação
+│   │   └── shared/          # Componentes reutilizáveis
+│   ├── public/
 │   ├── package.json
-│   └── server.ts
-├── backend/                Planejamento da API Java (implementação na Etapa 2)
-├── docs/                   Arquitetura, operação, testes e roadmap
-├── netlify.toml            Configuração da publicação do Angular
+│   └── README.md
+├── backend/                 # README e futura API Java
+├── docs/                    # Arquitetura, funcionalidades, testes e planejamento
+├── netlify.toml             # Configuração do deploy Angular
 └── README.md
 ```
 
+**Estado atual:** o Angular funciona de maneira independente. Não existe ainda uma API Java, integração com PostgreSQL ou transferência financeira entre contas no backend. A separação entre camadas já está organizada, e a migração ocorrerá de forma incremental conforme o [roadmap](docs/ROADMAP.md).
+
 ## Executar o frontend
 
-Use Node.js 22 (indicado em `frontend/.nvmrc`) e npm:
+Pré-requisitos: Node.js 22 e npm. Na raiz do repositório:
 
 ```bash
 cd frontend
@@ -58,43 +64,31 @@ npm install
 npm run dev
 ```
 
-A aplicação abre em `http://localhost:4200`.
-
-Acesso demonstrativo:
-
-```text
-Usuário: User
-Senha: 1234
-Perfil: Cliente, Gerente ou Admin
-```
-
-As credenciais `User` e `1234` são convertidas internamente para uma conta de teste pública da DummyJSON. A escolha do perfil ocorre exclusivamente no frontend.
-
-## Build e testes
-
-Execute a partir de `frontend/`:
+Abra `http://localhost:4200`. O formulário apresenta as credenciais fictícias `User` / `1234`; essas credenciais de demonstração são convertidas para uma conta pública de teste da DummyJSON. O acesso requer conexão com a API externa.
 
 ```bash
-npm run build      # Compilação da aplicação e SSR
-npm test           # Testes unitários em Chrome Headless
-npm run serve:ssr  # Executa a saída SSR após o build
+npm run typecheck
+npm run build
+npm test
 ```
 
-O build produz `frontend/dist/monavero/browser` e `frontend/dist/monavero/server`. A configuração de implantação está na raiz, em `netlify.toml`, com base `frontend`.
+`npm test` precisa de Chrome/Chromium. O projeto ainda não possui `package-lock.json` versionado; a reprodução exata das dependências ficará garantida quando o lockfile puder ser gerado e commitado, passando a usar `npm ci`.
 
-**Dependências:** o commit inicial não incluía `package-lock.json`. Por isso, neste estágio, a instalação usa `npm install`. O lockfile deverá ser gerado com npm em um ambiente com acesso ao registro e versionado; a partir disso poderemos adotar `npm ci` no CI e na publicação.
+A configuração do Netlify utiliza `frontend/dist/monavero/browser` como diretório de publicação. Consulte [o guia de deploy](docs/DEPLOY_NETLIFY.md) para verificar SSR, rotas e comportamento em produção.
 
 ## Documentação
 
-- [Arquitetura do frontend](docs/ARQUITETURA.md)
-- [Funcionalidades e limitações](docs/FUNCIONALIDADES.md)
-- [Deploy do Netlify](docs/DEPLOY_NETLIFY.md)
-- [Testes e CI](docs/TESTES.md)
-- [Roadmap](docs/ROADMAP.md)
-- [Evolução técnica](docs/EVOLUCAO.md)
+- [Frontend Angular](frontend/README.md): telas, arquitetura, estado, testes e execução da interface.
+- [Backend Java](backend/README.md): responsabilidades previstas, delimitação de módulos e requisitos de segurança e persistência.
+- [Arquitetura](docs/ARQUITETURA.md): fluxo atual da aplicação e evolução para Angular + Java + PostgreSQL.
+- [Funcionalidades](docs/FUNCIONALIDADES.md): escopo demonstrativo implementado.
+- [Testes e CI](docs/TESTES.md): comandos, workflow e critérios de verificação.
+- [Deploy no Netlify](docs/DEPLOY_NETLIFY.md): publicação do Angular SSR.
+- [Roadmap](docs/ROADMAP.md): etapas 0 a 12 e critérios de conclusão.
+- [Evolução técnica](docs/EVOLUCAO.md): estratégia de integração gradual com backend.
 
-## Situação do projeto
+## Evolução
 
-A aplicação Angular está disponível como base demonstrativa. A **Etapa 1** organiza o monorepositório, inclui integração contínua e fortalece validações da interface. O backend Java ainda não foi implementado e começará na **Etapa 2**.
+O objetivo é implementar gradualmente cadastro, autorização, contas, extrato persistido, transferências internas atômicas, agendamentos, administração e auditoria. Tudo continuará sendo **simulação bancária**, sem integração com instituições financeiras, Pix real ou cobrança efetiva de boletos.
 
-A confirmação de build, testes e deploy depende das respectivas execuções no GitHub Actions e no Netlify. Os dados financeiros ainda não possuem persistência; regras financeiras e autorização serão responsabilidade do backend nas próximas etapas.
+A Etapa 1 está em validação de CI e publicação. A Etapa 2 iniciará a API Java sem interromper o frontend demonstrativo. Veja o [roadmap](docs/ROADMAP.md) para acompanhar o progresso e distinguir entregas planejadas das verificadas.

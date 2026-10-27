@@ -2,33 +2,45 @@
 
 ## Frontend Angular
 
-As verificações automatizadas estão em `.github/workflows/frontend-ci.yml`. O workflow é executado em `push` e `pull_request` para a branch `main`, com Node.js 22 e Chrome for Testing.
+A configuração de CI fica em [`.github/workflows/frontend-ci.yml`](../.github/workflows/frontend-ci.yml). O workflow é acionado em `push` e `pull_request` na `main`, além de permitir execução manual, e prepara Node.js 22 e Chrome for Testing.
 
-Executar localmente ou em Codespaces, a partir da raiz do repositório:
+| Verificação | Comando (em `frontend/`) | Objetivo |
+| --- | --- | --- |
+| Tipagem TypeScript | `npm run typecheck` | Identificar erros de tipos no código Angular. |
+| Build | `npm run build` | Compilar frontend, templates e artefatos SSR. |
+| Testes unitários | `npm test` | Executar Jasmine/Karma em Chrome Headless. |
+
+Em Codespaces ou ambiente local:
 
 ```bash
 cd frontend
 npm install
+npm run typecheck
 npm run build
 npm test
 ```
 
-Os testes unitários atuais usam Jasmine e Karma em Chrome Headless. Uma instalação de navegador compatível é necessária para `npm test` fora do GitHub Actions.
+Chrome/Chromium é necessário para os testes; o workflow configura o caminho do binário com `CHROME_BIN`. No Netlify, a compilação usa `npm run build` com `base = "frontend"`.
 
-## Ausência temporária de lockfile
+## Dependências e reproducibilidade
 
-A base original não contém `package-lock.json`. O CI usa `npm install --no-audit --no-fund` para instalar dependências conforme o `package.json`. Isto **não garante versões transitivas reprodutíveis**.
+O frontend ainda não possui `package-lock.json` versionado. O workflow utiliza temporariamente `npm install --no-audit --no-fund`; versões transitivas podem variar, e a execução não é totalmente reproduzível.
 
-Assim que for executado `npm install` em um Codespaces com acesso ao npm, o `frontend/package-lock.json` resultante deve ser versionado. Depois, substituir `npm install` por `npm ci` no workflow e no procedimento de build. Não criar o lockfile manualmente.
+Quando o registro npm estiver acessível, execute `npm install` dentro de `frontend/` e commit o `frontend/package-lock.json` gerado. Em seguida, substitua `npm install` por `npm ci` no CI e, se aplicável, na configuração de build. Não crie um lockfile manualmente.
 
-## Verificações de revisão
+## Revisão funcional no Netlify
 
-- Login demonstrativo e troca de perfil funcionam como antes.
-- Recarregar a rota do dashboard não causa erro 404 no Netlify.
-- Extrato, filtros, notificações, pagamentos e navegação mobile permanecem operantes.
-- Transferências não podem ser solicitadas sem conta de origem ou com saldo insuficiente.
-- Nenhum dado financeiro exibido nesta etapa é apresentado como transação real.
+- Login demonstrativo com `User` / `1234`, mudança de perfil, navegação e logout.
+- Atualização direta de rotas internas sem erro 404; verificar SSR e hidratação.
+- Dashboard, extrato, filtros, notificações, auditoria e perfil.
+- Formulários de transferências: validações de saldo, limite, origem e dados obrigatórios.
+- Pagamentos demonstrativos e estados vazios.
+- Layout responsivo e tema claro/escuro.
 
-## Alcance
+## Critério de conclusão da Etapa 1
 
-Testes automatizados do frontend não substituem a futura bateria de testes de autorização, consistência transacional, PostgreSQL e concorrência no backend Java. Essas verificações serão implementadas nas etapas correspondentes.
+A Etapa 1 só estará **validada** depois de o GitHub Actions executar com sucesso, o Netlify compilar com o novo diretório e os fluxos essenciais serem conferidos na aplicação publicada. A existência do workflow no repositório não comprova seu sucesso.
+
+## Futura API Java
+
+As etapas posteriores acrescentarão testes de domínio, autorização, PostgreSQL, concorrência, idempotência e consistência transacional, com bancos de teste isolados de ambientes de produção.
