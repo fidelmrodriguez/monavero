@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: monavero-api
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+monavero:
+  cors:
+    allowed-origins: ${MONAVERO_CORS_ALLOWED_ORIGINS:http://localhost:4200}

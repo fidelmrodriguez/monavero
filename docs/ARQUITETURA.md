@@ -1,6 +1,6 @@
 # Arquitetura · Monavero
 
-O Monavero é um monorepositório organizado em **frontend Angular** e **backend Java planejado**. Neste estágio, somente o Angular está implementado. A integração com a API própria será adicionada progressivamente, sem descartar a experiência demonstrativa já existente.
+O Monavero é um monorepositório organizado em **frontend Angular** e **backend Java iniciado**. O frontend Angular está implementado e a Etapa 2 acrescenta os fundamentos HTTP da API Java, ainda sem recursos bancários. A integração com a API própria será adicionada progressivamente, sem descartar a experiência demonstrativa já existente.
 
 ## Arquitetura atual
 
@@ -50,6 +50,12 @@ A navegação usa componentes standalone, lazy loading, Angular Router, formulá
 
 `BankingService` consome dados públicos da DummyJSON (`/users`, `/products`, `/carts`) e monta contas, cartões, investimentos e transações fictícias. A consulta dispõe de fallback local. O saldo exibido não é modificado pela transferência demonstrativa. Agendamentos de pagamento não sobrevivem a uma reinicialização da aplicação.
 
+## Fundação Java implementada na Etapa 2
+
+A API está separada em `backend/`, utilizando Java 25, Spring Boot 4.1.1, Spring Modulith 2.1.1, Spring MVC, OpenAPI e Actuator. O pacote `system/` disponibiliza `GET /api/v1/system/info`; o Actuator expõe `GET /actuator/health` e o Swagger fica em `/swagger-ui.html`. `config/` concentra configuração de CORS por origem explícita, metadados da API e respostas de validação no formato Problem Details.
+
+O Angular **ainda não se comunica com esta API**. Não há identidade própria, banco de dados, autorização ou operações financeiras no Java. Consulte o [README do backend](../backend/README.md) e o [guia de deploy](DEPLOY_BACKEND.md).
+
 ## Arquitetura-alvo
 
 ```text
@@ -81,6 +87,6 @@ O servidor Java deverá decidir identidade, permissões e titularidade, validar 
 
 - O Netlify compila o projeto em `frontend/` e publica `dist/monavero/browser`; a configuração fica em `netlify.toml`.
 - O workflow do frontend fica em `.github/workflows/frontend-ci.yml` e valida TypeScript, build e testes quando executado pelo GitHub Actions.
-- `backend/` contém apenas documentação até o início da Etapa 2; não há URL de API Java para configurar no Angular.
+- `backend/` contém o código Java e seu workflow CI; ainda não há URL cloud validada nem integração no Angular.
 
 Consulte [Frontend](../frontend/README.md), [Backend](../backend/README.md), [Testes](TESTES.md) e [Roadmap](ROADMAP.md).

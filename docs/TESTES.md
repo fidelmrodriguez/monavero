@@ -22,16 +22,6 @@ npm test
 
 Chrome/Chromium é necessário para os testes; o workflow configura o caminho do binário com `CHROME_BIN`. No Netlify, a compilação usa `npm run build` com `base = "frontend"`.
 
-## Localização brasileira nos testes
-
-A aplicação usa `pt-BR` para exibir datas e valores em reais. O registro dos dados de localização é centralizado em `frontend/src/locale.ts` e carregado tanto na inicialização da aplicação (browser/SSR) quanto no ambiente Jasmine/Karma por meio dos `polyfills` do alvo `test` em `frontend/angular.json`.
-
-O primeiro workflow falhou com `NG0701: Missing locale data for the locale "pt-BR"` em componentes que utilizam `DatePipe` e `CurrencyPipe`. Após registrar o locale nos `polyfills`, uma nova execução falhou **antes dos testes**, porque o arquivo `src/locale.ts` não estava incluído na compilação TypeScript do Karma (`missing from the TypeScript compilation`). O arquivo `frontend/tsconfig.spec.json` passou a declarar `src/locale.ts` em `files`, de modo que o módulo de localização faça parte do programa de testes, além de ser carregado pelos `polyfills`.
-
-Os testes em `src/app/core/utils/locale.spec.ts` cobrem explicitamente as formatações de data e moeda. A correção de configuração foi verificada estaticamente; a execução completa ainda precisa ser aprovada pelo GitHub Actions.
-
-O layout principal também deve ser conferido no Netlify: em telas desktop, a topbar deve começar exatamente na borda direita da sidebar, sem faixa vazia; em telas menores, o menu móvel continua ocupando toda a largura.
-
 ## Dependências e reproducibilidade
 
 O frontend ainda não possui `package-lock.json` versionado. O workflow utiliza temporariamente `npm install --no-audit --no-fund`; versões transitivas podem variar, e a execução não é totalmente reproduzível.
@@ -47,10 +37,21 @@ Quando o registro npm estiver acessível, execute `npm install` dentro de `front
 - Pagamentos demonstrativos e estados vazios.
 - Layout responsivo e tema claro/escuro.
 
+## Backend Java
+
+O workflow [`.github/workflows/backend-ci.yml`](../.github/workflows/backend-ci.yml) roda em `push`, `pull_request` (quando há alterações no backend) e manualmente. Usa JDK 25 e executa `mvn -B -ntp clean verify` em `backend/`.
+
+```bash
+cd backend
+mvn -B -ntp clean verify
+```
+
+Os testes cobrem identificação da API, health check, geração de OpenAPI, CORS de origem local e rejeição de origem não autorizada. O teste de Spring Modulith verifica ciclos e limites das dependências entre módulos. A Etapa 2 está **pendente de execução no GitHub Actions**: a criação do código e do workflow ainda não prova que o CI passou.
+
 ## Critério de conclusão da Etapa 1
 
-A Etapa 1 só estará **validada** depois de o GitHub Actions executar com sucesso, o Netlify compilar com o novo diretório e os fluxos essenciais serem conferidos na aplicação publicada. A existência do workflow no repositório não comprova seu sucesso.
+A Etapa 1 foi **validada** após a publicação no Netlify e a aprovação do workflow `Frontend Angular CI #3`, conforme o resultado enviado em 27/10/2026.
 
-## Futura API Java
+## Próximos testes
 
-As etapas posteriores acrescentarão testes de domínio, autorização, PostgreSQL, concorrência, idempotência e consistência transacional, com bancos de teste isolados de ambientes de produção.
+As etapas posteriores acrescentarão testes de domínio, autorização, PostgreSQL com Testcontainers, concorrência, idempotência e consistência transacional, com bancos de teste isolados de ambientes de produção.

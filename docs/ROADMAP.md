@@ -1,13 +1,13 @@
 # Roadmap do Monavero
 
-O Monavero evolui de um frontend Angular demonstrativo para um sistema full stack de simulação bancária. O status **entregue** indica código preparado; **validada** exige execução dos testes e verificação nos ambientes publicados.
+O Monavero evolui de um frontend Angular demonstrativo para um sistema full stack de simulação bancária. **Código entregue** não é o mesmo que **etapa validada**: a validação requer CI e, quando previsto, verificação no ambiente cloud.
 
-| Etapa | Entrega | Status |
+| Etapa | Entrega | Situação em 27/10/2026 |
 | --- | --- | --- |
-| 0 | Frontend Angular inicial e publicação GitHub/Netlify | GitHub publicado; validação do Netlify pendente |
-| 1 | Monorepositório limpo, documentação por camada, CI, testes e Netlify | Consolidação preparada; validação do CI e Netlify pendente |
-| 2 | API Java/Spring Boot, módulos, documentação HTTP, endpoint de saúde | Planejada |
-| 3 | PostgreSQL, Spring Data JPA e migrações Flyway | Planejada |
+| 0 | Frontend Angular inicial e publicação GitHub/Netlify | **Validada** — frontend publicado e navegação confirmada |
+| 1 | Estrutura limpa, documentação por camada, CI e testes Angular | **Validada** — Frontend Angular CI #3 aprovado no GitHub |
+| 2 | API Java/Spring Boot, módulos, contratos HTTP, testes e health | **Código preparado neste ZIP** — CI Java e publicação cloud pendentes |
+| 3 | PostgreSQL, Spring Data JPA, modelo e migrações Flyway | Planejada |
 | 4 | Autenticação própria, cadastro, sessão e autorização no servidor | Planejada |
 | 5 | Contas, saldos, dashboard e extrato persistidos | Planejada |
 | 6 | Transferências internas, lançamentos atômicos, idempotência e concorrência | Planejada |
@@ -20,17 +20,17 @@ O Monavero evolui de um frontend Angular demonstrativo para um sistema full stac
 
 ## Critérios de conclusão
 
-- **0:** app acessível no Netlify, login demonstrativo e rotas internas funcionando.
-- **1:** não restam cópias Angular na raiz; build e testes aprovados no GitHub Actions; deploy Netlify validado.
-- **2:** API Java com build e testes, health check e documentação HTTP acessíveis em nuvem, sem quebra do frontend.
-- **3:** migrações reproduzíveis, conexão e persistência em banco de demonstração.
+- **0:** frontend no Netlify, login demonstrativo e rotas internas funcionando.
+- **1:** organização em `frontend/` e `backend/`; build e testes do Angular aprovados no Actions; deploy verificado.
+- **2:** API Java compilada e testada no Actions; health check, identificação e documentação OpenAPI acessíveis em nuvem; Angular continua funcional.
+- **3:** migrações reproduzíveis, conexão e dados persistidos no PostgreSQL de demonstração.
 - **4:** cadastro, login, logout e novo login, além de autorização e isolamento por titularidade.
-- **5:** dashboard, saldos e extrato refletem dados persistidos e isolados por usuário.
-- **6:** transferências atômicas, sem duplicações nem saldo inválido sob concorrência.
-- **7:** agendamentos disparados apenas uma vez, com cancelamento e estados consistentes.
-- **8:** pagamentos fictícios persistidos e com ciclo de processamento verificável.
+- **5:** dashboard, saldos e extrato refletindo dados persistidos e isolados por usuário.
+- **6:** transferências atômicas, sem duplicação nem saldo inválido sob concorrência.
+- **7:** agendamentos executados somente uma vez, com cancelamento e estados consistentes.
+- **8:** pagamentos fictícios persistidos e com ciclo verificável.
 - **9:** permissões efetivas e registros auditáveis de operações críticas.
-- **10:** telas existentes integradas à API com comportamento consistente.
+- **10:** interfaces existentes integradas à API com comportamento consistente.
 - **11:** bateria de testes e automações confiáveis, logs e monitoração adequados.
 - **12:** fluxos ponta a ponta verificados, documentação e release final publicadas.
 

@@ -12,7 +12,7 @@ O Monavero começa com uma interface Angular funcional e independente de backend
 
 ## Direção planejada: backend Java
 
-A evolução proposta é integrar um backend **Java com Spring Boot**, com implementação prevista para a Etapa 2. O diretório `backend/` ainda contém apenas planejamento, sem código Java.
+Na Etapa 2 foi iniciada uma API **Java 25 com Spring Boot 4.1.1**, com endpoint de identificação, health check, Swagger/OpenAPI, CORS e testes automatizados. A integração ao Angular e a persistência ainda não foram iniciadas; a execução no CI Java e a publicação na nuvem dependem de validação.
 
 Áreas de trabalho candidatas, a confirmar conforme os requisitos de cada etapa:
 
