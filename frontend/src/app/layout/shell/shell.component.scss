@@ -1,7 +1,8 @@
 .shell {
+  --sidebar-width: 250px;
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 250px minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
 }
 
 .sidebar {
@@ -81,7 +82,7 @@
 
 .topbar {
   position: fixed;
-  left: 286px;
+  left: var(--sidebar-width);
   right: 0;
   top: 0;
   height: 76px;
