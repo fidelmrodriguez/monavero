@@ -1,3 +1,6 @@
+# Configuração única do deploy do frontend Angular em monorepositório.
+# Todos os caminhos de build e publicação são relativos a "frontend".
 [build]
+  base = "frontend"
   command = "npm run build"
   publish = "dist/monavero/browser"

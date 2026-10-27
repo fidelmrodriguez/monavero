@@ -1,0 +1,44 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Auditoria</p>
+      <h1>Rastro de ações</h1>
+      <p class="muted">Monitoramento de login, permissões e operações sensíveis.</p>
+    </div>
+    <div class="field search-field">
+      <label for="auditSearch">Buscar evento</label>
+      <input id="auditSearch" class="input" type="search" [(ngModel)]="searchText" placeholder="Ação, área ou status" />
+    </div>
+  </header>
+
+  <article class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Usuário</th>
+            <th>Perfil</th>
+            <th>Área</th>
+            <th>Ação</th>
+            <th>IP</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of filteredEntries(); track entry.id) {
+            <tr>
+              <td data-label="Data">{{ entry.date | date:'dd/MM/yyyy HH:mm:ss':'':'pt-BR' }}</td>
+              <td data-label="Usuário">{{ entry.actor }}</td>
+              <td data-label="Perfil">{{ entry.role }}</td>
+              <td data-label="Área">{{ entry.area }}</td>
+              <td data-label="Ação">{{ entry.action }}</td>
+              <td data-label="IP">{{ entry.ip }}</td>
+              <td data-label="Status" [class.status-ok]="entry.status === 'sucesso'" [class.status-warning]="entry.status === 'alerta'" [class.status-danger]="entry.status === 'erro'">{{ entry.status }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>

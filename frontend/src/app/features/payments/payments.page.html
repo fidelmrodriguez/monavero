@@ -1,0 +1,76 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Pagamentos</p>
+      <h1>Agendamento de pagamentos</h1>
+      <p class="muted">Crie agendamentos demonstrativos e acompanhe a agenda temporária desta sessão.</p>
+    </div>
+  </header>
+
+  <div class="grid grid-2">
+    <article class="card">
+      <h2>Novo agendamento</h2>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="payment-form">
+        <div class="field">
+          <label for="barCode">Código de barras</label>
+          <input id="barCode" class="input" type="text" formControlName="barCode" placeholder="Digite ou cole o código" />
+          @if (isInvalid('barCode')) {
+            <span class="error-text">Informe ao menos 20 caracteres.</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="beneficiary">Beneficiário</label>
+          <input id="beneficiary" class="input" type="text" formControlName="beneficiary" placeholder="Empresa ou pessoa" />
+          @if (isInvalid('beneficiary')) {
+            <span class="error-text">Informe o beneficiário.</span>
+          }
+        </div>
+
+        <div class="grid grid-2 inner-grid">
+          <div class="field">
+            <label for="amount">Valor</label>
+            <input id="amount" class="input" type="number" formControlName="amount" />
+            @if (isInvalid('amount')) {
+              <span class="error-text">Informe um valor válido.</span>
+            }
+          </div>
+          <div class="field">
+            <label for="date">Data de pagamento</label>
+            <input id="date" class="input" type="date" formControlName="date" />
+            @if (isInvalid('date')) {
+              <span class="error-text">Informe uma data.</span>
+            }
+          </div>
+        </div>
+
+        <button class="btn btn-primary" type="submit" [disabled]="form.invalid">Agendar pagamento</button>
+      </form>
+    </article>
+
+    <article class="card">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">Agenda</p>
+          <h2>Pagamentos programados</h2>
+        </div>
+        <span class="badge">{{ scheduledPayments().length }} itens</span>
+      </div>
+
+      <div class="payment-list">
+        @for (payment of scheduledPayments(); track payment.id) {
+          <article class="payment-item">
+            <div>
+              <strong>{{ payment.beneficiary }}</strong>
+              <span>{{ payment.barCode }}</span>
+            </div>
+            <div>
+              <strong>{{ payment.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
+              <span>{{ payment.date | date:'dd/MM/yyyy':'':'pt-BR' }} · {{ payment.status }}</span>
+            </div>
+          </article>
+        }
+      </div>
+    </article>
+  </div>
+</section>

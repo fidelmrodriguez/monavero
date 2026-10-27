@@ -12,7 +12,7 @@ O Monavero começa com uma interface Angular funcional e independente de backend
 
 ## Direção planejada: backend Java
 
-A evolução proposta é integrar um backend **Java com Spring Boot**, sem incluir nenhum artefato Java neste repositório inicial.
+A evolução proposta é integrar um backend **Java com Spring Boot**, com implementação prevista para a Etapa 2. O diretório `backend/` ainda contém apenas planejamento, sem código Java.
 
 Áreas de trabalho candidatas, a confirmar conforme os requisitos de cada etapa:
 
@@ -31,3 +31,7 @@ O backend deve assumir as regras financeiras e de segurança. Validações exist
 - Não introduzir mensageria, microsserviços ou infraestrutura sem necessidade demonstrada.
 - Priorizar integridade de dados, autorização, clareza de código, tratamento de erros e testes reproduzíveis.
 - Documentar comportamento implementado separadamente de funcionalidades planejadas.
+
+## Planejamento detalhado
+
+O [roadmap](ROADMAP.md) separa as etapas de desenvolvimento, critérios de conclusão e status de validação.

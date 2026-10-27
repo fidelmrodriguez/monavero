@@ -1,0 +1,143 @@
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, .72fr);
+  gap: 36px;
+  padding: 34px;
+  align-items: stretch;
+  background:
+    radial-gradient(circle at 20% 15%, color-mix(in srgb, var(--primary), transparent 72%), transparent 34%),
+    var(--bg);
+}
+
+.login-hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: calc(100vh - 68px);
+  border-radius: 34px;
+  padding: 38px;
+  background: linear-gradient(135deg, #101828, #30206f);
+  color: white;
+  overflow: hidden;
+  position: relative;
+}
+
+.login-hero::after {
+  content: '';
+  position: absolute;
+  inset: auto -120px -170px auto;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .1);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.brand span {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: white;
+  color: #30206f;
+  font-weight: 900;
+}
+
+h1 {
+  max-width: 760px;
+  font-size: clamp(2.4rem, 7vw, 5.7rem);
+  color: white;
+  margin-bottom: 18px;
+}
+
+.login-hero p:not(.eyebrow) {
+  max-width: 660px;
+  color: rgba(255, 255, 255, .78);
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-grid article {
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .08);
+  backdrop-filter: blur(12px);
+  display: grid;
+  gap: 8px;
+}
+
+.hero-grid span {
+  color: rgba(255, 255, 255, .72);
+}
+
+.login-card {
+  align-self: center;
+  display: grid;
+  gap: 18px;
+  position: relative;
+}
+
+form {
+  display: grid;
+  gap: 16px;
+}
+
+.theme-button {
+  justify-self: end;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+  border-radius: 999px;
+  min-height: 38px;
+  padding: 0 14px;
+  font-weight: 800;
+}
+
+.credentials {
+  display: grid;
+  gap: 6px;
+  background: var(--surface-soft);
+  border: 1px dashed var(--border);
+  border-radius: 18px;
+  padding: 14px;
+  color: var(--muted);
+}
+
+.credentials strong {
+  color: var(--text);
+}
+
+@media (max-width: 1100px) {
+  .login-page {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .login-hero {
+    min-height: auto;
+    gap: 48px;
+    padding: 28px;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+}

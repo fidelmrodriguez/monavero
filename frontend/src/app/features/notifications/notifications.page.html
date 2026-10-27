@@ -1,0 +1,23 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Notificações</p>
+      <h1>Central em tempo real</h1>
+      <p class="muted">Eventos simulados chegam automaticamente enquanto a sessão está aberta.</p>
+    </div>
+    <button class="btn btn-secondary" type="button" (click)="notificationStore.markAllAsRead()">Marcar tudo como lido</button>
+  </header>
+
+  <article class="card notification-list">
+    @for (notification of notificationStore.notifications(); track notification.id) {
+      <button class="notification-item" type="button" [class.unread]="!notification.read" (click)="notificationStore.markAsRead(notification.id)">
+        <span class="notification-icon">{{ notification.type === 'success' ? '✅' : notification.type === 'warning' ? '⚠️' : notification.type === 'danger' ? '🚫' : 'ℹ️' }}</span>
+        <span>
+          <strong>{{ notification.title }}</strong>
+          <small>{{ notification.date | date:'dd/MM/yyyy HH:mm':'':'pt-BR' }}</small>
+          <p>{{ notification.description }}</p>
+        </span>
+      </button>
+    }
+  </article>
+</section>

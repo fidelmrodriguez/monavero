@@ -1,0 +1,36 @@
+<div class="chart-card">
+  <div class="chart-head">
+    <div>
+      <p class="eyebrow">{{ eyebrow }}</p>
+      <h3>{{ title }}</h3>
+    </div>
+    <span class="badge">{{ total() | currency:'BRL':'symbol':'1.0-0':'pt-BR' }}</span>
+  </div>
+
+  @if (variant === 'line') {
+    <svg class="line-chart" viewBox="0 0 360 160" role="img" [attr.aria-label]="title">
+      <defs>
+        <linearGradient id="chartArea" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stop-color="currentColor" stop-opacity=".2" />
+          <stop offset="1" stop-color="currentColor" stop-opacity="0" />
+        </linearGradient>
+      </defs>
+      <polyline class="line" [attr.points]="points()" />
+      <polygon class="area" [attr.points]="areaPoints()" />
+      @for (point of normalizedPoints(); track point.label) {
+        <circle class="dot" [attr.cx]="point.x" [attr.cy]="point.y" r="4" />
+        <text [attr.x]="point.x" y="154" text-anchor="middle">{{ point.label }}</text>
+      }
+    </svg>
+  } @else {
+    <div class="bar-chart">
+      @for (point of normalizedBars(); track point.label) {
+        <div class="bar-row">
+          <span>{{ point.label }}</span>
+          <div class="bar-track"><i [style.width.%]="point.percent"></i></div>
+          <strong>{{ point.value | currency:'BRL':'symbol':'1.0-0':'pt-BR' }}</strong>
+        </div>
+      }
+    </div>
+  }
+</div>

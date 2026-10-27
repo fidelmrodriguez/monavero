@@ -1,0 +1,20 @@
+.policy-card {
+  display: grid;
+  gap: 12px;
+}
+
+.policy-card p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.policy-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+  font-size: 1.5rem;
+}

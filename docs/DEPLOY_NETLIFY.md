@@ -1,51 +1,35 @@
-# Publicação no Netlify
+# Publicação do frontend no Netlify
 
-O Monavero mantém a configuração Angular SSR da aplicação, com `@netlify/angular-runtime` como dependência de desenvolvimento e o adaptador de renderização em `server.ts`.
+## Configuração para o monorepositório
 
-## Configuração do repositório
-
-O `netlify.toml` incluído no projeto define:
+O arquivo `netlify.toml` permanece na raiz do GitHub e define os caminhos referentes ao diretório `frontend/`:
 
 ```toml
 [build]
+  base = "frontend"
   command = "npm run build"
   publish = "dist/monavero/browser"
 ```
 
-A saída de build corresponde ao `outputPath` definido em `angular.json`. O arquivo `server.ts` fornece a integração com o runtime Angular do Netlify. Não é necessário adicionar um redirecionamento SPA genérico por cima da configuração SSR.
+- **Base directory:** `frontend`
+- **Build command:** `npm run build`
+- **Publish directory:** `dist/monavero/browser`, relativo a `frontend` (caminho completo no repositório: `frontend/dist/monavero/browser`).
+- **Node.js:** 22, declarado em `frontend/.nvmrc`.
+- **Framework:** Angular 19 com SSR; o `@netlify/angular-runtime` participa da integração de renderização.
 
-## Publicar
+O arquivo de configuração versionado tem precedência sobre as opções de build correspondentes na interface Netlify. Caso tenha configurado manualmente outra pasta, confira os valores após o commit de reorganização.
 
-1. Faça o commit dos arquivos do frontend em um repositório GitHub.
-2. No Netlify, crie um novo site importando esse repositório.
-3. Utilize Node.js 22 (o repositório inclui `.nvmrc`).
-4. Confira o comando de build `npm run build` e o diretório `dist/monavero/browser`.
-5. Faça o deploy e acompanhe o log de build. O runtime Angular deve cuidar da publicação SSR quando reconhecido pela plataforma.
-6. Confira diretamente as rotas `/login`, `/app/dashboard` e outras páginas depois do login e recarregue a página para validar o roteamento.
+## Passos de validação
 
-**O domínio público ainda não está definido neste repositório.** Adicione o endereço ao README após a publicação, em vez de reutilizar o URL da marca anterior.
+1. Conecte o repositório à branch `main` do site no Netlify.
+2. Execute o deploy usando a configuração do repositório.
+3. Confira no log que as dependências foram instaladas em `frontend/` e que a saída browser foi criada.
+4. Acesse a página de login e teste as credenciais de demonstração.
+5. Teste a navegação e recarregue uma rota interna; verifique o comportamento SSR e os redirects gerenciados pelo runtime.
+6. Confira o site em larguras de tela pequenas e maiores e em tema claro/escuro.
 
-## Teste local
+Se o build falhar ou houver rota 404, consulte primeiro o log do Netlify. Não crie um redirecionamento SPA genérico para `/index.html` sem verificar sua compatibilidade com a renderização SSR existente.
 
-```bash
-npm install
-npm run build
-npm run serve:ssr
-```
+## Limites
 
-O comando `serve:ssr` executa o artefato `dist/monavero/server/server.mjs` criado pelo build. O comando de desenvolvimento segue sendo `npm run dev`.
-
-## Validação pós-deploy
-
-- Conferir título "Monavero" e favicon com a letra M.
-- Entrar com `User` / `1234` e acessar o painel de demonstração.
-- Abrir extrato, transferências, pagamentos, notificações e perfil.
-- Selecionar os perfis gerente e admin em novos logins para conferir a navegação correspondente.
-- Conferir tema escuro, menu mobile e recarregamento de rotas internas.
-- Verificar o console e as requisições externas caso a DummyJSON esteja indisponível.
-
-A autenticação de demonstração requer acesso à DummyJSON. O dashboard possui fallback para dados financeiros, mas a autenticação não funciona offline.
-
-## Considerações
-
-Este deploy publica apenas um frontend demonstrativo. Não armazene credenciais reais no projeto nem interprete os perfis selecionados no cliente como autorização de produção. Uma API Java própria, quando existir, precisará de configuração de ambiente, CORS, contratos HTTP e um modelo de autenticação independente da DummyJSON.
+Esta publicação distribui apenas o frontend. O login continua usando DummyJSON e as demais operações financeiras são simuladas; não há configuração de API Java ou credenciais reais nesta etapa.

@@ -1,95 +1,100 @@
 # Monavero
 
-Interface de banco digital desenvolvida em **Angular 19**, **TypeScript** e **Angular SSR**, com painel financeiro, gerenciamento de contas demonstrativas, extrato, transferências, agendamento de pagamentos, notificações e áreas de gestão por perfil.
+Monavero é uma aplicação demonstrativa de banco digital com frontend desenvolvido em **Angular 19**, **TypeScript** e **Angular SSR**. O projeto reúne navegação por perfil, dashboard financeiro, extrato, formulários de transferência e pagamento, notificações e áreas de gestão. A evolução prevista é integrar essas experiências a uma API Java/Spring Boot própria.
 
-O Monavero reúne uma experiência de navegação responsiva, formulários reativos e recursos de estado do Angular em uma aplicação organizada por funcionalidades. O frontend já oferece os principais fluxos de navegação de um internet banking e está preparado para evoluir com uma API própria.
+> **Projeto demonstrativo.** Não é uma instituição financeira ou serviço de pagamentos. Os saldos, cartões, investimentos e movimentações são fictícios. A autenticação atual utiliza a API pública DummyJSON. Não utilize senhas ou dados bancários reais.
 
-> **Ambiente de demonstração.** Não se trata de uma instituição financeira nem de um serviço de pagamentos. Os saldos, cartões, extratos, transferências, pagamentos e registros de auditoria são fictícios. A autenticação de demonstração utiliza a API pública DummyJSON; não informe credenciais bancárias reais.
+## Funcionalidades disponíveis
 
-## Funcionalidades
-
-- **Acesso:** tela de login com credenciais demonstrativas preenchidas, validação de formulário, sessão no navegador e escolha de perfil para explorar a interface.
-- **Dashboard:** visão de contas, saldos, investimentos, cartões, movimentações recentes e gráficos financeiros em SVG.
-- **Extrato:** pesquisa, filtros por período, tipo de transação, status e intervalo de valor, com totalizadores.
-- **Transferências:** formulário com validação de campos, limite por operação e saldo exibido; registro visual de solicitação, sem movimentação financeira real.
-- **Pagamentos:** agendamento demonstrativo de boletos, com itens mantidos temporariamente na memória da aplicação.
-- **Notificações:** alertas visuais, lista de notificações, indicação de não lidas e eventos simulados durante a sessão.
-- **Gestão e auditoria:** telas acessíveis conforme o perfil demonstrativo selecionado (`cliente`, `gerente` ou `admin`), com ações e registros locais.
-- **Experiência:** layout responsivo, menus adaptados ao mobile, alternância entre temas claro e escuro e estados vazios para listagens.
+- **Autenticação demonstrativa:** acesso com credenciais de teste, sessão no navegador e seleção local de perfil (`cliente`, `gerente`, `admin`). As permissões ainda não são verificadas por um backend bancário.
+- **Dashboard:** contas, investimentos, cartões, gráfico de fluxo financeiro, categorias de despesas e movimentações recentes.
+- **Extrato:** listagem, filtros de período, tipo, status e valores e totalizadores.
+- **Transferências:** formulário com validação de dados, limite e saldo; produz notificações fictícias, **sem transferência efetiva de recursos**.
+- **Pagamentos:** agendamentos simulados mantidos apenas na memória da aplicação.
+- **Notificações e auditoria:** eventos de interface e registros demonstrativos durante a sessão.
+- **Experiência:** interface responsiva, componentes standalone, lazy loading, tema claro/escuro e formulários reativos.
 
 ## Tecnologias
 
-| Camada | Tecnologias |
+| Área | Tecnologia |
 | --- | --- |
-| Interface | Angular 19, componentes standalone, TypeScript, SCSS |
+| Frontend | Angular 19, TypeScript, SCSS, Signals, RxJS, Reactive Forms |
 | Renderização | Angular SSR, hidratação e event replay |
-| Estado e formulários | Signals, RxJS, Reactive Forms |
-| Navegação | Angular Router, lazy loading, guards e resolver |
-| Integrações | HttpClient, interceptors e DummyJSON (demonstração) |
+| Navegação | Angular Router, guards e resolver |
+| API temporária | DummyJSON, via HttpClient |
 | Testes | Jasmine e Karma |
-| Hospedagem | Netlify, com integração `@netlify/angular-runtime` |
+| CI | GitHub Actions (build e testes frontend) |
+| Hospedagem do frontend | Netlify, Angular Runtime |
+| Backend previsto | Java, Spring Boot, Spring Security, PostgreSQL e Flyway |
 
-## Iniciar o frontend
+## Estrutura do repositório
 
-**Pré-requisitos:** Node.js 22 e npm (a versão de Node está indicada em `.nvmrc`).
+```text
+monavero/
+├── .github/workflows/       Verificações automáticas do frontend
+├── frontend/               Aplicação Angular, SSR e testes
+│   ├── public/
+│   ├── src/app/
+│   │   ├── core/           Serviços, estado, modelos e guards
+│   │   ├── features/       Páginas por funcionalidade
+│   │   ├── layout/         Navegação e estrutura principal
+│   │   └── shared/         Componentes reutilizáveis
+│   ├── angular.json
+│   ├── package.json
+│   └── server.ts
+├── backend/                Planejamento da API Java (implementação na Etapa 2)
+├── docs/                   Arquitetura, operação, testes e roadmap
+├── netlify.toml            Configuração da publicação do Angular
+└── README.md
+```
+
+## Executar o frontend
+
+Use Node.js 22 (indicado em `frontend/.nvmrc`) e npm:
 
 ```bash
-# na raiz do repositório Monavero
+cd frontend
 npm install
 npm run dev
 ```
 
-A aplicação de desenvolvimento fica disponível em `http://localhost:4200`.
+A aplicação abre em `http://localhost:4200`.
 
-Para testar o acesso demonstrativo:
+Acesso demonstrativo:
 
 ```text
 Usuário: User
 Senha: 1234
-Perfil: Cliente, Gerente ou Admin (selecionado na tela)
+Perfil: Cliente, Gerente ou Admin
 ```
 
-O par `User` / `1234` é convertido internamente em credenciais públicas de teste da DummyJSON. O perfil é escolhido no frontend, portanto **não representa autorização validada por um servidor bancário**.
+As credenciais `User` e `1234` são convertidas internamente para uma conta de teste pública da DummyJSON. A escolha do perfil ocorre exclusivamente no frontend.
 
-## Comandos
+## Build e testes
+
+Execute a partir de `frontend/`:
 
 ```bash
-npm run dev          # servidor de desenvolvimento Angular
-npm run build        # build de produção, com artefatos browser e SSR
-npm run serve:ssr    # servidor SSR local após o build
-npm test             # testes unitários sem modo watch
+npm run build      # Compilação da aplicação e SSR
+npm test           # Testes unitários em Chrome Headless
+npm run serve:ssr  # Executa a saída SSR após o build
 ```
 
-O build é gerado em `dist/monavero/`. A publicação no Netlify está configurada pelo `netlify.toml` e pela integração Angular da plataforma; o diretório browser é `dist/monavero/browser`.
+O build produz `frontend/dist/monavero/browser` e `frontend/dist/monavero/server`. A configuração de implantação está na raiz, em `netlify.toml`, com base `frontend`.
 
-## Organização
-
-```text
-public/                 Identidade visual e arquivos estáticos
-src/
-  app/
-    core/               Serviços, estado, modelos, guards e interceptors
-    features/           Telas agrupadas por funcionalidade
-    layout/             Shell, menus e navegação
-    shared/             Componentes compartilhados
-  styles.scss           Tokens visuais e estilos globais
-  main.ts               Entrada da aplicação no navegador
-  main.server.ts        Entrada de renderização SSR
-server.ts               Integração SSR com o runtime Angular do Netlify
-docs/                   Referência técnica e funcional
-angular.json            Configuração do projeto Angular
-netlify.toml            Configuração de publicação
-```
+**Dependências:** o commit inicial não incluía `package-lock.json`. Por isso, neste estágio, a instalação usa `npm install`. O lockfile deverá ser gerado com npm em um ambiente com acesso ao registro e versionado; a partir disso poderemos adotar `npm ci` no CI e na publicação.
 
 ## Documentação
 
 - [Arquitetura do frontend](docs/ARQUITETURA.md)
-- [Funcionalidades e comportamento](docs/FUNCIONALIDADES.md)
-- [Publicação no Netlify](docs/DEPLOY_NETLIFY.md)
-- [Evolução da aplicação](docs/EVOLUCAO.md)
+- [Funcionalidades e limitações](docs/FUNCIONALIDADES.md)
+- [Deploy do Netlify](docs/DEPLOY_NETLIFY.md)
+- [Testes e CI](docs/TESTES.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Evolução técnica](docs/EVOLUCAO.md)
 
-## Limites da versão atual
+## Situação do projeto
 
-Este repositório contém **somente o frontend**. Os dados financeiros não vêm de uma API bancária; parte das informações é produzida a partir de respostas da DummyJSON, com valores e regras demonstrativas definidos no próprio código, e parte possui fallback local para indisponibilidade externa. O navegador mantém sessão e preferência de tema; agendamentos, notificações e auditoria não são persistidos em um banco de dados.
+A aplicação Angular está disponível como base demonstrativa. A **Etapa 1** organiza o monorepositório, inclui integração contínua e fortalece validações da interface. O backend Java ainda não foi implementado e começará na **Etapa 2**.
 
-A camada de segurança atual é própria de uma demonstração de interface. O armazenamento de token no navegador e os perfis selecionáveis **não devem ser aproveitados diretamente como autenticação/autorização de produção**. A implementação de backend transacional e suas validações acontecerá em uma evolução separada.
+A confirmação de build, testes e deploy depende das respectivas execuções no GitHub Actions e no Netlify. Os dados financeiros ainda não possuem persistência; regras financeiras e autorização serão responsabilidade do backend nas próximas etapas.

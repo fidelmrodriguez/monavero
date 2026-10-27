@@ -49,3 +49,7 @@ As transferências são validadas e geram feedback e eventos locais; **não alte
 O código atual é um protótipo funcional de interface. Há tokens mantidos em `localStorage`, permissões de rota avaliadas no cliente, eventos de auditoria em memória e notificações artificiais. Esses comportamentos precisam ser substituídos ou redesenhados antes de qualquer uso com usuários ou informações financeiras reais.
 
 Não inserir segredos, senhas de produção, chaves privadas ou dados pessoais reais no código, no console ou no repositório.
+
+## Organização por módulos no monorepositório
+
+A partir da Etapa 1, o Angular reside integralmente em `frontend/`, enquanto `docs/`, `.github/` e `netlify.toml` ficam na raiz. O diretório `backend/` contém apenas documentação do trabalho Java futuro, sem APIs implementadas. A referência de caminhos da aplicação Angular, para comandos e arquivos, parte de `frontend/`.
