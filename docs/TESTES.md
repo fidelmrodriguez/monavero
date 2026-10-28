@@ -46,6 +46,14 @@ cd backend
 mvn -B -ntp clean verify
 ```
 
+### Verificação obrigatória antes da publicação na Blitz
+
+O backend deve compilar **sem erros** no workflow `Backend Java CI` antes de considerarmos um deploy validado. A Blitz também compila a aplicação no Dockerfile (mesmo com `-DskipTests`): essa opção ignora a execução dos testes, **não** a compilação das classes Java.
+
+Em alterações das entidades JPA ou do `pom.xml`, verificar especialmente declarações duplicadas de atributos/métodos e dependências Maven repetidas. Erros de compilação impedem a publicação da versão nova, embora a Blitz possa continuar servindo a versão anterior.
+
+Após o CI verde, confirmar na Blitz o deploy do **novo commit** e então validar health check, Flyway e os fluxos de autenticação da Etapa 4.
+
 Os testes cobrem identificação da API, health check, geração de OpenAPI, CORS de origem local e rejeição de origem não autorizada. O teste de Spring Modulith verifica ciclos e limites das dependências entre módulos. Na Etapa 3, os testes de contexto e persistência passam a iniciar PostgreSQL 18 isolado com Testcontainers, verificando migração V1, repositórios de usuários e contas e vínculos de titularidade. O CI da Etapa 3 ainda precisa ser observado após o commit; a publicação da API na Blitz não substitui essa verificação.
 
 ## Critério de conclusão da Etapa 1

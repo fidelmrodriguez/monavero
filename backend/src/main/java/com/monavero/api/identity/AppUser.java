@@ -43,16 +43,6 @@ public class AppUser {
     @Column(name = "is_demo", nullable = false)
     private boolean demo = false;
 
-    @Column(name = "password_hash", length = 255)
-    private String passwordHash;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "access_role", nullable = false, length = 16)
-    private AccessRole accessRole = AccessRole.CLIENT;
-
-    @Column(name = "is_demo", nullable = false)
-    private boolean demo = false;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -80,21 +70,6 @@ public class AppUser {
         updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
-    public void configurePassword(String encodedPassword) {
-        if (demo || encodedPassword == null || encodedPassword.isBlank()) {
-            throw new IllegalArgumentException("Credencial inválida");
-        }
-        passwordHash = encodedPassword;
-    }
-
-    public void markAsDemo() {
-        if (passwordHash != null) throw new IllegalStateException("Conta pessoal não pode ser demo");
-        demo = true;
-    }
-
-    public String getPasswordHash() { return passwordHash; }
-    public AccessRole getAccessRole() { return accessRole; }
-    public boolean isDemo() { return demo; }
     public void configurePassword(String encodedPassword) {
         if (demo || encodedPassword == null || encodedPassword.isBlank()) {
             throw new IllegalArgumentException("Credencial inválida");
