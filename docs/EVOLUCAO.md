@@ -10,14 +10,14 @@ O Monavero começa com uma interface Angular funcional e independente de backend
 - Notificações, auditoria local, administração ilustrativa e preferências de tema.
 - Estrutura de testes unitários e configuração de publicação no Netlify.
 
-## Direção planejada: backend Java
+## Backend Java e persistência inicial
 
-Na Etapa 2 foi iniciada uma API **Java 25 com Spring Boot 4.1.1**, com endpoint de identificação, health check, Swagger/OpenAPI, CORS e testes automatizados. A integração ao Angular e a persistência ainda não foram iniciadas; a execução no CI Java e a publicação na nuvem dependem de validação.
+Na Etapa 2 foi iniciada uma API **Java 25 com Spring Boot 4.1.1**, com endpoint de identificação, health check, Swagger/OpenAPI, CORS e testes automatizados. A aplicação está publicada na Blitz. A Etapa 3 acrescenta persistência em PostgreSQL/Neon, Spring Data JPA, Hibernate e Flyway; os testes de integração utilizam PostgreSQL 18 com Testcontainers. A aplicação das migrações no Neon e o CI do backend precisam ser validados após este commit. A integração Angular–Java ainda não foi iniciada.
 
-Áreas de trabalho candidatas, a confirmar conforme os requisitos de cada etapa:
+Frentes de evolução seguintes, preservando o modelo relacional inicial:
 
 1. **Identidade e acesso:** cadastro e autenticação próprios, sessão segura e permissões conferidas no servidor.
-2. **Contas:** titularidade, saldos, consultas e histórico persistidos.
+2. **Contas:** entidades e titularidade já modeladas; consultas autorizadas, saldos operacionais e histórico ainda serão implementados.
 3. **Movimentações:** lançamentos de débito e crédito, regras de saldo, idempotência e consistência transacional.
 4. **Pagamentos:** agendamentos persistidos, estados de processamento e operações demonstrativas verificáveis.
 5. **Auditoria:** eventos gerados no backend, segregação por conta e consulta autorizada.

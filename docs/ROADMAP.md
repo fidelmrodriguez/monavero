@@ -2,12 +2,12 @@
 
 O Monavero evolui de um frontend Angular demonstrativo para um sistema full stack de simulação bancária. **Código entregue** não é o mesmo que **etapa validada**: a validação requer CI e, quando previsto, verificação no ambiente cloud.
 
-| Etapa | Entrega | Situação em 27/10/2026 |
+| Etapa | Entrega | Situação em 28/10/2026 |
 | --- | --- | --- |
 | 0 | Frontend Angular inicial e publicação GitHub/Netlify | **Validada** — frontend publicado e navegação confirmada |
 | 1 | Estrutura limpa, documentação por camada, CI e testes Angular | **Validada** — Frontend Angular CI #3 aprovado no GitHub |
-| 2 | API Java/Spring Boot, módulos, contratos HTTP, testes e health | **Código preparado neste ZIP** — CI Java e publicação cloud pendentes |
-| 3 | PostgreSQL, Spring Data JPA, modelo e migrações Flyway | Planejada |
+| 2 | API Java/Spring Boot, módulos, contratos HTTP, testes e health | **API publicada na Blitz** — Swagger, identificação e health confirmados; CI Java ainda a verificar |
+| 3 | PostgreSQL, Spring Data JPA, modelo e migrações Flyway | **Código entregue neste ZIP** — Neon criado; migração/CI/deploy a validar |
 | 4 | Autenticação própria, cadastro, sessão e autorização no servidor | Planejada |
 | 5 | Contas, saldos, dashboard e extrato persistidos | Planejada |
 | 6 | Transferências internas, lançamentos atômicos, idempotência e concorrência | Planejada |
@@ -23,7 +23,7 @@ O Monavero evolui de um frontend Angular demonstrativo para um sistema full stac
 - **0:** frontend no Netlify, login demonstrativo e rotas internas funcionando.
 - **1:** organização em `frontend/` e `backend/`; build e testes do Angular aprovados no Actions; deploy verificado.
 - **2:** API Java compilada e testada no Actions; health check, identificação e documentação OpenAPI acessíveis em nuvem; Angular continua funcional.
-- **3:** migrações reproduzíveis, conexão e dados persistidos no PostgreSQL de demonstração.
+- **3:** migrações reproduzíveis, CI de persistência aprovado, tabelas criadas no Neon e API reiniciada com conexão saudável; sem exposição pública de dados sem autenticação.
 - **4:** cadastro, login, logout e novo login, além de autorização e isolamento por titularidade.
 - **5:** dashboard, saldos e extrato refletindo dados persistidos e isolados por usuário.
 - **6:** transferências atômicas, sem duplicação nem saldo inválido sob concorrência.

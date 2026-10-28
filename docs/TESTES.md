@@ -46,7 +46,7 @@ cd backend
 mvn -B -ntp clean verify
 ```
 
-Os testes cobrem identificação da API, health check, geração de OpenAPI, CORS de origem local e rejeição de origem não autorizada. O teste de Spring Modulith verifica ciclos e limites das dependências entre módulos. A Etapa 2 está **pendente de execução no GitHub Actions**: a criação do código e do workflow ainda não prova que o CI passou.
+Os testes cobrem identificação da API, health check, geração de OpenAPI, CORS de origem local e rejeição de origem não autorizada. O teste de Spring Modulith verifica ciclos e limites das dependências entre módulos. Na Etapa 3, os testes de contexto e persistência passam a iniciar PostgreSQL 18 isolado com Testcontainers, verificando migração V1, repositórios de usuários e contas e vínculos de titularidade. O CI da Etapa 3 ainda precisa ser observado após o commit; a publicação da API na Blitz não substitui essa verificação.
 
 ## Critério de conclusão da Etapa 1
 
@@ -55,3 +55,17 @@ A Etapa 1 foi **validada** após a publicação no Netlify e a aprovação do wo
 ## Próximos testes
 
 As etapas posteriores acrescentarão testes de domínio, autorização, PostgreSQL com Testcontainers, concorrência, idempotência e consistência transacional, com bancos de teste isolados de ambientes de produção.
+
+## Testes PostgreSQL da Etapa 3
+
+O workflow `backend-ci.yml` executa `mvn -B -ntp clean verify` em runner Ubuntu com Docker. As classes `SystemApiIntegrationTest` e `PersistenceIntegrationTest` utilizam `PostgresIntegrationTest`, que configura um container PostgreSQL 18 temporário por `@DynamicPropertySource`. As variáveis do Neon **não são necessárias nem devem ser colocadas em secrets do Actions**.
+
+Verificações principais:
+
+- Inicialização da aplicação e contrato HTTP com datasource real de teste.
+- Aplicação automática de `V1__initial_banking_schema.sql` pelo Flyway.
+- Validação de esquema Hibernate em `ddl-auto=validate`.
+- Persistência e consulta de usuário, conta e titularidade, com rollback por teste.
+- Verificação de limites modulares pelo Spring Modulith.
+
+Em ambiente próprio com Docker e Java 25: `cd backend && mvn clean verify`. O CI verde será a confirmação do funcionamento; o código foi preparado sem executar os testes Maven completos no ambiente de geração da entrega.

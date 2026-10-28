@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class SystemApiIntegrationTest {
+class SystemApiIntegrationTest extends PostgresIntegrationTest {
 
     @Autowired
     private MockMvc mvc;

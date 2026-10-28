@@ -1,6 +1,6 @@
 # Monavero
 
-**Monavero** é uma aplicação web de banco digital demonstrativo. A experiência de frontend é construída com **Angular 19 e TypeScript** e agora inclui a **fundação de uma API Java com Spring Boot**. O projeto explora a evolução de uma interface financeira funcional para um sistema full stack com autenticação própria, dados persistidos, consistência transacional e auditoria.
+**Monavero** é uma aplicação web de banco digital demonstrativo. A experiência de frontend é construída com **Angular 19 e TypeScript** e agora inclui uma **API Java com persistência inicial em PostgreSQL no Neon**. O projeto explora a evolução de uma interface financeira funcional para um sistema full stack; o banco inicial já é modelado, enquanto autenticação, operações transacionais e auditoria permanecem etapas futuras.
 
 [**Frontend · Angular**](frontend/README.md) · [**Backend · Java**](backend/README.md) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/ROADMAP.md) · [Testes](docs/TESTES.md)
 
@@ -31,9 +31,10 @@ Os componentes e comportamentos de interface são detalhados no [README do front
 | Automação frontend | GitHub Actions (TypeScript, build e testes aprovados na Etapa 1) |
 | Automação backend | GitHub Actions (Maven e testes; validação pendente após commit) |
 | Publicação frontend | Netlify, com build a partir de `frontend/` |
-| Backend (fundação implementada) | Java 25, Spring Boot 4.1.1, Spring MVC, Spring Modulith, Actuator e OpenAPI |
-| Backend (próximas etapas) | Spring Security, autenticação, persistência e operações financeiras |
-| Persistência planejada | PostgreSQL, Spring Data JPA e Flyway |
+| Backend (implementado) | Java 25, Spring Boot 4.1.1, Spring MVC, Spring Modulith, Actuator e OpenAPI |
+| Persistência (Etapa 3) | PostgreSQL 18 no Neon, Spring Data JPA, Hibernate e Flyway (código entregue; deploy a validar) |
+| Testes de persistência | PostgreSQL 18 temporário com Testcontainers em CI |
+| Backend (próximas etapas) | Spring Security, autenticação, consultas bancárias e operações financeiras |
 
 ## Arquitetura e estrutura
 
@@ -55,7 +56,7 @@ monavero/
 └── README.md
 ```
 
-**Estado atual:** o Angular funciona de maneira independente. A API Java possui endpoint público de identificação, health check, Swagger, configuração CORS e testes, mas **não realiza login nem operações financeiras**. Ainda não há PostgreSQL integrado nem endpoints bancários. A separação entre camadas já está organizada, e a migração ocorrerá de forma incremental conforme o [roadmap](docs/ROADMAP.md).
+**Estado atual:** o Angular funciona de maneira independente. A API Java tem endpoint público, health check, Swagger e persistência modelada em PostgreSQL (Etapa 3, deploy pendente). **Não realiza login ou operações financeiras e não expõe endpoints bancários**. A separação entre camadas já está organizada, e a migração ocorrerá de forma incremental conforme o [roadmap](docs/ROADMAP.md).
 
 ## Executar o frontend
 
@@ -89,13 +90,14 @@ mvn clean verify
 mvn spring-boot:run
 ```
 
-A API atende `GET /api/v1/system/info`, `GET /actuator/health` e `/swagger-ui.html`. Ela **ainda não está ligada ao Angular**. Veja o [README do backend](backend/README.md) e o [guia de deploy](docs/DEPLOY_BACKEND.md).
+Antes de iniciar a API, configure `MONAVERO_DB_JDBC_URL`, `MONAVERO_DB_USERNAME` e `MONAVERO_DB_PASSWORD` (veja [Deploy do backend](docs/DEPLOY_BACKEND.md)); `mvn clean verify` utiliza PostgreSQL isolado com Testcontainers e não requer Neon. A API atende `GET /api/v1/system/info`, `GET /actuator/health` e `/swagger-ui.html`. Ela **ainda não está ligada ao Angular**. Veja o [README do backend](backend/README.md) e o [guia de deploy](docs/DEPLOY_BACKEND.md).
 
 ## Documentação
 
 - [Frontend Angular](frontend/README.md): telas, arquitetura, estado, testes e execução da interface.
-- [Backend Java](backend/README.md): API Java existente, execução, endpoints, testes e limites da Etapa 2.
-- [Deploy do backend](docs/DEPLOY_BACKEND.md): preparação Docker, variáveis e validação da API em nuvem.
+- [Backend Java](backend/README.md): API, persistência, execução, endpoints e testes.
+- [Persistência](docs/PERSISTENCIA.md): modelo de dados, regras e migrações Flyway.
+- [Deploy do backend](docs/DEPLOY_BACKEND.md): Blitz, variáveis privadas de banco e validação das migrações no Neon.
 - [Arquitetura](docs/ARQUITETURA.md): fluxo atual da aplicação e evolução para Angular + Java + PostgreSQL.
 - [Funcionalidades](docs/FUNCIONALIDADES.md): escopo demonstrativo implementado.
 - [Testes e CI](docs/TESTES.md): comandos, workflow e critérios de verificação.
@@ -107,4 +109,4 @@ A API atende `GET /api/v1/system/info`, `GET /actuator/health` e `/swagger-ui.ht
 
 O objetivo é implementar gradualmente cadastro, autorização, contas, extrato persistido, transferências internas atômicas, agendamentos, administração e auditoria. Tudo continuará sendo **simulação bancária**, sem integração com instituições financeiras, Pix real ou cobrança efetiva de boletos.
 
-As Etapas 0 e 1 foram validadas com o deploy do frontend e o GitHub Actions aprovado. A Etapa 2 entrega a fundação da API Java; sua validação requer o CI do backend e a publicação em serviço cloud, sem interromper o frontend demonstrativo. Veja o [roadmap](docs/ROADMAP.md) para acompanhar o progresso e distinguir entregas planejadas das verificadas.
+As Etapas 0 e 1 foram validadas, e a API da Etapa 2 está publicada e respondendo na Blitz. A Etapa 3 entrega o modelo PostgreSQL em código; sua validação ainda exige CI Java, migração no Neon e deploy na Blitz, sem interromper o frontend demonstrativo. Veja o [roadmap](docs/ROADMAP.md) para acompanhar o progresso e distinguir entregas planejadas das verificadas.
