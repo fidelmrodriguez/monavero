@@ -3,7 +3,7 @@
     <div>
       <p class="eyebrow">Perfil</p>
       <h1>Preferências e segurança</h1>
-      <p class="muted">Preferências de visualização e sessão de demonstração.</p>
+      <p class="muted">Preferências de visualização e sessão autenticada.</p>
     </div>
     <button class="btn btn-danger" type="button" (click)="authStore.logout()">Sair da conta</button>
   </header>
@@ -14,7 +14,7 @@
       <div>
         <p class="eyebrow">Usuário autenticado</p>
         <h2>{{ authStore.displayName() }}</h2>
-        <p class="muted">Identificação apresentada no ambiente de demonstração.</p>
+        <p class="muted">Identidade validada pelo backend Monavero.</p>
       </div>
     </article>
 
@@ -29,9 +29,9 @@
       </div>
 
       <div class="security-list">
-        <span class="badge">Sessão demonstrativa</span>
+        <span class="badge">Sessão autenticada</span>
         <span class="badge">Auditoria simulada</span>
-        <span class="badge">Navegação por perfil</span>
+        <span class="badge">Permissões do servidor</span>
       </div>
     </article>
   </div>

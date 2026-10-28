@@ -30,7 +30,7 @@ Quando o registro npm estiver acessível, execute `npm install` dentro de `front
 
 ## Revisão funcional no Netlify
 
-- Login demonstrativo com `User` / `1234`, mudança de perfil, navegação e logout.
+- Login demonstrativo com `User` / `1234` editáveis, cadastro pessoal, login posterior, atualização de página e logout. Verificar que não é possível selecionar privilégios de administrador pelo navegador.
 - Atualização direta de rotas internas sem erro 404; verificar SSR e hidratação.
 - Dashboard, extrato, filtros, notificações, auditoria e perfil.
 - Formulários de transferências: validações de saldo, limite, origem e dados obrigatórios.
@@ -69,3 +69,10 @@ Verificações principais:
 - Verificação de limites modulares pelo Spring Modulith.
 
 Em ambiente próprio com Docker e Java 25: `cd backend && mvn clean verify`. O CI verde será a confirmação do funcionamento; o código foi preparado sem executar os testes Maven completos no ambiente de geração da entrega.
+
+
+## Testes da Etapa 4 — autenticação
+
+`AuthIntegrationTest` usa Testcontainers/PostgreSQL 18 e MockMvc para cobrir cadastro, sessão, `GET /me`, logout/revogação, novo login com BCrypt, rejeição de senha incorreta, prevenção de duplicidade, senha curta, demo com papel de cliente e não persistência do token em texto puro. O CI do Angular cobre a tela editável e a integração HTTP de autenticação.
+
+A etapa exige **ambos os workflows verdes** e o teste manual na aplicação publicada: cadastro → logout → login novamente → F5 → logout → token anterior rejeitado. Verifique Flyway V2 na Blitz/Neon. O pacote não recebeu confirmação de execução real de Maven ou de Angular no ambiente de geração; somente o CI após o commit confirma o resultado.

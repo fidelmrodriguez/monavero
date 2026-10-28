@@ -1,18 +1,18 @@
 # Frontend · Monavero
 
-Interface demonstrativa de banco digital desenvolvida com **Angular 19, TypeScript e SCSS**. Reúne dashboard, extrato, formulários financeiros, notificações, administração e navegação responsiva. O frontend funciona independentemente de uma API própria: o login utiliza temporariamente a DummyJSON, e as informações financeiras são **fictícias**.
+Interface demonstrativa de banco digital desenvolvida com **Angular 19, TypeScript e SCSS**. Reúne dashboard, extrato, formulários financeiros, notificações, administração e navegação responsiva. A autenticação foi integrada ao backend Java, enquanto as informações financeiras continuam **fictícias**, com dados de apresentação fornecidos pela DummyJSON e fallback local.
 
-[Visão geral do Monavero](../README.md) · [Backend Java (planejado)](../backend/README.md) · [Arquitetura](../docs/ARQUITETURA.md) · [Funcionalidades](../docs/FUNCIONALIDADES.md) · [Deploy](../docs/DEPLOY_NETLIFY.md)
+[Visão geral do Monavero](../README.md) · [Backend Java](../backend/README.md) · [Arquitetura](../docs/ARQUITETURA.md) · [Funcionalidades](../docs/FUNCIONALIDADES.md) · [Deploy](../docs/DEPLOY_NETLIFY.md)
 
 ## Interface e experiência
 
-- **Acesso:** formulário de usuário, senha e perfil de demonstração; logout e recuperação da sessão no navegador.
+- **Acesso:** formulário com acesso demonstrativo editável, cadastro pessoal, login e logout reais no Java, sessão validada no servidor ao navegar.
 - **Dashboard:** saldos de contas, investimentos, cartões, movimentações recentes, gráficos de fluxo e categorias de despesa.
 - **Extrato:** busca textual e filtros por data, natureza, situação e intervalo de valores.
 - **Transferências:** formulário reativo com validação de campos, limites e saldo; confirmação apenas simulada, sem movimentar valores.
 - **Pagamentos:** cadastro de agendamentos em memória, sem processamento bancário ou armazenamento no servidor.
 - **Notificações e auditoria:** feedback das ações do usuário e registro local de eventos de demonstração.
-- **Administração e perfis:** áreas visuais para cliente, gerente e administrador. A restrição de rotas é feita no Angular e não equivale à autorização do backend.
+- **Administração e perfis:** áreas visuais para cliente, gerente e administrador. O Angular mostra páginas conforme o perfil informado pelo Java; guards são somente complementares à autorização que será aplicada aos endpoints bancários nas próximas etapas.
 - **Responsividade:** navegação lateral e menu adaptáveis, tema claro/escuro, estados vazios e carregamento de páginas sob demanda.
 
 ## Tecnologias e responsabilidades
@@ -22,7 +22,7 @@ Interface demonstrativa de banco digital desenvolvida com **Angular 19, TypeScri
 | Angular 19 + standalone | Componentes, templates e páginas carregadas por rota |
 | TypeScript + SCSS | Tipagem de dados e estilos da interface |
 | Signals + `computed()` | Estado de sessão, tema, notificações e dados derivados |
-| RxJS + HttpClient | Consumo da DummyJSON e tratamento de requisições |
+| RxJS + HttpClient | Consumo da API Java para login e DummyJSON apenas para dados financeiros fictícios |
 | Reactive Forms | Formulários de login, transferências e pagamentos |
 | Angular Router | Guards, resolver do dashboard, redirecionamentos e lazy loading |
 | Angular SSR | Renderização no servidor, hidratação e event replay |
@@ -36,11 +36,11 @@ frontend/
 ├── src/
 │   ├── app/
 │   │   ├── core/
-│   │   │   ├── guards/       # Proteção demonstrativa de rotas
+│   │   │   ├── guards/       # Guards com validação da sessão na API
 │   │   │   ├── interceptors/ # Requisições HTTP
 │   │   │   ├── models/       # Contratos da interface
 │   │   │   ├── resolvers/    # Dados iniciais do dashboard
-│   │   │   ├── services/     # Autenticação externa e dados simulados
+│   │   │   ├── services/     # Auth Java e dados financeiros simulados
 │   │   │   ├── state/        # Sessão, notificações, tema e auditoria
 │   │   │   └── utils/        # Formatação e utilitários
 │   │   ├── features/         # Login, dashboard, extrato, transferências,
@@ -60,13 +60,13 @@ frontend/
 
 As rotas ficam em `src/app/app.routes.ts`. A configuração de serviços, hidratação e interceptors está em `src/app/app.config.ts`. A renderização de servidor é preparada em `src/app/app.config.server.ts` e `server.ts`.
 
-## Integração temporária e estado
+## Autenticação e dados de demonstração
 
-`AuthApiService` executa autenticação de teste em `https://dummyjson.com/auth/login`. As credenciais inicialmente exibidas (`User` e `1234`) são convertidas para uma conta pública da API; são dados de acesso **de demonstração**, não credenciais bancárias. A sessão é salva pelo `AuthStore` em `localStorage` (`monavero-session`).
+`AuthApiService` usa a API Java publicada na Blitz: `POST /api/v1/auth/demo`, `/register`, `/login`, `/logout` e `GET /me`. O endereço público fica em `src/app/core/config/monavero-api.ts`. O formulário inicia com o atalho **User / 1234**, mas os campos são editáveis. O cadastro pessoal exige nome, e-mail e senha de pelo menos 12 caracteres, com login automático após a criação da conta.
 
-`BankingService` consulta recursos públicos da DummyJSON (`/users`, `/products` e `/carts`) e monta visualizações financeiras simuladas. Quando a API não responde, o serviço pode usar dados fictícios locais. Transferências não criam movimentações; agendamentos de pagamento desaparecem após reiniciar a aplicação.
+O servidor atribui o perfil `CLIENT` no cadastro e ao demo, sem aceitar escolha de administrador pelo Angular. `AuthStore` guarda um token opaco em **sessionStorage**, válido por até 12 horas, valida a sessão pelo endpoint `/me` e solicita revogação no logout. A sessão não usa cookies de terceiros, pois Netlify e Blitz estão em domínios diferentes. Armazenamento no navegador continua exigindo proteção contra XSS; veja `docs/SEGURANCA_AUTENTICACAO.md`.
 
-A seleção de perfil `cliente`, `gerente` ou `admin` ocorre no navegador, e os guards conferem apenas esse estado local. Não utilize o ambiente para senhas pessoais ou informações financeiras reais.
+Os dados financeiros de dashboard, cartões, extratos e investimentos continuam **simulados e iguais para todos os perfis**, pois `BankingService` ainda consulta a DummyJSON (`/users`, `/products`, `/carts`) e possui fallback local. Isto não representa a conta bancária real do usuário cadastrado: a integração de titularidade/contas virá na Etapa 5. Transferências e pagamentos não movimentam dinheiro.
 
 ## Executar e validar
 

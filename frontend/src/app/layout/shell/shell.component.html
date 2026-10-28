@@ -16,8 +16,8 @@
 
     <div class="side-card">
       <span class="badge">{{ authStore.role() }}</span>
-      <h3>Ambiente demonstrativo</h3>
-      <p>Dados fictícios, perfis simulados e eventos de auditoria locais.</p>
+      <h3>{{ authStore.isDemo() ? 'Ambiente demonstrativo' : 'Conta pessoal' }}</h3>
+      <p>Dados financeiros fictícios e operações simuladas. Permissões definidas pela API.</p>
     </div>
   </aside>
 

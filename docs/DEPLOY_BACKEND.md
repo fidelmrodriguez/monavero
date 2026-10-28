@@ -75,3 +75,19 @@ O health check pode retornar `DOWN` se o PostgreSQL estiver inacessível. Dados 
 | Nenhum endpoint novo no Swagger | Esperado: Etapa 3 só cria persistência e não expõe CRUD sem autenticação |
 
 A Etapa 4 adicionará Spring Security e autorização. Nada neste deploy habilita transações bancárias reais.
+
+
+## Etapa 4 — publicação da autenticação
+
+A atualização adiciona Spring Security e a migração `V2__authentication_and_sessions.sql`. **Não altere V1 no banco**. Mantenha as quatro variáveis já existentes (`MONAVERO_DB_*` e CORS) e, se desejar desabilitar o login público demo, acrescente `MONAVERO_DEMO_ENABLED=false`. O padrão da aplicação é `true` para demonstração.
+
+1. Confirme que a variável CORS contém a URL **exata** do Netlify (sem barra final), por exemplo `https://monavero.netlify.app`.
+2. Aplique um único commit da Etapa 4 no monorepositório. A Blitz e o Netlify atualizam a partir da `main`.
+3. Confirme ambos os workflows GitHub Actions aprovados; em caso de falha, não considere a etapa validada.
+4. Nos logs da Blitz, verifique que o Flyway aplicou V2 e que Spring Boot terminou de iniciar. `GET /actuator/health` deve continuar `UP`.
+5. No Neon, execute `SELECT version, description, success FROM flyway_schema_history ORDER BY installed_rank;` e confirme V1 e V2 com `success = true`.
+6. Abra o Netlify: tente o acesso demo, crie uma conta pessoal com senha forte, saia, entre novamente com a mesma conta e recarregue a página. O backend deve atribuir `CLIENT`; o frontend não fornece papel admin ou gerente.
+
+**Sem segredos no Git:** não cole connection strings, senhas, tokens ou hashes em README, commits, prints ou logs. O frontend usa um endereço público da API definido em `src/app/core/config/monavero-api.ts`; se o domínio da Blitz mudar, atualize esse arquivo e faça novo build Netlify.
+
+O frontend utiliza `sessionStorage` para o token Bearer (não é cookie entre domínios). Não exponha código não confiável na página; limitação e próximos controles em [Segurança e autenticação](SEGURANCA_AUTENTICACAO.md). O banco financeiro pessoal ainda não foi conectado ao dashboard (Etapa 5).

@@ -22,7 +22,7 @@ Os IDs de usuários e contas são UUIDs; o relacionamento de titularidade no Jav
 - Nenhum usuário ou conta é criado automaticamente em produção.
 - Não há senha, token, dados pessoais reais ou seed de demonstração nesta etapa.
 - O `balance` é iniciado em zero e não há serviços públicos que o alterem. Na Etapa 6, as operações exigirão livro de lançamentos, idempotência e controle de concorrência; o esquema será ampliado por novas migrações.
-- O frontend Angular permanece conectado à DummyJSON e mostra dados simulados independentes do Neon.
+- O frontend Angular usa a API Java para autenticação; somente os dados financeiros fictícios continuam vindo da DummyJSON, independentes do Neon.
 - Nenhum endpoint de leitura ou escrita de usuário, conta ou titularidade é exposto sem Spring Security (Etapa 4).
 
 ## Migrações
@@ -56,3 +56,10 @@ ORDER BY table_name;
 Resultado esperado: histórico Flyway com migração `1` bem-sucedida e três tabelas de negócio. Não há necessidade de compartilhar dados de tabelas ou credenciais.
 
 Os testes de integração usam Testcontainers com PostgreSQL 18 efêmero no CI; **nunca** o banco Neon de produção.
+
+
+## Migração V2 — credenciais e sessões
+
+O arquivo `V2__authentication_and_sessions.sql` adiciona `password_hash` (BCrypt, anulável para compatibilidade com registros anteriores), `access_role` e `is_demo` em `app_users`, além da tabela `auth_sessions`. O banco guarda **somente SHA-256 do token de sessão**, nunca o token original. Sessões expiram em 12 horas e podem ser revogadas. O Flyway mantém V1 imutável.
+
+Esta migração não cria contas bancárias novas nem lançamentos financeiros. O bootstrap da conta demo não cria senha pública de banco; somente associa um usuário marcado como demonstração ao endpoint `/demo`.

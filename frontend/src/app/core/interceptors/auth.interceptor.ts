@@ -1,27 +1,16 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, throwError } from 'rxjs';
 import { AuthStore } from '../state/auth.store';
-import { NotificationStore } from '../state/notification.store';
+import { MONAVERO_API_URL } from '../config/monavero-api';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const authStore = inject(AuthStore);
-  const notificationStore = inject(NotificationStore);
-  const token = authStore.session()?.accessToken;
-  const isExternalApi = req.url.includes('dummyjson.com');
-
-  const request = token && isExternalApi
+  const store = inject(AuthStore);
+  const token = store.session()?.accessToken;
+  // Nunca enviar tokens do Monavero à DummyJSON ou a outros serviços externos.
+  const isMonaveroApi = req.url.startsWith(`${MONAVERO_API_URL}/api/`);
+  const isPublicAuth = /\/api\/v1\/auth\/(login|register|demo)$/.test(req.url);
+  const request = token && isMonaveroApi && !isPublicAuth
     ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
     : req;
-
-  return next(request).pipe(
-    catchError((error) => {
-      notificationStore.add({
-        title: 'Falha de comunicação',
-        message: 'A operação não pôde ser concluída agora.',
-        type: 'danger'
-      });
-      return throwError(() => error);
-    })
-  );
+  return next(request);
 };

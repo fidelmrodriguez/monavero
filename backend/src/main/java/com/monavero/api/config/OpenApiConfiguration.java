@@ -12,7 +12,7 @@ public class OpenApiConfiguration {
     OpenAPI monaveroOpenApi() {
         return new OpenAPI().info(new Info()
             .title("Monavero API")
-            .version("0.2.0")
+            .version("0.4.0")
             .description("API do sistema bancário demonstrativo. Sem operações financeiras reais."));
     }
 }

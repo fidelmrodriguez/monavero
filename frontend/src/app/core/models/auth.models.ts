@@ -1,23 +1,25 @@
 export type UserRole = 'cliente' | 'gerente' | 'admin';
 
-export interface AuthSession {
-  accessToken: string;
-  refreshToken?: string;
-  id: number;
-  username: string;
-  role: UserRole;
-  displayName: 'User';
+export interface AuthProfile {
+  id: string;
+  email: string;
+  name: string;
+  role: 'CLIENT' | 'MANAGER' | 'ADMIN';
+  demo: boolean;
 }
 
-export interface ExternalLoginResponse {
-  id: number;
-  username: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  gender?: string;
-  image?: string;
-  accessToken?: string;
-  token?: string;
-  refreshToken?: string;
+export interface AuthResponse {
+  accessToken: string;
+  expiresAt: string;
+  user: AuthProfile;
+}
+
+export interface AuthSession extends AuthResponse {
+  // Esta informação é apenas visual. O backend sempre verifica o token e o perfil.
+  role: UserRole;
+  displayName: string;
+}
+
+export function toRole(value: AuthProfile['role']): UserRole {
+  return value === 'ADMIN' ? 'admin' : value === 'MANAGER' ? 'gerente' : 'cliente';
 }

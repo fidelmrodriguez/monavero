@@ -4,11 +4,11 @@ Este documento descreve a aplicação tal como implementada no frontend. Todos o
 
 ## Login e sessão
 
-- Formulário reativo com usuário e senha editáveis e perfil selecionável.
+- Formulário reativo com usuário e senha editáveis, além de cadastro de conta pessoal.
 - Credenciais iniciais de teste: `User` e `1234`.
-- Acesso à DummyJSON para obter um token de teste; sessão guardada no navegador.
+- Autenticação própria pelo Spring Security, token opaco e validação da sessão no PostgreSQL.
 - Redirecionamento após login, proteção de rotas e opção de logout.
-- Três perfis visuais: cliente, gerente e administrador. O frontend determina o perfil a partir da seleção no login.
+- Papéis definidos pelo backend; contas novas e demo recebem `CLIENT`. Áreas de gerente e administrador não são liberadas pelo formulário.
 
 ## Painel financeiro
 
@@ -46,7 +46,7 @@ Este documento descreve a aplicação tal como implementada no frontend. Todos o
 
 ## Administração e perfil
 
-- O perfil gerente pode abrir auditoria; o administrador pode abrir auditoria e administração.
+- Rotas reservadas para perfis `MANAGER` e `ADMIN` permanecem previstas na interface; perfis públicos são `CLIENT` e não podem elevar privilégios.
 - A página administrativa exibe políticas e botões que simulam solicitações de revisão.
 - A página de perfil exibe o usuário e permite alternar os temas claro e escuro.
 
@@ -59,4 +59,4 @@ Este documento descreve a aplicação tal como implementada no frontend. Todos o
 
 ## Fora do escopo desta versão
 
-A versão do frontend não contém cadastro de contas bancárias, autenticação bancária própria, ledger, conciliação, histórico persistente, PIX real, processamento de boletos, regras de prevenção a fraude no servidor ou integração com instituições financeiras.
+A versão do frontend não contém cadastro de contas bancárias, ledger, conciliação, histórico persistente, PIX real, processamento de boletos, regras de prevenção a fraude no servidor ou integração com instituições financeiras.

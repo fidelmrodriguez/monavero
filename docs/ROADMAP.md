@@ -6,9 +6,9 @@ O Monavero evolui de um frontend Angular demonstrativo para um sistema full stac
 | --- | --- | --- |
 | 0 | Frontend Angular inicial e publicação GitHub/Netlify | **Validada** — frontend publicado e navegação confirmada |
 | 1 | Estrutura limpa, documentação por camada, CI e testes Angular | **Validada** — Frontend Angular CI #3 aprovado no GitHub |
-| 2 | API Java/Spring Boot, módulos, contratos HTTP, testes e health | **API publicada na Blitz** — Swagger, identificação e health confirmados; CI Java ainda a verificar |
-| 3 | PostgreSQL, Spring Data JPA, modelo e migrações Flyway | **Código entregue neste ZIP** — Neon criado; migração/CI/deploy a validar |
-| 4 | Autenticação própria, cadastro, sessão e autorização no servidor | Planejada |
+| 2 | API Java/Spring Boot, módulos, contratos HTTP, testes e health | **Validada** — API Blitz, Swagger, health e CI Java confirmados |
+| 3 | PostgreSQL, Spring Data JPA, modelo e migrações Flyway | **Validada** — CI verde, Flyway V1 aplicada na Blitz, tabelas e histórico confirmados no Neon |
+| 4 | Autenticação própria, cadastro, sessão e autorização no servidor | **Código entregue** — validar CI, migração V2, deploy e fluxos na interface |
 | 5 | Contas, saldos, dashboard e extrato persistidos | Planejada |
 | 6 | Transferências internas, lançamentos atômicos, idempotência e concorrência | Planejada |
 | 7 | Agendamento seguro de transferências | Planejada |
@@ -24,7 +24,7 @@ O Monavero evolui de um frontend Angular demonstrativo para um sistema full stac
 - **1:** organização em `frontend/` e `backend/`; build e testes do Angular aprovados no Actions; deploy verificado.
 - **2:** API Java compilada e testada no Actions; health check, identificação e documentação OpenAPI acessíveis em nuvem; Angular continua funcional.
 - **3:** migrações reproduzíveis, CI de persistência aprovado, tabelas criadas no Neon e API reiniciada com conexão saudável; sem exposição pública de dados sem autenticação.
-- **4:** cadastro, login, logout e novo login, além de autorização e isolamento por titularidade.
+- **4:** cadastro, login, logout com revogação e novo login; usuário demo; permissão atribuída no servidor. O isolamento de dados bancários fica para a Etapa 5.
 - **5:** dashboard, saldos e extrato refletindo dados persistidos e isolados por usuário.
 - **6:** transferências atômicas, sem duplicação nem saldo inválido sob concorrência.
 - **7:** agendamentos executados somente uma vez, com cancelamento e estados consistentes.

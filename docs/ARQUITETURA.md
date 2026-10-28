@@ -7,24 +7,21 @@ O Monavero é um monorepositório organizado em **frontend Angular** e **backend
 ```text
 Navegador
    │
-   ▼
 Netlify — Angular 19 (SSR + hidratação)
-   │
-   ├── Sessão demonstrativa no navegador
-   ├── Guards e estados de interface
-   ├── Dados financeiros fictícios / fallback local
-   │
-   └── HTTPS → DummyJSON (autenticação e recursos públicos)
+   ├── HTTPS → Blitz — API Java (cadastro/login/demo/me/logout)
+   │                │ Spring Security + sessões SHA-256
+   │                └── PostgreSQL Neon (V1 + V2 Flyway)
+   └── HTTPS → DummyJSON (somente dados financeiros fictícios)
 ```
 
-A DummyJSON fornece recursos públicos que a interface transforma em dados financeiros fictícios. Ela **não** é um serviço bancário nem mantém contas Monavero. As transferências apenas notificam o usuário; os pagamentos agendados existem em memória durante a execução da aplicação.
+A DummyJSON **não** participa da autenticação nem recebe tokens Monavero. Cartões, investimentos e movimentações exibidos continuam fictícios e serão integrados a contas por titularidade na Etapa 5.
 
 ## Estrutura atual do Angular
 
 | Pasta ou arquivo | Responsabilidade |
 | --- | --- |
 | `frontend/src/app/core/models/` | Tipos e contratos usados pela interface. |
-| `frontend/src/app/core/services/auth-api.service.ts` | Login demonstrativo na DummyJSON. |
+| `frontend/src/app/core/services/auth-api.service.ts` | Cadastro, login, demo e logout na API Java. |
 | `frontend/src/app/core/services/banking.service.ts` | Adaptação e fallback de dados financeiros fictícios e pagamentos em memória. |
 | `frontend/src/app/core/state/` | Sessão, notificações, auditoria local e preferências de tema. |
 | `frontend/src/app/core/guards/` | Proteção de rotas com base na sessão e no perfil visual. |
@@ -34,17 +31,17 @@ A DummyJSON fornece recursos públicos que a interface transforma em dados finan
 | `frontend/src/app/app.config.ts` | Angular Router, hidratação, HttpClient e locale pt-BR. |
 | `frontend/server.ts` | Integração SSR com o runtime Angular do Netlify. |
 
-A navegação usa componentes standalone, lazy loading, Angular Router, formulários reativos, Signals e RxJS. A autenticação de demonstração utiliza a chave `monavero-session` em `localStorage` e não é adequada a dados reais.
+A navegação usa componentes standalone, lazy loading, Angular Router, formulários reativos, Signals e RxJS. A sessão autenticada utiliza `monavero-auth-v2` em `sessionStorage`, com validade de 12h e confirmação no servidor. O modelo continua demonstrativo e está sujeito às limitações descritas no guia de segurança.
 
 ## Fluxos atuais
 
 ### Autenticação
 
-1. O usuário vê `User` / `1234` pré-preenchidos e pode editar ambos os campos.
-2. `AuthApiService` converte esse par demonstrativo para uma conta pública de teste e faz login na DummyJSON.
-3. `AuthStore` mantém o token de teste e o papel visual (`cliente`, `gerente`, `admin`) no navegador.
-4. Os guards habilitam a navegação de acordo com o estado local; o servidor externo **não certifica papéis bancários**.
-5. O logout remove a sessão do navegador.
+1. A tela inicia com `User` / `1234` editáveis para abrir uma sessão demo via `POST /api/v1/auth/demo`.
+2. Dados pessoais são enviados por HTTPS para cadastro ou login na API Java; senha tem hash BCrypt no servidor.
+3. A API retorna token opaco, validade e perfil (`CLIENT` por padrão); Angular não aceita definição de administrador pelo usuário.
+4. O navegador armazena token em `sessionStorage`; `GET /me` valida cada navegação protegida. `POST /logout` revoga a sessão no PostgreSQL.
+5. Roles de gerente/administrador permanecem previstas no modelo, mas não são atribuídas no cadastro público.
 
 ### Dados financeiros
 
@@ -54,7 +51,7 @@ A navegação usa componentes standalone, lazy loading, Angular Router, formulá
 
 A API está separada em `backend/`, utilizando Java 25, Spring Boot 4.1.1, Spring Modulith 2.1.1, Spring MVC, OpenAPI e Actuator. O pacote `system/` disponibiliza `GET /api/v1/system/info`; o Actuator expõe `GET /actuator/health` e o Swagger fica em `/swagger-ui.html`. `config/` concentra configuração de CORS por origem explícita, metadados da API e respostas de validação no formato Problem Details.
 
-A Etapa 3 introduz `identity/` (usuários) e `accounts/` (contas e titularidade), Spring Data JPA e Flyway. A migração V1 define `app_users`, `bank_accounts` e `account_holders`, com PKs UUID, FKs, índices e restrições SQL. O backend exige variáveis privadas para conectar ao Neon, utiliza Hibernate em modo `validate` e mantém testes isolados com Testcontainers. O Angular **ainda não se comunica com esta API**. Não há autenticação, endpoints bancários ou operações financeiras no Java. Consulte o [README do backend](../backend/README.md) e o [guia de deploy](DEPLOY_BACKEND.md).
+A Etapa 3 introduz `identity/` (usuários) e `accounts/` (contas e titularidade), Spring Data JPA e Flyway. A migração V1 define `app_users`, `bank_accounts` e `account_holders`, com PKs UUID, FKs, índices e restrições SQL. O backend exige variáveis privadas para conectar ao Neon, utiliza Hibernate em modo `validate` e mantém testes isolados com Testcontainers. Na Etapa 4, o Angular passou a se comunicar com esta API para autenticação. Ainda não existem endpoints bancários nem operações financeiras no Java. Consulte o [README do backend](../backend/README.md) e o [guia de deploy](DEPLOY_BACKEND.md).
 
 ## Arquitetura-alvo
 
@@ -90,3 +87,12 @@ O servidor Java deverá decidir identidade, permissões e titularidade, validar 
 - `backend/` está publicado na Blitz (`https://monavero-api.fidelmrodriguez.blitz.cloud`) com health, info e Swagger. O deploy do modelo PostgreSQL V1 no Neon ainda precisa ser validado após o commit da Etapa 3; o Angular não está integrado à API.
 
 Consulte [Frontend](../frontend/README.md), [Backend](../backend/README.md), [Testes](TESTES.md) e [Roadmap](ROADMAP.md).
+
+
+## Autenticação implementada na Etapa 4
+
+- Angular chama a API Java para cadastro, login e demonstração; a DummyJSON não recebe credenciais nem tokens de autenticação.
+- `auth` em Spring Boot utiliza Spring Security e sessões opacas. O token aleatório de 256 bits é entregue somente na resposta, seu hash SHA-256 é persistido no Neon em `auth_sessions`.
+- Cada chamada protegida valida existência, expiração, revogação e estado do usuário. Papel `CLIENT`, `MANAGER` ou `ADMIN` é atribuído pelo backend, sem escolha por formulário.
+- O login demo é uma conta especial com papel `CLIENT`; pode ser desativado pela variável `MONAVERO_DEMO_ENABLED=false`.
+- Fluxos bancários autenticados e isolados por titularidade serão implementados na Etapa 5. A API não expõe saldos ou contas nesta etapa.

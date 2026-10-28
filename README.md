@@ -1,17 +1,17 @@
 # Monavero
 
-**Monavero** é uma aplicação web de banco digital demonstrativo. A experiência de frontend é construída com **Angular 19 e TypeScript** e agora inclui uma **API Java com persistência inicial em PostgreSQL no Neon**. O projeto explora a evolução de uma interface financeira funcional para um sistema full stack; o banco inicial já é modelado, enquanto autenticação, operações transacionais e auditoria permanecem etapas futuras.
+**Monavero** é uma aplicação web de banco digital demonstrativo. A experiência de frontend é construída com **Angular 19 e TypeScript** e agora inclui uma **API Java com persistência inicial em PostgreSQL no Neon**. O projeto explora a evolução de uma interface financeira funcional para um sistema full stack; a persistência e a autenticação própria com Spring Security já estão implementadas; operações financeiras transacionais e auditoria persistida são etapas futuras.
 
-[**Frontend · Angular**](frontend/README.md) · [**Backend · Java**](backend/README.md) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/ROADMAP.md) · [Testes](docs/TESTES.md)
+[**Frontend · Angular**](frontend/README.md) · [**Backend · Java**](backend/README.md) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/ROADMAP.md) · [Testes](docs/TESTES.md) · [Autenticação](docs/SEGURANCA_AUTENTICACAO.md)
 
 [![Frontend Angular CI](https://img.shields.io/github/actions/workflow/status/fidelmrodriguez/monavero/frontend-ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=Frontend%20CI)](https://github.com/fidelmrodriguez/monavero/actions/workflows/frontend-ci.yml)
 [![Backend Java CI](https://img.shields.io/github/actions/workflow/status/fidelmrodriguez/monavero/backend-ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=Backend%20CI)](https://github.com/fidelmrodriguez/monavero/actions/workflows/backend-ci.yml)
 
-> **Ambiente de demonstração:** Monavero não é um banco nem realiza operações financeiras reais. Contas, saldos, extratos, pagamentos, cartões e investimentos são fictícios. O login usa temporariamente a API pública DummyJSON; não informe senhas pessoais ou dados bancários reais.
+> **Ambiente de demonstração:** Monavero não é um banco nem realiza operações financeiras reais. Contas, saldos, extratos, pagamentos, cartões e investimentos são fictícios. O login e o cadastro utilizam agora autenticação própria da API Java; não informe senhas pessoais ou dados bancários reais.
 
 ## Funcionalidades existentes
 
-- **Acesso demonstrativo:** login e logout, restauração de sessão no navegador e seleção visual entre cliente, gerente e administrador. A escolha de perfil ainda não é autorizada por servidor bancário.
+- **Acesso e cadastro:** autenticação na API Java, login demonstrativo, cadastro pessoal, logout e sessão revogável. Os papéis de acesso são definidos pelo servidor, sem seleção de admin pelo navegador.
 - **Dashboard:** visão de contas, indicadores financeiros, gráfico SVG, cartões, investimentos e movimentações recentes.
 - **Extrato:** pesquisa, filtros por período, tipo, status e valores, com totalização das movimentações exibidas.
 - **Transferências:** formulários e validações de saldo, limite, favorecido e destino, com notificações e registro local de auditoria. **Nenhum valor é debitado ou creditado.**
@@ -26,15 +26,15 @@ Os componentes e comportamentos de interface são detalhados no [README do front
 | --- | --- |
 | Frontend implementado | Angular 19, TypeScript, SCSS, Signals, RxJS, Reactive Forms |
 | Renderização implementada | Angular SSR, hidratação e event replay |
-| Integração temporária | HttpClient com DummyJSON e fallback de dados fictícios |
+| Dados financeiros temporários | HttpClient com DummyJSON somente nos dados financeiros fictícios (não no login) |
 | Testes frontend | Jasmine, Karma e Chrome Headless |
 | Automação frontend | GitHub Actions (TypeScript, build e testes aprovados na Etapa 1) |
-| Automação backend | GitHub Actions (Maven e testes; validação pendente após commit) |
+| Automação backend | GitHub Actions (Maven, Testcontainers e autenticação; validação da Etapa 4 pendente após commit) |
 | Publicação frontend | Netlify, com build a partir de `frontend/` |
 | Backend (implementado) | Java 25, Spring Boot 4.1.1, Spring MVC, Spring Modulith, Actuator e OpenAPI |
-| Persistência (Etapa 3) | PostgreSQL 18 no Neon, Spring Data JPA, Hibernate e Flyway (código entregue; deploy a validar) |
+| Persistência (Etapa 3) | PostgreSQL 18 no Neon, Spring Data JPA, Hibernate e Flyway V1 validada; V2 de autenticação entregue para validação |
 | Testes de persistência | PostgreSQL 18 temporário com Testcontainers em CI |
-| Backend (próximas etapas) | Spring Security, autenticação, consultas bancárias e operações financeiras |
+| Backend (próximas etapas) | Consultas bancárias e operações financeiras; autenticação com Spring Security já implementada |
 
 ## Arquitetura e estrutura
 
@@ -56,7 +56,7 @@ monavero/
 └── README.md
 ```
 
-**Estado atual:** o Angular funciona de maneira independente. A API Java tem endpoint público, health check, Swagger e persistência modelada em PostgreSQL (Etapa 3, deploy pendente). **Não realiza login ou operações financeiras e não expõe endpoints bancários**. A separação entre camadas já está organizada, e a migração ocorrerá de forma incremental conforme o [roadmap](docs/ROADMAP.md).
+**Estado atual:** o Angular utiliza a API Java para autenticação e a DummyJSON exclusivamente para os dados financeiros simulados. A API tem health, Swagger, persistência PostgreSQL e endpoints de cadastro, login, demonstração e logout. **Ainda não realiza operações financeiras nem expõe endpoints bancários**. A separação entre camadas já está organizada, e a migração ocorrerá de forma incremental conforme o [roadmap](docs/ROADMAP.md).
 
 ## Executar o frontend
 
@@ -68,7 +68,7 @@ npm install
 npm run dev
 ```
 
-Abra `http://localhost:4200`. O formulário apresenta as credenciais fictícias `User` / `1234`; essas credenciais de demonstração são convertidas para uma conta pública de teste da DummyJSON. O acesso requer conexão com a API externa.
+Abra `http://localhost:4200`. O formulário inicia com `User` / `1234` editáveis para acesso demonstrativo autenticado pela API Java; também é possível criar uma conta pessoal. O cadastro exige senha de pelo menos 12 caracteres. O frontend depende da API Java para autenticação.
 
 ```bash
 npm run typecheck
@@ -90,7 +90,7 @@ mvn clean verify
 mvn spring-boot:run
 ```
 
-Antes de iniciar a API, configure `MONAVERO_DB_JDBC_URL`, `MONAVERO_DB_USERNAME` e `MONAVERO_DB_PASSWORD` (veja [Deploy do backend](docs/DEPLOY_BACKEND.md)); `mvn clean verify` utiliza PostgreSQL isolado com Testcontainers e não requer Neon. A API atende `GET /api/v1/system/info`, `GET /actuator/health` e `/swagger-ui.html`. Ela **ainda não está ligada ao Angular**. Veja o [README do backend](backend/README.md) e o [guia de deploy](docs/DEPLOY_BACKEND.md).
+Antes de iniciar a API, configure `MONAVERO_DB_JDBC_URL`, `MONAVERO_DB_USERNAME` e `MONAVERO_DB_PASSWORD` (veja [Deploy do backend](docs/DEPLOY_BACKEND.md)); `mvn clean verify` utiliza PostgreSQL isolado com Testcontainers e não requer Neon. A API atende identificação, health e Swagger, além dos endpoints de autenticação em `/api/v1/auth/*`. Ela **já está ligada ao Angular para autenticação**, mas não para dados financeiros. Veja o [README do backend](backend/README.md) e o [guia de deploy](docs/DEPLOY_BACKEND.md).
 
 ## Documentação
 
@@ -107,6 +107,6 @@ Antes de iniciar a API, configure `MONAVERO_DB_JDBC_URL`, `MONAVERO_DB_USERNAME`
 
 ## Evolução
 
-O objetivo é implementar gradualmente cadastro, autorização, contas, extrato persistido, transferências internas atômicas, agendamentos, administração e auditoria. Tudo continuará sendo **simulação bancária**, sem integração com instituições financeiras, Pix real ou cobrança efetiva de boletos.
+O objetivo é evoluir a autenticação já implementada com contas, extrato persistido, transferências internas atômicas, agendamentos, administração e auditoria. Tudo continuará sendo **simulação bancária**, sem integração com instituições financeiras, Pix real ou cobrança efetiva de boletos.
 
-As Etapas 0 e 1 foram validadas, e a API da Etapa 2 está publicada e respondendo na Blitz. A Etapa 3 entrega o modelo PostgreSQL em código; sua validação ainda exige CI Java, migração no Neon e deploy na Blitz, sem interromper o frontend demonstrativo. Veja o [roadmap](docs/ROADMAP.md) para acompanhar o progresso e distinguir entregas planejadas das verificadas.
+As Etapas 0 a 3 foram validadas, incluindo CI Java, Blitz e migração V1 no Neon. A Etapa 4 entrega autenticação própria, integração Angular e migração V2; sua validação exige ambos os workflows, novo deploy e teste completo de cadastro e login. Veja o [roadmap](docs/ROADMAP.md) para acompanhar o progresso e distinguir entregas planejadas das verificadas.
