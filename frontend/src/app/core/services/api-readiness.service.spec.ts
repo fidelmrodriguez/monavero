@@ -4,8 +4,18 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { defer, of, throwError } from 'rxjs';
 import { MONAVERO_API_URL } from '../config/monavero-api';
 
+/**
+ * O JSON de um Response nativo usa Web Streams e pode resolver fora da fila
+ * controlada pelo fakeAsync no Chrome Headless. Este dublê simula somente
+ * os campos efetivamente consumidos pelo ApiReadinessService, mantendo o
+ * parse JSON assíncrono de forma determinística nos testes.
+ */
 function response(body: string, contentType: string): Response {
-  return new Response(body, { status: 200, headers: { 'Content-Type': contentType } });
+  return {
+    ok: true,
+    headers: new Headers({ 'Content-Type': contentType }),
+    json: () => Promise.resolve(JSON.parse(body))
+  } as Response;
 }
 
 describe('ApiReadinessService', () => {
