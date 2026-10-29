@@ -100,7 +100,40 @@ form {
   gap: 16px;
 }
 
+.login-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.demo-role-top {
+  flex: 1;
+  min-width: 0;
+  max-width: 450px;
+  display: grid;
+  gap: 6px;
+}
+
+.demo-role-top label {
+  font-size: .82rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.demo-role-top .input {
+  width: 100%;
+  min-height: 42px;
+}
+
+.login-error {
+  margin: 0;
+  line-height: 1.5;
+}
+
 .theme-button {
+  margin-left: auto;
+  flex-shrink: 0;
   justify-self: end;
   border: 1px solid var(--border);
   background: var(--surface-soft);
@@ -146,10 +179,8 @@ form {
 .auth-tabs button { border: 1px solid var(--border); border-radius: 12px; padding: 12px; cursor: pointer; background: var(--surface-soft); color: var(--text); font-weight: 700; }
 .auth-tabs button.selected { background: var(--primary); color: white; border-color: var(--primary); }
 
-.demo-role-note {
-  display: block;
-  color: var(--muted);
-  font-size: .82rem;
-  line-height: 1.45;
-  margin-top: 6px;
+@media (max-width: 520px) {
+  .login-topbar { flex-wrap: wrap; }
+  .login-topbar .theme-button { order: -1; }
+  .demo-role-top { flex-basis: 100%; max-width: none; }
 }

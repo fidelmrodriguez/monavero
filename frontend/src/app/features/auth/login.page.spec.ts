@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { of } from 'rxjs';
+import { loginIdentifierValidator } from './login.page';
+import { FormControl } from '@angular/forms';
 import { AuthStore } from '../../core/state/auth.store';
 import { LoginPage } from './login.page';
 
@@ -29,7 +31,8 @@ describe('LoginPage', () => {
 
   it('exibe os três perfis apenas na demonstração, sem permitir atribuir papel no cadastro', () => {
     expect(fixture.nativeElement.textContent).toContain('Monavero');
-    expect(fixture.nativeElement.querySelector('#role')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.login-topbar #role')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('form #role')).toBeNull();
     expect(fixture.nativeElement.querySelectorAll('#role option').length).toBe(3);
     component.changeMode('register');
     fixture.detectChanges();
@@ -58,6 +61,51 @@ describe('LoginPage', () => {
     component.submit();
     expect(loginSpy).toHaveBeenCalledWith('pessoal@exemplo.com', 'senha-segura');
     expect(demoSpy).not.toHaveBeenCalled();
+  });
+
+  it('exige e-mail para contas pessoais, mas mantém o atalho User', () => {
+    expect(loginIdentifierValidator(new FormControl('User'))).toBeNull();
+    expect(loginIdentifierValidator(new FormControl('pessoal@exemplo.com'))).toBeNull();
+    expect(loginIdentifierValidator(new FormControl('Pessoa Exemplo'))).toEqual({ emailOrDemo: true });
+    expect(loginIdentifierValidator(new FormControl('usuario-invalido'))).toEqual({ emailOrDemo: true });
+  });
+
+  it('não envia ao backend um nome sem e-mail; explica como entrar na conta', () => {
+    const store = TestBed.inject(AuthStore);
+    const loginSpy = spyOn(store, 'login').and.returnValue(of(null));
+    component.form.controls.username.setValue('Fulano');
+    component.submit();
+    fixture.detectChanges();
+    expect(loginSpy).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('O nome não é usado para login');
+  });
+
+  it('limpa 1234 ao trocar User pelo e-mail da conta pessoal', () => {
+    expect(component.form.controls.password.value).toBe('1234');
+    component.form.controls.username.setValue('pessoal@exemplo.com');
+    component.onUsernameInput();
+    expect(component.form.controls.password.value).toBe('');
+    expect(component.form.invalid).toBeTrue();
+  });
+
+  it('mostra ajuda quando o backend rejeita as credenciais da conta', () => {
+    const store = TestBed.inject(AuthStore);
+    const loginSpy = spyOn(store, 'login').and.returnValue(of(null));
+    component.form.patchValue({ username: 'pessoal@exemplo.com', password: 'senha-segura-2026' });
+    component.submit();
+    fixture.detectChanges();
+    expect(loginSpy).toHaveBeenCalledWith('pessoal@exemplo.com', 'senha-segura-2026');
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('e-mail do cadastro');
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).not.toContain('senha-segura-2026');
+  });
+
+  it('envia cadastro pessoal com e-mail e a senha escolhida', () => {
+    const store = TestBed.inject(AuthStore);
+    const registerSpy = spyOn(store, 'register').and.returnValue(of(null));
+    component.changeMode('register');
+    component.registration.setValue({ name: 'Pessoa Exemplo', email: 'pessoal@exemplo.com', password: 'senha-segura-2026' });
+    component.submit();
+    expect(registerSpy).toHaveBeenCalledWith('Pessoa Exemplo', 'pessoal@exemplo.com', 'senha-segura-2026');
   });
 
   it('exige senha forte no cadastro', () => {

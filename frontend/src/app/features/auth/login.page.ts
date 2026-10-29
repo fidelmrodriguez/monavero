@@ -1,9 +1,16 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormControl, NonNullableFormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthStore } from '../../core/state/auth.store';
 import { ThemeStore } from '../../core/state/theme.store';
 import { UserRole } from '../../core/models/auth.models';
+
+/** O backend identifica contas pessoais pelo e-mail único; apenas User é um atalho demo. */
+export function loginIdentifierValidator(control: AbstractControl): ValidationErrors | null {
+  const identifier = String(control.value ?? '').trim();
+  if (!identifier || identifier.toLowerCase() === 'user') return null;
+  return Validators.email(new FormControl(identifier)) === null ? null : { emailOrDemo: true };
+}
 
 @Component({
   selector: 'app-login-page',
@@ -18,10 +25,11 @@ export class LoginPage {
   protected readonly authStore = inject(AuthStore);
   protected readonly themeStore = inject(ThemeStore);
   readonly mode = signal<'login' | 'register'>('login');
+  readonly loginError = signal<string | null>(null);
 
   // Os dois campos continuam editáveis e começam com o atalho do ambiente demo.
   readonly form = this.fb.group({
-    username: ['User', [Validators.required]],
+    username: ['User', [Validators.required, loginIdentifierValidator]],
     password: ['1234', [Validators.required, Validators.minLength(4)]],
     role: this.fb.control<UserRole>('cliente', [Validators.required])
   });
@@ -31,9 +39,22 @@ export class LoginPage {
     password: ['', [Validators.required, Validators.minLength(12), Validators.maxLength(72)]]
   });
 
-  changeMode(mode: 'login' | 'register'): void { this.mode.set(mode); }
+  onUsernameInput(): void {
+    this.loginError.set(null);
+    // A senha pré-preenchida pertence somente ao atalho demo. Não a envie em um login pessoal.
+    if (this.form.controls.username.value.trim().toLowerCase() !== 'user' &&
+        this.form.controls.password.value === '1234') {
+      this.form.controls.password.setValue('');
+    }
+  }
+
+  changeMode(mode: 'login' | 'register'): void {
+    this.loginError.set(null);
+    this.mode.set(mode);
+  }
 
   submit(): void {
+    this.loginError.set(null);
     if (this.mode() === 'register') {
       if (this.registration.invalid) { this.registration.markAllAsTouched(); return; }
       const { name, email, password } = this.registration.getRawValue();
@@ -42,10 +63,16 @@ export class LoginPage {
     }
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     const { username, password, role } = this.form.getRawValue();
-    const guest = username.trim().toLowerCase() === 'user' && password === '1234';
+    const identifier = username.trim();
+    const guest = identifier.toLowerCase() === 'user' && password === '1234';
     // A opção de perfil vale apenas para User/1234; contas reais usam o papel da API.
-    const request = guest ? this.authStore.demo(role) : this.authStore.login(username, password);
-    request.subscribe(session => this.finish(session));
+    const request = guest ? this.authStore.demo(role) : this.authStore.login(identifier, password);
+    request.subscribe(session => {
+      if (session) { this.finish(session); return; }
+      this.loginError.set(guest
+        ? 'Não foi possível abrir a demonstração. Verifique a conexão e tente novamente.'
+        : 'Não foi possível entrar. Para uma conta criada, use o e-mail do cadastro e a senha escolhida (não o nome nem a senha 1234 da demonstração).');
+    });
   }
 
   private finish(session: unknown): void {
