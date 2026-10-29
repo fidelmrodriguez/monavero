@@ -54,6 +54,7 @@ export class LoginPage {
   }
 
   submit(): void {
+    if (this.authStore.isLoading()) return; // impede solicitações duplicadas
     this.loginError.set(null);
     if (this.mode() === 'register') {
       if (this.registration.invalid) { this.registration.markAllAsTouched(); return; }

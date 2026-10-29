@@ -14,6 +14,7 @@ Interface demonstrativa de banco digital desenvolvida com **Angular 19, TypeScri
 - **Notificações e auditoria:** feedback das ações do usuário e registro local de eventos de demonstração.
 - **Administração e perfis:** áreas visuais de cliente, gerente e administrador para avaliação técnica. Com `User` / `1234`, o seletor do login escolhe a **visualização de demonstração** (inclusive auditoria/administração). O backend continua atribuindo `CLIENT` à conta demo; nenhum privilégio de API pode ser concedido pelo seletor. Para contas pessoais, sempre vale o perfil recebido do Java.
 - **Responsividade:** navegação lateral e menu adaptáveis, tema claro/escuro, estados vazios e carregamento de páginas sob demanda.
+- **Carregamento e despertar:** a tela inicial exibe um indicador antes do bootstrap Angular; depois, o aplicativo aguarda o endpoint público `/api/v1/system/info` da API Java na Blitz. Só considera o backend pronto quando recebe JSON com `application: monavero-api` e `status: available`, não quando a Blitz responde HTML de cold start. Consulta automaticamente a cada 5 segundos com limite de 12 segundos por tentativa e contador visual. Os guards aguardam o servidor antes de validar a sessão; login e cadastro mostram progresso e bloqueiam envios duplicados. A consulta é anônima e não envia credenciais nem tokens.
 
 ## Tecnologias e responsabilidades
 

@@ -108,6 +108,29 @@ describe('LoginPage', () => {
     expect(registerSpy).toHaveBeenCalledWith('Pessoa Exemplo', 'pessoal@exemplo.com', 'senha-segura-2026');
   });
 
+  it('exibe carregamento e bloqueia envio duplicado durante autenticação', () => {
+    const store = TestBed.inject(AuthStore);
+    const demoSpy = spyOn(store, 'demo').and.returnValue(of(null));
+    store.isLoading.set(true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.auth-progress')?.textContent).toContain('Autenticando');
+    expect(fixture.nativeElement.querySelector('.login-card').getAttribute('aria-busy')).toBe('true');
+    component.submit();
+    expect(demoSpy).not.toHaveBeenCalled();
+    store.isLoading.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.auth-progress')).toBeNull();
+  });
+
+  it('indica criação da conta quando o cadastro está em processamento', () => {
+    const store = TestBed.inject(AuthStore);
+    component.changeMode('register');
+    store.isLoading.set(true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.auth-progress')?.textContent).toContain('Criando sua conta');
+    store.isLoading.set(false);
+  });
+
   it('exige senha forte no cadastro', () => {
     component.registration.setValue({ name: 'Teste', email: 'teste@exemplo.com', password: 'curta' });
     expect(component.registration.invalid).toBeTrue();

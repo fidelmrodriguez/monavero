@@ -13,10 +13,17 @@
     </div>
   </section>
 
-  <section class="login-card card">
+  <section class="login-card card" [attr.aria-busy]="authStore.isLoading()">
+    @if (authStore.isLoading()) {
+      <div class="auth-progress" role="status" aria-live="polite">
+        <span class="monavero-spinner" aria-hidden="true"></span>
+        <strong>{{ mode() === 'login' ? 'Autenticando...' : 'Criando sua conta...' }}</strong>
+        <span>Aguarde a confirmação da API Java.</span>
+      </div>
+    }
     <div class="auth-tabs" role="group" aria-label="Modalidade de acesso">
-      <button type="button" [class.selected]="mode() === 'login'" (click)="changeMode('login')">Entrar</button>
-      <button type="button" [class.selected]="mode() === 'register'" (click)="changeMode('register')">Criar conta</button>
+      <button type="button" [disabled]="authStore.isLoading()" [class.selected]="mode() === 'login'" (click)="changeMode('login')">Entrar</button>
+      <button type="button" [disabled]="authStore.isLoading()" [class.selected]="mode() === 'register'" (click)="changeMode('register')">Criar conta</button>
     </div>
 
     <div class="login-topbar">

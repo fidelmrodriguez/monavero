@@ -1,5 +1,23 @@
 <router-outlet />
 
+@if (!apiReadiness.ready()) {
+  <main class="api-wakeup" role="status" aria-live="polite" aria-label="Inicialização do Monavero">
+    <section class="api-wakeup-card">
+      <div class="api-wakeup-logo" aria-hidden="true">M</div>
+      <p class="api-wakeup-kicker">MONAVERO · INTERNET BANKING</p>
+      <h1>Preparando seu acesso</h1>
+      <p class="api-wakeup-description">Conectando ao servidor bancário de demonstração.</p>
+      <div class="api-wakeup-status">
+        <span class="monavero-spinner" aria-hidden="true"></span>
+        <span>Aguardando a API Java despertar na Blitz Cloud</span>
+      </div>
+      <p class="api-wakeup-time" aria-label="Tempo decorrido" aria-live="off">{{ apiReadiness.elapsedLabel() }}</p>
+      <p class="api-wakeup-hint">No plano gratuito, o primeiro acesso pode levar alguns minutos. A conexão é verificada automaticamente.</p>
+    </section>
+  </main>
+}
+
+
 @if (showToasts()) {
   <div class="toast-stack" aria-live="polite" aria-atomic="true">
     @for (toast of notificationStore.toasts(); track toast.id) {

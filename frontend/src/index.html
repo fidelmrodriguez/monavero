@@ -8,8 +8,20 @@
   <meta name="description" content="Monavero: experiência demonstrativa de banco digital com contas, cartões, extrato e transferências em Angular.">
   <meta name="theme-color" content="#30206f">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <style>
+    .monavero-boot { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px; background: #f4f7fb; color: #111827; font: 600 16px system-ui, sans-serif; text-align: center; }
+    .monavero-boot-inner { display: grid; justify-items: center; gap: 18px; }
+    .monavero-boot-spinner { display: block; width: 42px; height: 42px; border: 4px solid #dbe3ef; border-top-color: #5b47d6; border-radius: 50%; animation: monavero-boot-spin .8s linear infinite; }
+    @keyframes monavero-boot-spin { to { transform: rotate(360deg); } }
+    @media (prefers-color-scheme: dark) { .monavero-boot { background: #0b1020; color: #f8fafc; } }
+    @media (prefers-reduced-motion: reduce) { .monavero-boot-spinner { animation: none; } }
+  </style>
 </head>
 <body>
-  <app-root></app-root>
+  <app-root>
+    <div class="monavero-boot" role="status" aria-live="polite">
+      <div class="monavero-boot-inner"><span class="monavero-boot-spinner" aria-hidden="true"></span><span>Carregando Monavero...</span></div>
+    </div>
+  </app-root>
 </body>
 </html>

@@ -102,7 +102,7 @@ form {
 
 .login-topbar {
   display: flex;
-  align-items: center;
+  align-items: flex-end; /* botão na mesma linha/base do select, abaixo do label */
   gap: 14px;
   justify-content: space-between;
 }
@@ -165,7 +165,7 @@ form {
   background: var(--surface-soft);
   color: var(--text);
   border-radius: 999px;
-  min-height: 38px;
+  min-height: 42px;
   padding: 0 14px;
   font-weight: 800;
 }
@@ -207,6 +207,26 @@ form {
 
 @media (max-width: 520px) {
   .login-topbar { flex-wrap: wrap; }
-  .login-topbar .theme-button { order: -1; }
   .demo-role-top { flex-basis: 100%; max-width: none; }
 }
+
+/* Bloqueia novos cliques durante login/cadastro e evita múltiplos POST. */
+.auth-progress {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  border-radius: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  color: var(--text);
+  text-align: center;
+  backdrop-filter: blur(4px);
+}
+.auth-progress .monavero-spinner { width: 38px; height: 38px; border-width: 4px; }
+.auth-progress strong { font-size: 1.2rem; }
+.auth-progress span:last-child { color: var(--muted); font-size: .9rem; }

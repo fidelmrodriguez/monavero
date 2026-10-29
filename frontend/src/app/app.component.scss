@@ -1,0 +1,44 @@
+/* Camada global de prontidão, usada também quando o usuário abre uma rota protegida. */
+.api-wakeup {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 20px;
+  background: radial-gradient(circle at 16% 14%, rgba(91, 71, 214, .16), transparent 42%), var(--bg);
+  color: var(--text);
+}
+
+.api-wakeup-card {
+  width: min(100%, 470px);
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: clamp(28px, 6vw, 48px);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.api-wakeup-logo {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  border-radius: 19px;
+  background: linear-gradient(135deg, #31206f, #5b47d6);
+  color: #fff;
+  font-weight: 900;
+  font-size: 2rem;
+}
+
+.api-wakeup-kicker { margin: 8px 0 0; color: var(--primary); font-size: .72rem; font-weight: 800; letter-spacing: .12em; }
+.api-wakeup-card h1 { margin: 0; font-size: clamp(1.6rem, 5vw, 2rem); }
+.api-wakeup-description { margin: 0; color: var(--muted); line-height: 1.5; }
+.api-wakeup-status { display: flex; gap: 11px; align-items: center; justify-content: center; margin-top: 14px; font-weight: 600; font-size: .9rem; }
+.api-wakeup-time { margin: 4px 0 0; font-size: 1.8rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.api-wakeup-hint { margin: 0; padding: 13px; border-radius: 14px; background: var(--surface-soft); color: var(--muted); font-size: .83rem; line-height: 1.55; }

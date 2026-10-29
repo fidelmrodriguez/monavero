@@ -497,3 +497,17 @@ td {
     bottom: 16px;
   }
 }
+
+/* Feedback visual acessível de processamento e conexão com a API. */
+.monavero-spinner {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: monavero-spin .8s linear infinite;
+}
+@keyframes monavero-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .monavero-spinner { animation: none; } }
