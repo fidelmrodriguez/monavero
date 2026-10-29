@@ -145,3 +145,11 @@ form {
 .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .auth-tabs button { border: 1px solid var(--border); border-radius: 12px; padding: 12px; cursor: pointer; background: var(--surface-soft); color: var(--text); font-weight: 700; }
 .auth-tabs button.selected { background: var(--primary); color: white; border-color: var(--primary); }
+
+.demo-role-note {
+  display: block;
+  color: var(--muted);
+  font-size: .82rem;
+  line-height: 1.45;
+  margin-top: 6px;
+}

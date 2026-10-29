@@ -10,7 +10,9 @@ export const permissionGuard: CanActivateFn = (route) => {
   const router = inject(Router);
   const allowedRoles = route.data['roles'] as UserRole[] | undefined;
 
-  if (!allowedRoles?.length || allowedRoles.includes(authStore.role())) {
+  // Páginas de auditoria/administração são simulações locais para avaliar a UI.
+  // O backend segue autorizando exclusivamente pelo papel real do token.
+  if (!allowedRoles?.length || allowedRoles.includes(authStore.viewRole())) {
     return true;
   }
 

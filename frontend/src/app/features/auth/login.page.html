@@ -36,6 +36,15 @@
           }
         </div>
         <div class="field">
+          <label for="role">Visualizar como (demonstração)</label>
+          <select id="role" class="input" formControlName="role">
+            <option value="cliente">Cliente</option>
+            <option value="gerente">Gerente</option>
+            <option value="admin">Administrador</option>
+          </select>
+          <small class="demo-role-note">Use User / 1234 para explorar cada perfil. Essa seleção muda somente as telas de exemplo; o servidor mantém o papel CLIENT.</small>
+        </div>
+        <div class="field">
           <label for="password">Senha</label>
           <input id="password" class="input" type="password" formControlName="password" autocomplete="current-password" />
           @if (form.controls.password.touched && form.controls.password.invalid) {
@@ -49,7 +58,7 @@
       <div class="credentials">
         <strong>Acesso de demonstração</strong>
         <span>Usuário: User · Senha: 1234</span>
-        <small>O atalho abre uma sessão demonstrativa na API. Não use dados bancários reais.</small>
+        <small>As três modalidades usam User / 1234. A demonstração de gerente/admin não concede privilégios na API. Não use dados reais.</small>
       </div>
     } @else {
       <p class="eyebrow">Conta pessoal</p>

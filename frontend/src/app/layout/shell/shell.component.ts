@@ -41,7 +41,7 @@ export class ShellComponent {
   ];
 
   protected readonly visibleNavigation = computed(() => {
-    const role = this.authStore.role();
+    const role = this.authStore.viewRole();
     return this.navigation.filter((item) => !item.roles || item.roles.includes(role));
   });
 

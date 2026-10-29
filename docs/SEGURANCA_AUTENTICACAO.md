@@ -7,7 +7,7 @@
 - Demo em `/demo`: conta especial criada no backend (sem senha reutilizável); acesso público para avaliação, com papel `CLIENT`, habilitado por padrão. Desabilitar em produção não demonstrativa com `MONAVERO_DEMO_ENABLED=false`.
 - Cada login recebe token Bearer opaco aleatório de 32 bytes e expiração em 12h. `auth_sessions` persiste apenas SHA-256, vencimento e revogação. A cada chamada autenticada o Spring Security valida sessão, usuário ativo e papel.
 - `GET /me` e `POST /logout` exigem token. O logout revoga a sessão no banco. Ao receber resposta de sessão inválida, o Angular remove a sessão local.
-- Os perfis não são selecionáveis no frontend. A interface nunca concede permissões a si própria; novas rotas REST deverão sempre verificar titularidade e autorização no Java.
+- O login demonstrativo permite escolher Cliente, Gerente ou Administrador com o mesmo atalho `User` / `1234`, exclusivamente para **pré-visualizar as telas simuladas**. O papel real do demo na API permanece `CLIENT`, sem elevação de acesso. O seletor não participa do cadastro pessoal nem das credenciais enviadas ao backend. Guards do Angular protegem a experiência visual, mas não servem como autorização de API; endpoints REST devem verificar titularidade e papéis no Java.
 
 ## Limitações assumidas e próximos controles
 
@@ -23,7 +23,9 @@
 2. Cadastro → logout → login com mesma conta → F5 mantendo a sessão.
 3. Logout invalida a sessão no servidor; token antigo deve retornar 401 em `/me`.
 4. Senha incorreta retorna 401; cadastro com e-mail repetido retorna 409.
-5. Atalho `User`/`1234` deve criar sessão demonstrativa de cliente, sem permitir elevar privilégio pelo formulário.
+5. Atalho `User`/`1234` deve exibir Cliente, Gerente e Administrador no seletor visual, sem elevar o papel `CLIENT` na API nem permitir cadastro público de administradores.
+6. Selecionar Administrador no demo → navegar em Administração/Auditoria → atualizar (F5) e abrir outra aba: a visualização persiste, mas `GET /me` deve continuar retornando `CLIENT`.
+7. Usar credenciais pessoais com o seletor em Administrador: o backend deve continuar determinando o papel real, sem qualquer elevação.
 
 ## Verificação de sincronização entre abas
 

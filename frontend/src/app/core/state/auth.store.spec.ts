@@ -109,6 +109,45 @@ describe('AuthStore entre abas', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/login');
   });
 
+  it('sincroniza e preserva o perfil visual admin entre abas e após validar /me', async () => {
+    const first = newTab();
+    first.demo('admin').subscribe();
+    expect(first.viewRole()).toBe('admin');
+    expect(first.role()).toBe('cliente'); // Papel real definido pela API.
+    expect(first.session()?.user.role).toBe('CLIENT');
+
+    sessionStorage.removeItem(STORAGE_KEY);
+    const second = newTab();
+    await second.waitForTabSession();
+    expect(second.viewRole()).toBe('admin');
+    expect(second.role()).toBe('cliente');
+    second.validateSession().subscribe(accepted => expect(accepted).toBeTrue());
+    expect(second.viewRole()).toBe('admin');
+    expect(second.role()).toBe('cliente');
+  });
+
+  it('restaura a visualização de gerente depois de F5', () => {
+    const first = newTab();
+    first.demo('gerente').subscribe();
+    expect(first.viewRole()).toBe('gerente');
+
+    // Um novo AuthStore simula o reload no mesmo sessionStorage.
+    const reloaded = newTab();
+    expect(reloaded.viewRole()).toBe('gerente');
+    expect(reloaded.role()).toBe('cliente');
+    expect(reloaded.session()?.user.role).toBe('CLIENT');
+  });
+
+  it('não permite usar o perfil visual em uma sessão pessoal da API', () => {
+    const first = newTab();
+    const personal: AuthProfile = { ...profile, demo: false };
+    api.login.and.returnValue(of({ ...response, user: personal }));
+    first.login('pessoal@exemplo.com', 'senha-valida').subscribe();
+    expect(first.role()).toBe('cliente');
+    expect(first.viewRole()).toBe('cliente');
+    expect(first.session()?.demoViewRole).toBeUndefined();
+  });
+
   it('não restaura a sessão depois de um logout durante validação pendente', () => {
     const first = newTab();
     first.demo().subscribe();

@@ -15,9 +15,14 @@
     </nav>
 
     <div class="side-card">
-      <span class="badge">{{ authStore.role() }}</span>
+      <span class="badge">{{ authStore.viewRole() }}</span>
       <h3>{{ authStore.isDemo() ? 'Ambiente demonstrativo' : 'Conta pessoal' }}</h3>
-      <p>Dados financeiros fictícios e operações simuladas. Permissões definidas pela API.</p>
+      <p>Dados financeiros fictícios e operações simuladas.</p>
+      @if (authStore.isDemo()) {
+        <p>Perfil visual para avaliação técnica. Na API, a conta continua CLIENT.</p>
+      } @else {
+        <p>Permissões reais definidas pela API.</p>
+      }
     </div>
   </aside>
 

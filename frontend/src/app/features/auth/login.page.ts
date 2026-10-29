@@ -3,6 +3,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { AuthStore } from '../../core/state/auth.store';
 import { ThemeStore } from '../../core/state/theme.store';
+import { UserRole } from '../../core/models/auth.models';
 
 @Component({
   selector: 'app-login-page',
@@ -21,7 +22,8 @@ export class LoginPage {
   // Os dois campos continuam editáveis e começam com o atalho do ambiente demo.
   readonly form = this.fb.group({
     username: ['User', [Validators.required]],
-    password: ['1234', [Validators.required, Validators.minLength(4)]]
+    password: ['1234', [Validators.required, Validators.minLength(4)]],
+    role: this.fb.control<UserRole>('cliente', [Validators.required])
   });
   readonly registration = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(160)]],
@@ -39,9 +41,10 @@ export class LoginPage {
       return;
     }
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
-    const { username, password } = this.form.getRawValue();
+    const { username, password, role } = this.form.getRawValue();
     const guest = username.trim().toLowerCase() === 'user' && password === '1234';
-    const request = guest ? this.authStore.demo() : this.authStore.login(username, password);
+    // A opção de perfil vale apenas para User/1234; contas reais usam o papel da API.
+    const request = guest ? this.authStore.demo(role) : this.authStore.login(username, password);
     request.subscribe(session => this.finish(session));
   }
 

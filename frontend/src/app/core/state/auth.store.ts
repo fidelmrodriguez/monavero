@@ -30,7 +30,13 @@ export class AuthStore implements OnDestroy {
   private readonly sessionState = signal<AuthSession | null>(this.restoreSession());
   readonly session = this.sessionState.asReadonly();
   readonly isAuthenticated = computed(() => Boolean(this.sessionState()?.accessToken));
+  /** Papel real retornado pelo backend. Nunca é modificado pela seleção do demo. */
   readonly role = computed<UserRole>(() => this.sessionState()?.role ?? 'cliente');
+  /** Perfil visual do portfólio. Somente sessões marcadas como demo pela API podem simulá-lo. */
+  readonly viewRole = computed<UserRole>(() => {
+    const session = this.sessionState();
+    return session?.user.demo ? (this.safeDemoRole(session.demoViewRole) ?? this.role()) : this.role();
+  });
   readonly displayName = computed(() => this.sessionState()?.displayName ?? 'User');
   readonly isDemo = computed(() => Boolean(this.sessionState()?.user.demo));
   readonly isLoading = signal(false);
@@ -63,8 +69,8 @@ export class AuthStore implements OnDestroy {
     return this.handle(this.api.register(name, email, password));
   }
 
-  demo(): Observable<AuthSession | null> {
-    return this.handle(this.api.demo());
+  demo(viewRole: UserRole = 'cliente'): Observable<AuthSession | null> {
+    return this.handle(this.api.demo(), viewRole);
   }
 
   /** Valida a sessão salva no servidor, incluindo expiração, revogação e papel atual. */
@@ -78,7 +84,10 @@ export class AuthStore implements OnDestroy {
       map(profile => {
         // Um logout em outra aba pode ocorrer enquanto /me ainda está em voo.
         if (this.sessionState()?.accessToken !== session.accessToken) return false;
-        this.setSession({ ...session, user: profile, role: toRole(profile.role), displayName: profile.name }, false);
+        this.setSession({
+          ...session, user: profile, role: toRole(profile.role), displayName: profile.name,
+          demoViewRole: profile.demo && session.user.demo ? this.safeDemoRole(session.demoViewRole) : undefined
+        }, false);
         return true;
       }),
       catchError(() => {
@@ -98,10 +107,13 @@ export class AuthStore implements OnDestroy {
     }
   }
 
-  private handle(request: Observable<AuthResponse>): Observable<AuthSession | null> {
+  private handle(request: Observable<AuthResponse>, demoViewRole?: UserRole): Observable<AuthSession | null> {
     this.isLoading.set(true);
     return request.pipe(
-      map(response => ({ ...response, role: toRole(response.user.role), displayName: response.user.name })),
+      map(response => ({
+        ...response, role: toRole(response.user.role), displayName: response.user.name,
+        demoViewRole: response.user.demo ? this.safeDemoRole(demoViewRole) : undefined
+      })),
       tap(session => {
         this.setSession(session);
         this.audit.register('Login realizado', 'Autenticação', 'sucesso', session.role);
@@ -182,7 +194,8 @@ export class AuthStore implements OnDestroy {
     const session: AuthSession = {
       ...message.session,
       role: toRole(message.session.user.role),
-      displayName: message.session.user.name
+      displayName: message.session.user.name,
+      demoViewRole: message.session.user.demo ? this.safeDemoRole(message.session.demoViewRole) : undefined
     };
     this.setSession(session, false);
     // Login em outra aba atualiza também uma aba que estava na tela de login.
@@ -215,6 +228,10 @@ export class AuthStore implements OnDestroy {
       typeof session.expiresAt === 'string' && Date.parse(session.expiresAt) > Date.now();
   }
 
+  private safeDemoRole(role: unknown): UserRole | undefined {
+    return role === 'cliente' || role === 'gerente' || role === 'admin' ? role : undefined;
+  }
+
   private restoreSession(): AuthSession | null {
     if (!this.isBrowser) return null;
     // Nunca reutilizar o token da antiga API DummyJSON.
@@ -223,7 +240,14 @@ export class AuthStore implements OnDestroy {
     if (!raw) return null;
     try {
       const value = JSON.parse(raw) as unknown;
-      if (this.isValidSession(value)) return value;
+      if (this.isValidSession(value)) {
+        return {
+          ...value,
+          role: toRole(value.user.role),
+          displayName: value.user.name,
+          demoViewRole: value.user.demo ? this.safeDemoRole(value.demoViewRole) : undefined
+        };
+      }
     } catch { /* Sessão anterior inválida. */ }
     sessionStorage.removeItem(STORAGE_KEY);
     return null;
