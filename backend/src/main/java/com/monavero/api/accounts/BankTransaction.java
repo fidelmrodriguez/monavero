@@ -34,6 +34,9 @@ public class BankTransaction {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
+    @Column(name = "transfer_id")
+    private UUID transferId;
+
     protected BankTransaction() { }
 
     public BankTransaction(UUID accountId, OffsetDateTime occurredAt, String description,
@@ -50,6 +53,13 @@ public class BankTransaction {
         this.amount = amount;
     }
 
+    public BankTransaction(UUID accountId, OffsetDateTime occurredAt, String description,
+                           String category, String movementType, BigDecimal amount, UUID transferId) {
+        this(accountId, occurredAt, description, category, movementType, amount);
+        if (transferId == null) throw new IllegalArgumentException("Identificador da transferência obrigatório");
+        this.transferId = transferId;
+    }
+
     public UUID getId() { return id; }
     public UUID getAccountId() { return accountId; }
     public OffsetDateTime getOccurredAt() { return occurredAt; }
@@ -57,4 +67,5 @@ public class BankTransaction {
     public String getCategory() { return category; }
     public String getMovementType() { return movementType; }
     public BigDecimal getAmount() { return amount; }
+    public UUID getTransferId() { return transferId; }
 }

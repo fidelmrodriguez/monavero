@@ -109,3 +109,20 @@ Veja [Persistência](../docs/PERSISTENCIA.md) e [Roadmap](../docs/ROADMAP.md).
 - Somente o usuário demonstrativo recebe dados fictícios persistidos. O perfil visual Gerente/Administrador não altera o token nem as permissões da API.
 - Flyway V4 cria `account_transactions` sem alterar as migrações V1–V3.
 - Transferências, pagamentos, investimentos e cartões reais serão implementados em etapas futuras.
+
+### Etapa 6 — transferências internas
+
+`POST /api/v1/banking/transfers` exige `Authorization: Bearer <token>` e JSON:
+
+```json
+{
+  "originAccountId": "UUID_DA_CONTA_ORIGEM",
+  "destinationAgency": "0001",
+  "destinationAccountNumber": "MV0123456789AB",
+  "amount": 25.37,
+  "description": "Transferência demonstrativa",
+  "idempotencyKey": "UUID_UNICO_POR_TENTATIVA"
+}
+```
+
+**Atenção:** números de conta do exemplo são ilustrativos, use os retornados pelo endpoint `GET /api/v1/banking/overview`. Resposta inclui ID da transferência, contas de origem/destino, valor, data e status. A mesma chave e o mesmo conteúdo devolvem o mesmo recibo; conteúdo diferente com a mesma chave retorna 409. Transferências só ocorrem entre contas Monavero e apenas o demo pode usar a segunda conta demo; nenhuma movimentação bancária real é feita.

@@ -33,3 +33,21 @@
   color: var(--muted);
   line-height: 1.55;
 }
+
+.demo-fill {
+  width: 100%;
+  padding: 10px 14px;
+  text-align: left;
+  white-space: normal;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--text);
+}
+.success-note {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--surface-soft);
+  font-weight: 700;
+}

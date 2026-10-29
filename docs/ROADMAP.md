@@ -8,9 +8,9 @@ O Monavero evolui de um frontend Angular demonstrativo para um sistema full stac
 | 1 | Estrutura limpa, documentação por camada, CI e testes Angular | **Validada** — Frontend Angular CI #3 aprovado no GitHub |
 | 2 | API Java/Spring Boot, módulos, contratos HTTP, testes e health | **Validada** — API Blitz, Swagger, health e CI Java confirmados |
 | 3 | PostgreSQL, Spring Data JPA, modelo e migrações Flyway | **Validada** — CI verde, Flyway V1 aplicada na Blitz, tabelas e histórico confirmados no Neon |
-| 4 | Autenticação própria, cadastro, sessão e autorização no servidor | **Código entregue** — validar CI, migração V2, deploy e fluxos na interface |
-| 5 | Contas, saldos, dashboard e extrato persistidos | Planejada |
-| 6 | Transferências internas, lançamentos atômicos, idempotência e concorrência | Planejada |
+| 4 | Autenticação própria, cadastro, sessão e autorização no servidor | **Validada funcionalmente** — Spring Security, Flyway V3, login, logout e sessão entre abas |
+| 5 | Contas, saldos, dashboard e extrato persistidos | **Implementada; validação operacional pendente** — V4, dashboard, extrato e CI backend verde |
+| 6 | Transferências internas, lançamentos atômicos, idempotência e concorrência | **Código preparado; aguardando CI e deploy** |
 | 7 | Agendamento seguro de transferências | Planejada |
 | 8 | Pagamentos demonstrativos e agendamentos persistidos | Planejada |
 | 9 | Administração, autorização e auditoria de operações | Planejada |
@@ -42,3 +42,7 @@ Monavero é demonstrativo. Não implementará Pix real, integração com institu
 ### Atualização — Etapa 5
 
 Implementação preparada: provisionamento de contas por usuário, movimentações persistidas no PostgreSQL (Flyway V4), isolamento pelo titular autenticado, dados demonstrativos separados de contas pessoais, integração Angular do dashboard/extrato, recuperação de indisponibilidade temporária da Blitz e navegação sem piscar o formulário. A etapa só deve ser marcada concluída após CI, migração e testes na Blitz/Netlify.
+
+### Atualização — Etapa 6
+
+Transferências **imediatas** entre contas Monavero, com validação de titularidade e saldo no servidor, travas PostgreSQL ordenadas, dois lançamentos simétricos em uma transação de banco, chave de idempotência e Flyway V5. A identidade demo possui duas contas fictícias e só pode transferir entre elas. Não há PIX/TED externo nem agendamento antecipado (Etapa 7). **Validação pendente:** Backend Java CI, Frontend Angular CI, V5 no Neon e teste pela interface na Blitz/Netlify.

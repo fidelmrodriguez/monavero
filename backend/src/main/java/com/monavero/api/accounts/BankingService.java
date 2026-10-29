@@ -27,25 +27,32 @@ public class BankingService {
         this.jdbc = jdbc;
     }
 
-    /** Cria uma conta somente quando necessário, serializando requisições concorrentes do mesmo usuário. */
+    /** Consulta contas e extrato sempre com filtro por titular; nenhuma conta de terceiro aparece. */
     @Transactional
     public BankingDtos.Overview overview(AuthenticatedUser principal) {
-        BankAccount account = accountFor(principal);
-        List<BankingDtos.Movement> movements = transactions
-            .findTop100ByAccountIdOrderByOccurredAtDesc(account.getId())
-            .stream().map(tx -> new BankingDtos.Movement(
-                tx.getId(), tx.getOccurredAt(), tx.getDescription(), tx.getCategory(),
-                tx.getMovementType().toLowerCase(Locale.ROOT), "concluido",
+        ensurePrimary(principal);
+        List<AccountHolder> belonging = holders.findByUserId(principal.id());
+        belonging.sort(java.util.Comparator.comparing(holder -> holder.getHolderRole() != HolderRole.PRIMARY));
+        List<BankAccount> ownedAccounts = belonging.stream()
+            .map(holder -> accounts.findById(holder.getAccountId()).orElseThrow()).toList();
+        List<BankingDtos.Account> summaries = ownedAccounts.stream()
+            .map(account -> new BankingDtos.Account(account.getId(),
+                account.getAccountType() == AccountType.SAVINGS ? "Conta poupança" : "Conta corrente",
+                account.getBranchCode(), account.getAccountNumber(), account.getBalance(), account.getCurrency()))
+            .toList();
+        List<BankingDtos.Movement> movements = ownedAccounts.stream()
+            .flatMap(account -> transactions.findTop100ByAccountIdOrderByOccurredAtDesc(account.getId()).stream())
+            .sorted(java.util.Comparator.comparing(BankTransaction::getOccurredAt).reversed())
+            .limit(100)
+            .map(tx -> new BankingDtos.Movement(tx.getId(), tx.getOccurredAt(), tx.getDescription(),
+                tx.getCategory(), tx.getMovementType().toLowerCase(Locale.ROOT), "concluido",
                 tx.getAmount(), "internet banking"))
             .toList();
-        BankingDtos.Account summary = new BankingDtos.Account(account.getId(),
-            account.getAccountType() == AccountType.SAVINGS ? "Conta poupança" : "Conta corrente",
-            account.getBranchCode(), account.getAccountNumber(), account.getBalance(), account.getCurrency());
-        return new BankingDtos.Overview(List.of(summary), movements);
+        return new BankingDtos.Overview(summaries, movements);
     }
 
-    private BankAccount accountFor(AuthenticatedUser principal) {
-        // A trava transacional do PostgreSQL cobre duas abas e várias instâncias da aplicação.
+    /** Provisionamento idempotente, com trava compartilhada entre abas e instâncias Java. */
+    BankAccount ensurePrimary(AuthenticatedUser principal) {
         jdbc.execute((org.springframework.jdbc.core.ConnectionCallback<Void>) connection -> {
             try (var statement = connection.prepareStatement("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))")) {
                 statement.setString(1, principal.id().toString());
@@ -55,15 +62,32 @@ public class BankingService {
         });
         List<AccountHolder> belonging = holders.findByUserId(principal.id());
         if (!belonging.isEmpty()) {
-            // Não expor uma conta de terceiro: a titularidade é a fonte de autorização.
-            return accounts.findById(belonging.get(0).getAccountId()).orElseThrow();
+            AccountHolder primary = belonging.stream()
+                .filter(holder -> holder.getHolderRole() == HolderRole.PRIMARY)
+                .findFirst().orElse(belonging.get(0));
+            BankAccount account = accounts.findById(primary.getAccountId()).orElseThrow();
+            if (principal.demo() && belonging.size() == 1) createDemoDestination(principal.id());
+            return account;
         }
-        String number = "MV" + UUID.randomUUID().toString().replace("-", "")
-            .substring(0, 12).toUpperCase(Locale.ROOT);
-        BankAccount account = accounts.saveAndFlush(new BankAccount(number, "0001", AccountType.CHECKING));
+        BankAccount account = accounts.saveAndFlush(new BankAccount(uniqueNumber(), "0001", AccountType.CHECKING));
         holders.saveAndFlush(new AccountHolder(account.getId(), principal.id(), HolderRole.PRIMARY));
-        if (principal.demo()) seedDemo(account);
+        if (principal.demo()) {
+            seedDemo(account);
+            createDemoDestination(principal.id());
+        }
         return account;
+    }
+
+    private void createDemoDestination(UUID userId) {
+        // Segunda conta da identidade demonstrativa: permite testar transferências sem
+        // transferir o saldo público de demonstração a usuários pessoais.
+        BankAccount second = accounts.saveAndFlush(new BankAccount(uniqueNumber(), "0001", AccountType.SAVINGS));
+        holders.saveAndFlush(new AccountHolder(second.getId(), userId, HolderRole.CO_HOLDER));
+    }
+
+    private String uniqueNumber() {
+        return "MV" + UUID.randomUUID().toString().replace("-", "")
+            .substring(0, 12).toUpperCase(Locale.ROOT);
     }
 
     private void seedDemo(BankAccount account) {
@@ -90,6 +114,6 @@ public class BankingService {
         }
         transactions.saveAll(items);
         account.setDemonstrationBalance(balance);
-        accounts.save(account);
+        accounts.saveAndFlush(account);
     }
 }

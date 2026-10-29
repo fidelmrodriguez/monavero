@@ -103,3 +103,7 @@ A API Java será construída em `backend/`. Quando existir, os serviços do Angu
 - Não são utilizadas respostas da DummyJSON para saldos ou transações. Contas pessoais começam vazias; apenas o usuário demo vê produtos de investimento/cartão fictícios como referência visual.
 - Falhas temporárias 502/503/504 ou de rede da Blitz acionam o despertar da API e repetição limitada, sem repetir credenciais incorretas (401).
 - O indicador de autenticação permanece na tela até a navegação concluir, sem reaparecer o formulário entre o login e o dashboard.
+
+### Etapa 6 — transferências internas
+
+A página **Transferências** consulta contas reais da API, valida dados no formulário e executa `POST /api/v1/banking/transfers`. O spinner permanece durante a confirmação. Sucesso só é exibido após retorno da API e o saldo é recarregado. Se a conexão com a Blitz cair, a mesma chave de idempotência pode ser reutilizada sem duplicar o débito. A conta demo oferece um botão para preencher a segunda conta fictícia de destino. Agendamentos ainda não são implementados.

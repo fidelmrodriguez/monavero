@@ -72,3 +72,21 @@ export interface ScheduledPayment {
   date: string;
   status: 'agendado' | 'processando' | 'concluido';
 }
+
+/** Operação atômica entre contas existentes do Monavero (não é PIX/TED externo). */
+export interface TransferRequest {
+  originAccountId: string;
+  destinationAgency: string;
+  destinationAccountNumber: string;
+  amount: number;
+  description: string;
+  idempotencyKey: string;
+}
+export interface TransferReceipt {
+  id: string;
+  originAccountId: string;
+  destinationAccountId: string;
+  amount: number;
+  executedAt: string;
+  status: 'concluido';
+}

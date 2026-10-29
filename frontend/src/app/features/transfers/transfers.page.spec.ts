@@ -1,75 +1,75 @@
 import { provideHttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { DashboardOverview } from '../../core/models/banking.models';
 import { BankingService } from '../../core/services/banking.service';
+import { AuthStore } from '../../core/state/auth.store';
 import { TransfersPage } from './transfers.page';
 
 const overviewFixture: DashboardOverview = {
   accounts: [
-    { id: 'acc-corrente', label: 'Conta corrente', agency: '0001', number: '12345-6', balance: 10000, currency: 'BRL' }
+    { id: 'd785cbbb-a054-4006-9cc9-663eeb9e1536', label: 'Conta corrente', agency: '0001',
+      number: 'MV123456789012', balance: 10000, currency: 'BRL' },
+    { id: '2ff15191-5e46-44da-b073-8b16e2e06d54', label: 'Conta poupança', agency: '0001',
+      number: 'MV000001234567', balance: 0, currency: 'BRL' }
   ],
-  investments: [],
-  cards: [],
-  transactions: [],
-  cashflow: [],
-  expensesByCategory: []
-};
-
-const bankingServiceStub = {
-  getOverview: () => of(overviewFixture)
+  investments: [], cards: [], transactions: [], cashflow: [], expensesByCategory: []
 };
 
 describe('TransfersPage', () => {
-  let component: TransfersPage;
   let fixture: ComponentFixture<TransfersPage>;
-
+  let bankingService: jasmine.SpyObj<BankingService>;
   beforeEach(async () => {
+    bankingService = jasmine.createSpyObj('BankingService', ['getOverview', 'transfer']);
+    bankingService.getOverview.and.returnValue(of(overviewFixture));
+    bankingService.transfer.and.returnValue(of({
+      id: '5a468cc2-5ef5-40c6-a882-3f3ba555a73b',
+      originAccountId: overviewFixture.accounts[0].id,
+      destinationAccountId: overviewFixture.accounts[1].id,
+      amount: 25, executedAt: new Date().toISOString(), status: 'concluido'
+    }));
     await TestBed.configureTestingModule({
       imports: [TransfersPage],
-      providers: [
-        provideRouter([]),
-        provideHttpClient(),
-        { provide: BankingService, useValue: bankingServiceStub }
-      ]
+      providers: [provideRouter([]), provideHttpClient(),
+        { provide: BankingService, useValue: bankingService },
+        { provide: AuthStore, useValue: { role: () => 'cliente', isDemo: () => true } }]
     }).compileComponents();
-
     fixture = TestBed.createComponent(TransfersPage);
-    component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
-  it('deve criar a página de transferências', () => {
-    expect(component).toBeTruthy();
+  it('deve carregar a conta persistente e permitir preencher conta de demonstração', () => {
+    expect(fixture.nativeElement.querySelector('#originAccount').value)
+      .toBe(overviewFixture.accounts[0].id);
+    const fill = fixture.nativeElement.querySelector('.demo-fill') as HTMLButtonElement;
+    expect(fill).not.toBeNull();
+    fill.click();
+    fixture.detectChanges();
+    expect((fixture.nativeElement.querySelector('#accountNumber') as HTMLInputElement).value)
+      .toBe(overviewFixture.accounts[1].number);
   });
 
-  it('deve impedir o envio se não existir uma conta de origem disponível', () => {
-    const service = TestBed.inject(BankingService);
-    const getOverview = spyOn(service, 'getOverview').and.returnValue(of({ ...overviewFixture, accounts: [] }));
-    const isolatedFixture = TestBed.createComponent(TransfersPage);
-    isolatedFixture.detectChanges();
-
-    const button = isolatedFixture.nativeElement.querySelector('button[type=submit]') as HTMLButtonElement;
-    expect(button.disabled).toBeTrue();
-    expect(isolatedFixture.nativeElement.textContent).toContain('Nenhuma conta de origem disponível');
-
-    isolatedFixture.destroy();
-    getOverview.and.callThrough();
-  });
-
-  it('deve atualizar a validação de saldo quando o valor muda', () => {
+  it('envia para a API e confirma somente depois da resposta', () => {
+    (fixture.nativeElement.querySelector('.demo-fill') as HTMLButtonElement).click();
     const amount = fixture.nativeElement.querySelector('#amount') as HTMLInputElement;
-    amount.value = '11000';
+    amount.value = '25';
     amount.dispatchEvent(new Event('input'));
     fixture.detectChanges();
-    amount.dispatchEvent(new Event('blur'));
+    (fixture.nativeElement.querySelector('button[type=submit]') as HTMLButtonElement).click();
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Saldo insuficiente');
+    expect(bankingService.transfer).toHaveBeenCalledTimes(1);
+    expect(bankingService.transfer.calls.mostRecent().args[0].amount).toBe(25);
+    expect(fixture.nativeElement.textContent).toContain('confirmada e registrada');
+  });
 
-    amount.value = '500';
-    amount.dispatchEvent(new Event('input'));
+  it('não reporta sucesso diante de falha da API', () => {
+    bankingService.transfer.and.returnValue(throwError(() => ({ status: 422 })));
+    (fixture.nativeElement.querySelector('.demo-fill') as HTMLButtonElement).click();
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).not.toContain('Saldo insuficiente');
+    (fixture.nativeElement.querySelector('button[type=submit]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Transferência recusada');
+    expect(fixture.nativeElement.textContent).not.toContain('confirmada e registrada');
   });
 });

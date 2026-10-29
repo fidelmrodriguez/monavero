@@ -65,3 +65,15 @@ A versão do frontend não contém cadastro de contas bancárias, ledger, concil
 ### Etapa 5 — persistência financeira
 
 Dashboard e extrato passam a consumir contas e lançamentos reais no Neon, isolados por identidade autenticada. As movimentações fictícias da conta demo são persistidas; usuários pessoais têm contas independentes, iniciadas sem movimentações. Transferências, pagamentos e funcionalidades de cartões/investimentos continuam no roadmap.
+
+### Etapa 6 — transferências internas persistentes
+
+- Envio imediato entre contas com agência e número existentes no Monavero; não há integração com instituições financeiras reais.
+- Origem obrigatoriamente vinculada ao usuário autenticado; perfil visual de gerente/admin nunca concede autorização bancária.
+- Valor positivo com duas casas decimais, limite de R$ 50 mil, saldo suficiente e contas ativas em BRL, todos verificados pelo backend.
+- Travas de linha PostgreSQL em ordem determinística e uma única transação ACID para débito, crédito, registro da transferência e dois lançamentos em `account_transactions`.
+- Identificador de idempotência por requisição para evitar transferência duplicada quando a Blitz retornar 502 ou a conexão cair após a gravação.
+- Ambiente demonstrativo: duas contas fictícias (corrente e poupança), com botão para preencher o destino; transferências do usuário demo ficam restritas a contas da mesma demonstração.
+- Saldo e extrato são consultados novamente na API depois da confirmação; falha na operação não produz notificação de sucesso.
+- Flyway V5 cria `bank_transfers` e correlaciona lançamentos via `transfer_id`, preservando V1-V4.
+- Agendamento é escopo exclusivo da Etapa 7.

@@ -31,6 +31,23 @@ describe('BankingService persistente', () => {
     expect(total).toBe(450.5);
   });
 
+  it('envia transferência com chave de idempotência ao backend', () => {
+    const request = { originAccountId: '123', destinationAgency: '0001',
+      destinationAccountNumber: 'MV98765', amount: 12.50,
+      description: 'teste', idempotencyKey: 'c94f8c31-abd6-49b1-bd99-d91d4072d2a9' };
+    let completed = false;
+    service.transfer(request).subscribe(result => {
+      expect(result.status).toBe('concluido');
+      completed = true;
+    });
+    const call = http.expectOne(`${MONAVERO_API_URL}/api/v1/banking/transfers`);
+    expect(call.request.method).toBe('POST');
+    expect(call.request.body).toEqual(request);
+    call.flush({ id: 't1', originAccountId: '123', destinationAccountId: '456',
+      amount: 12.50, executedAt: new Date().toISOString(), status: 'concluido' });
+    expect(completed).toBeTrue();
+  });
+
   it('não inventa saldos quando a API responde sem contas', () => {
     service.getOverview().subscribe(value => {
       expect(value.accounts).toEqual([]);

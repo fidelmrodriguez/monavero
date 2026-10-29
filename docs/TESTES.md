@@ -129,3 +129,14 @@ apagar registros do banco.
 3. Confirmar Flyway em `public.flyway_schema_history` (versões 1–4) e inicialização do backend sem erro.
 4. Verificar login de duas contas pessoais distintas: contas/lançamentos não devem se misturar; depois de sair e entrar novamente, o identificador da conta deve permanecer.
 5. Confirmar User/1234 com histórico de demonstração e observar que 502 de despertar não encerra a sessão; login concluído deve ir direto ao dashboard.
+
+### Etapa 6 — transferências
+
+A classe `TransferIntegrationTest` usa Testcontainers/PostgreSQL real no CI para verificar:
+- Flyway V5 aplicada e contexto Spring carregado.
+- Autenticação obrigatória, permissão por titularidade e isolamento da demonstração.
+- Transferência atômica entre duas contas do demo, conservação do total e dois lançamentos simétricos.
+- Reenvio com a mesma chave de idempotência, sem novo débito; chave reaproveitada com outro valor retorna 409.
+- Saldo insuficiente e origem igual ao destino são rejeitados.
+
+Os testes Angular verificam a chamada HTTP, confirmação somente após sucesso e tratamento de falha. **Não executar `-DskipTests` como critério de aprovação da etapa**: usar `mvn -B -ntp clean verify` no CI e `npm test -- --watch=false` conforme workflow Angular. Não considerar a etapa validada sem CI e deploy.

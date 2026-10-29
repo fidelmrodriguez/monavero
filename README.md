@@ -113,3 +113,7 @@ As Etapas 0 a 3 foram validadas, incluindo CI Java, Blitz e migração V1 no Neo
 
 
 **Etapa 5 em validação:** API `GET /api/v1/banking/overview` e migração V4 para contas/extrato persistentes por usuário. Melhorias de recuperação da Blitz e navegação após login incluídas. Não considerar concluída sem CI e deploy validados.
+
+### Etapa 6 — transferências internas (em validação)
+
+Backend 0.6.0-SNAPSHOT: saldo e lançamentos atômicos, idempotência e autenticação por titularidade; Flyway V5. Frontend: formulário de transferência imediata, atualização de saldo/extrato e modo demo seguro com duas contas. Não há PIX real, agendamento ou movimentação de dinheiro verdadeiro. Validar CI de backend/frontend e deploy antes de marcar a etapa concluída.

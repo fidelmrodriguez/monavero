@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { MONAVERO_API_URL } from '../config/monavero-api';
-import { AccountSummary, DashboardOverview, FinancePoint, ScheduledPayment, Transaction } from '../models/banking.models';
+import { AccountSummary, DashboardOverview, FinancePoint, ScheduledPayment, Transaction, TransferReceipt, TransferRequest } from '../models/banking.models';
 import { AuthStore } from '../state/auth.store';
 import { ApiReadinessService } from './api-readiness.service';
 import { uid } from '../utils/formatters';
@@ -33,6 +33,13 @@ export class BankingService {
   getOverview(): Observable<DashboardOverview> {
     return this.apiReadiness.recover(this.http.get<BankingResponse>(this.url)).pipe(
       map(response => this.toOverview(response))
+    );
+  }
+
+  /** Uma tentativa usa sempre a mesma chave; o backend garante idempotência. */
+  transfer(request: TransferRequest): Observable<TransferReceipt> {
+    return this.apiReadiness.recover(
+      this.http.post<TransferReceipt>(`${MONAVERO_API_URL}/api/v1/banking/transfers`, request)
     );
   }
 
