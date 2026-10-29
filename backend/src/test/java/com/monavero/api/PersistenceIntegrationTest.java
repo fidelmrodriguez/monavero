@@ -35,6 +35,26 @@ class PersistenceIntegrationTest extends PostgresIntegrationTest {
             .isEqualTo(3);
     }
 
+
+    @Test
+    void flywayV3AlinhaHashDasSessoesAoTipoVarcharDoHibernate() {
+        Integer applied = jdbc.queryForObject(
+            "SELECT count(*) FROM flyway_schema_history WHERE version = '3' AND success = true", Integer.class);
+        assertThat(applied).isEqualTo(1);
+
+        String sqlType = jdbc.queryForObject(
+            "SELECT data_type FROM information_schema.columns " +
+            "WHERE table_schema = 'public' AND table_name = 'auth_sessions' " +
+            "AND column_name = 'token_hash'", String.class);
+        Integer maxLength = jdbc.queryForObject(
+            "SELECT character_maximum_length FROM information_schema.columns " +
+            "WHERE table_schema = 'public' AND table_name = 'auth_sessions' " +
+            "AND column_name = 'token_hash'", Integer.class);
+
+        assertThat(sqlType).isEqualTo("character varying");
+        assertThat(maxLength).isEqualTo(64);
+    }
+
     @Test
     @Transactional
     void persisteUsuariosContasETitularidade() {

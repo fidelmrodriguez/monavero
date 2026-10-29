@@ -2,8 +2,6 @@ package com.monavero.api.auth;
 
 import com.monavero.api.identity.AppUser;
 import jakarta.persistence.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -18,11 +16,9 @@ public class AuthSession {
     @JoinColumn(name = "user_id", nullable = false)
     private AppUser user;
 
-    // PostgreSQL retorna CHAR(64) como bpchar / JDBC Types.CHAR.
-    // columnDefinition sozinho não muda o tipo JDBC padrão de String (VARCHAR).
-    @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(name = "token_hash", nullable = false, length = 64, unique = true,
-            columnDefinition = "char(64)")
+    // O Flyway V3 normaliza token_hash para VARCHAR(64), o tipo JDBC de String.
+    // Os hashes SHA-256 têm exatamente 64 caracteres hexadecimais.
+    @Column(name = "token_hash", nullable = false, length = 64, unique = true)
     private String tokenHash;
 
     @Column(name = "created_at", nullable = false)

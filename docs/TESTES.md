@@ -83,37 +83,40 @@ Em ambiente próprio com Docker e Java 25: `cd backend && mvn clean verify`. O C
 
 `AuthIntegrationTest` usa Testcontainers/PostgreSQL 18 e MockMvc para cobrir cadastro, sessão, `GET /me`, logout/revogação, novo login com BCrypt, rejeição de senha incorreta, prevenção de duplicidade, senha curta, demo com papel de cliente e não persistência do token em texto puro. O CI do Angular cobre a tela editável e a integração HTTP de autenticação.
 
-A etapa exige **ambos os workflows verdes** e o teste manual na aplicação publicada: cadastro → logout → login novamente → F5 → logout → token anterior rejeitado. Verifique Flyway V2 na Blitz/Neon. O pacote não recebeu confirmação de execução real de Maven ou de Angular no ambiente de geração; somente o CI após o commit confirma o resultado.
+A etapa exige **ambos os workflows verdes** e o teste manual na aplicação publicada: cadastro → logout → login novamente → F5 → logout → token anterior rejeitado. Verifique Flyway V3 na Blitz/Neon (V1 e V2 preservadas). O pacote não recebeu confirmação de execução real de Maven ou de Angular no ambiente de geração; somente o CI após o commit confirma o resultado.
 
 
-## Hotfix da Etapa 4 — tipo da coluna de hash da sessão
+## Correção da Etapa 4 — Flyway V3 e tipo do hash de sessão
 
-A migração `V2__authentication_and_sessions.sql` define `auth_sessions.token_hash`
-como `CHAR(64)` (`bpchar` no PostgreSQL, `Types.CHAR` no driver JDBC).
-O Hibernate mapeia `String` por padrão como `Types.VARCHAR`: somente
-`@Column(columnDefinition = "char(64)")` **não é suficiente** para alterar o tipo
-JDBC esperado pela verificação `ddl-auto=validate`.
+A migração **V2 já foi executada** no Neon e criou `auth_sessions.token_hash` como
+`CHAR(64)` (`bpchar` / JDBC `Types.CHAR`). O Hibernate 7, usando a entidade
+Java `String`, espera `Types.VARCHAR`. Os logs de execução da Blitz nos commits
+`733d3a4` e `48a3d86` confirmaram a falha ao inicializar o JPA:
 
-O log de execução da Blitz (commit `733d3a4`) confirmou a divergência de tipos.
-O hotfix proposto aplica o mapeamento conjunto na entidade `AuthSession`:
-
-```java
-@JdbcTypeCode(SqlTypes.CHAR)
-@Column(name = "token_hash", nullable = false, length = 64, unique = true,
-        columnDefinition = "char(64)")
-private String tokenHash;
+```text
+Schema validation: wrong column type encountered in column [token_hash]
+in table [auth_sessions]; found [bpchar (Types#CHAR)],
+but expecting [char(64) (Types#VARCHAR)]
 ```
 
-O erro anterior era `found [bpchar (Types#CHAR)], but expecting [char(64) (Types#VARCHAR)]`.
-`@JdbcTypeCode(SqlTypes.CHAR)` instrui o Hibernate a usar o tipo JDBC `CHAR`,
-compatível com a coluna existente, preservando a coluna, seu índice único e as sessões.
-A eficácia do hotfix ainda depende de validação pelo Backend Java CI e pelo
-reinício bem-sucedido da versão `0.4.0-SNAPSHOT` na Blitz.
-**Não edite a migração V2 já executada nem altere o esquema do Neon manualmente.**
+As tentativas anteriores de forçar `columnDefinition = "char(64)"` e
+`@JdbcTypeCode(SqlTypes.CHAR)` não resolveram a validação na versão publicada.
+Esta correção **não altera V1/V2, não desabilita `ddl-auto=validate` e não
+executa DDL manual no Neon**: adiciona `V3__align_auth_session_token_hash_varchar.sql`,
+que o Flyway executará uma única vez na inicialização, convertendo apenas
+`token_hash` para `VARCHAR(64)` e preservando as sessões e sua unicidade.
 
-O workflow `Backend Java CI` agora publica `monavero-backend-surefire-reports`
-como artefato quando houver falhas, incluindo os relatórios de testes e as primeiras
-exceções. O deploy só será considerado validado depois de CI verde, publicação da
-versão `0.4.0-SNAPSHOT` na Blitz e testes reais de cadastro, login, logout e demonstração.
-O Dockerfile atualmente usa `-DskipTests` por tempo de construção; portanto,
-`BUILD SUCCESS` na Blitz **não substitui** o GitHub Actions.
+O tipo padrão `VARCHAR` passa a corresponder ao mapeamento `@Column(length = 64)`
+na entidade `AuthSession`. Os hashes SHA-256 gerados pelo backend têm exatamente
+64 dígitos hexadecimais, portanto a conversão não altera os valores válidos.
+
+`PersistenceIntegrationTest` agora verifica a aplicação bem-sucedida da V3
+e o tipo e o limite de 64 caracteres no PostgreSQL isolado via Testcontainers.
+Executar `cd backend && mvn -B -ntp clean verify` com Java 25 e Docker; não
+considerar `BUILD SUCCESS` da Blitz suficiente, pois seu Dockerfile pula testes.
+O workflow `Backend Java CI` armazena os relatórios Surefire quando houver falha.
+
+**Critério de conclusão:** Backend Java CI verde, início estável da versão
+`0.4.0-SNAPSHOT` na Blitz e validação de cadastro, login, sessão demo e logout.
+Não editar versões Flyway antigas, não executar comandos SQL manuais e não
+apagar registros do banco.
