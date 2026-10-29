@@ -95,3 +95,11 @@ O build gera `dist/monavero/browser` e `dist/monavero/server` dentro de `fronten
 O Angular é publicado separadamente pelo Netlify. A configuração está em [`../netlify.toml`](../netlify.toml), com `base = "frontend"`, comando `npm run build` e saída `dist/monavero/browser`. A integração SSR usa `@netlify/angular-runtime`; rotas internas precisam ser testadas após o deploy, especialmente ao atualizar a página diretamente.
 
 A API Java será construída em `backend/`. Quando existir, os serviços do Angular migrarão de dados demonstrativos para contratos próprios, mantendo as telas e as validações de experiência. A autenticação e autorização verdadeiras ficarão exclusivamente a cargo do servidor.
+
+
+## Etapa 5: dados financeiros por sessão
+
+- Dashboard e extrato consomem `GET /api/v1/banking/overview`, com autorização Bearer e persistência PostgreSQL no backend.
+- Não são utilizadas respostas da DummyJSON para saldos ou transações. Contas pessoais começam vazias; apenas o usuário demo vê produtos de investimento/cartão fictícios como referência visual.
+- Falhas temporárias 502/503/504 ou de rede da Blitz acionam o despertar da API e repetição limitada, sem repetir credenciais incorretas (401).
+- O indicador de autenticação permanece na tela até a navegação concluir, sem reaparecer o formulário entre o login e o dashboard.

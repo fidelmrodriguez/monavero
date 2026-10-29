@@ -3,7 +3,7 @@
     <div>
       <p class="eyebrow">Dashboard</p>
       <h1>Olá, {{ authStore.displayName() }}.</h1>
-      <p class="muted">Visão consolidada de contas, investimentos, cartões e movimentações recentes.</p>
+      <p class="muted">Saldos e movimentações vinculados à sua conta no PostgreSQL.</p>
     </div>
     <a class="btn btn-primary" routerLink="/app/transferencias">Nova transferência</a>
   </header>
@@ -19,12 +19,12 @@
     <article class="card compact metric-card">
       <span class="metric-label">Investimentos</span>
       <strong>{{ totalInvestments() | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
-      <small>Carteira diversificada</small>
+      <small>{{ authStore.isDemo() ? 'Carteira fictícia da demonstração' : 'Em preparação' }}</small>
     </article>
     <article class="card compact metric-card">
       <span class="metric-label">Cartões</span>
       <strong>{{ totalCardUsed() | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
-      <small>Uso consolidado no mês</small>
+      <small>{{ authStore.isDemo() ? 'Cartão fictício da demonstração' : 'Em preparação' }}</small>
     </article>
   </div>
 
@@ -60,6 +60,7 @@
             </div>
           </div>
         }
+        @if (overview.investments.length === 0) { <p class="muted">Disponível em uma próxima etapa.</p> }
       </div>
     </article>
 
@@ -84,6 +85,7 @@
             <small>Vencimento dia {{ card.dueDay }} · {{ card.status }}</small>
           </article>
         }
+        @if (overview.cards.length === 0) { <p class="muted">Disponível em uma próxima etapa.</p> }
       </div>
     </article>
   </div>

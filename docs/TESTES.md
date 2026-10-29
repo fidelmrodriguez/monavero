@@ -120,3 +120,12 @@ O workflow `Backend Java CI` armazena os relatórios Surefire quando houver falh
 `0.4.0-SNAPSHOT` na Blitz e validação de cadastro, login, sessão demo e logout.
 Não editar versões Flyway antigas, não executar comandos SQL manuais e não
 apagar registros do banco.
+
+
+### Validar a Etapa 5
+
+1. `cd backend && mvn -B -ntp clean verify` com Java 25 e Docker/Testcontainers disponíveis. A migração V4 e o isolamento de contas são exercitados em `BankingIntegrationTest`.
+2. `cd frontend && npm install && npm test` e `npm run build` (ou `npm ci` se houver lockfile) com Node conforme `.nvmrc`.
+3. Confirmar Flyway em `public.flyway_schema_history` (versões 1–4) e inicialização do backend sem erro.
+4. Verificar login de duas contas pessoais distintas: contas/lançamentos não devem se misturar; depois de sair e entrar novamente, o identificador da conta deve permanecer.
+5. Confirmar User/1234 com histórico de demonstração e observar que 502 de despertar não encerra a sessão; login concluído deve ir direto ao dashboard.

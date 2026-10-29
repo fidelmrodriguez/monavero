@@ -1,6 +1,8 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, OnDestroy, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { MONAVERO_API_URL } from '../config/monavero-api';
+import { HttpErrorResponse } from '@angular/common/http';
+import { from, Observable, retry, throwError } from 'rxjs';
 
 const RETRY_MS = 5_000;
 const TIMEOUT_MS = 12_000;
@@ -28,11 +30,35 @@ export class ApiReadinessService implements OnDestroy {
   private retryId?: ReturnType<typeof setTimeout>;
   private controller?: AbortController;
   private complete!: () => void;
-  private readonly readyPromise = new Promise<void>(resolve => { this.complete = resolve; });
+  private readyPromise = new Promise<void>(resolve => { this.complete = resolve; });
+
+  /** Revalida a API quando a Blitz volta a dormir depois da primeira abertura do site. */
+  markUnavailable(): void {
+    if (!this.browser || this.destroyed || !this.readyState()) return;
+    this.readyState.set(false);
+    this.readyPromise = new Promise<void>(resolve => { this.complete = resolve; });
+    this.started = false;
+    this.start();
+  }
+
+  /** Repete requisições apenas após erro de rede/Blitz e retorno real da API. 401 não é repetido. */
+  recover<T>(request: Observable<T>): Observable<T> {
+    return request.pipe(retry({
+      count: 2,
+      delay: error => {
+        if (!(error instanceof HttpErrorResponse) || ![0, 502, 503, 504].includes(error.status)) {
+          return throwError(() => error);
+        }
+        this.markUnavailable();
+        return from(this.waitUntilReady());
+      }
+    }));
+  }
 
   start(): void {
     if (!this.browser || this.started || this.destroyed) return;
     this.started = true;
+    this.elapsedSeconds.set(0);
     this.startedAt = Date.now();
     this.intervalId = setInterval(() => {
       this.elapsedSeconds.set(Math.floor((Date.now() - this.startedAt) / 1000));

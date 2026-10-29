@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
+import { AuthSession } from '../../core/models/auth.models';
 import { provideHttpClient } from '@angular/common/http';
 import { of } from 'rxjs';
 import { loginIdentifierValidator } from './login.page';
@@ -120,6 +121,16 @@ describe('LoginPage', () => {
     store.isLoading.set(false);
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.auth-progress')).toBeNull();
+  });
+
+  it('mantém o loading até o dashboard concluir a navegação', () => {
+    const store = TestBed.inject(AuthStore);
+    const router = TestBed.inject(Router);
+    spyOn(store, 'demo').and.returnValue(of({} as AuthSession));
+    spyOn(router, 'navigateByUrl').and.returnValue(new Promise<boolean>(() => { }));
+    component.submit();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.auth-progress')).not.toBeNull();
   });
 
   it('indica criação da conta quando o cadastro está em processamento', () => {

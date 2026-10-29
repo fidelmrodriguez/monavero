@@ -37,3 +37,8 @@ O Monavero evolui de um frontend Angular demonstrativo para um sistema full stac
 ## Limites do produto
 
 Monavero é demonstrativo. Não implementará Pix real, integração com instituições financeiras, compensação real de boletos ou movimentação de dinheiro de verdade.
+
+
+### Atualização — Etapa 5
+
+Implementação preparada: provisionamento de contas por usuário, movimentações persistidas no PostgreSQL (Flyway V4), isolamento pelo titular autenticado, dados demonstrativos separados de contas pessoais, integração Angular do dashboard/extrato, recuperação de indisponibilidade temporária da Blitz e navegação sem piscar o formulário. A etapa só deve ser marcada concluída após CI, migração e testes na Blitz/Netlify.

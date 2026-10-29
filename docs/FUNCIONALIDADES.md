@@ -60,3 +60,8 @@ Este documento descreve a aplicação tal como implementada no frontend. Todos o
 ## Fora do escopo desta versão
 
 A versão do frontend não contém cadastro de contas bancárias, ledger, conciliação, histórico persistente, PIX real, processamento de boletos, regras de prevenção a fraude no servidor ou integração com instituições financeiras.
+
+
+### Etapa 5 — persistência financeira
+
+Dashboard e extrato passam a consumir contas e lançamentos reais no Neon, isolados por identidade autenticada. As movimentações fictícias da conta demo são persistidas; usuários pessoais têm contas independentes, iniciadas sem movimentações. Transferências, pagamentos e funcionalidades de cartões/investimentos continuam no roadmap.

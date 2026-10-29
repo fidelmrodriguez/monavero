@@ -100,3 +100,12 @@ Após inserir variáveis na Blitz, aplicar o commit e concluir o deploy:
 5. Não enviar senhas, hashes ou tokens em logs ou prints.
 
 Veja [Persistência](../docs/PERSISTENCIA.md) e [Roadmap](../docs/ROADMAP.md).
+
+
+## Etapa 5 — contas e extrato persistentes
+
+- `GET /api/v1/banking/overview` exige token Bearer e retorna somente a conta do titular autenticado e os últimos 100 lançamentos da conta.
+- A conta corrente é provisionada de forma idempotente no primeiro acesso, incluindo usuários cadastrados antes da Etapa 5. Contas pessoais começam com saldo zero e extrato vazio.
+- Somente o usuário demonstrativo recebe dados fictícios persistidos. O perfil visual Gerente/Administrador não altera o token nem as permissões da API.
+- Flyway V4 cria `account_transactions` sem alterar as migrações V1–V3.
+- Transferências, pagamentos, investimentos e cartões reais serão implementados em etapas futuras.

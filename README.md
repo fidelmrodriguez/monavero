@@ -110,3 +110,6 @@ Antes de iniciar a API, configure `MONAVERO_DB_JDBC_URL`, `MONAVERO_DB_USERNAME`
 O objetivo é evoluir a autenticação já implementada com contas, extrato persistido, transferências internas atômicas, agendamentos, administração e auditoria. Tudo continuará sendo **simulação bancária**, sem integração com instituições financeiras, Pix real ou cobrança efetiva de boletos.
 
 As Etapas 0 a 3 foram validadas, incluindo CI Java, Blitz e migração V1 no Neon. A Etapa 4 entrega autenticação própria, integração Angular e migração V2; sua validação exige ambos os workflows, novo deploy e teste completo de cadastro e login. Veja o [roadmap](docs/ROADMAP.md) para acompanhar o progresso e distinguir entregas planejadas das verificadas.
+
+
+**Etapa 5 em validação:** API `GET /api/v1/banking/overview` e migração V4 para contas/extrato persistentes por usuário. Melhorias de recuperação da Blitz e navegação após login incluídas. Não considerar concluída sem CI e deploy validados.

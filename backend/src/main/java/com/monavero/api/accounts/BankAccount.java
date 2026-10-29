@@ -71,6 +71,14 @@ public class BankAccount {
         updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
+    /** Apenas dados fictícios iniciais; operações financeiras terão regras próprias na Etapa 6. */
+    void setDemonstrationBalance(BigDecimal initialBalance) {
+        if (initialBalance == null || initialBalance.signum() < 0) {
+            throw new IllegalArgumentException("Saldo de demonstração inválido");
+        }
+        balance = initialBalance.setScale(2);
+    }
+
     public UUID getId() { return id; }
     public String getAccountNumber() { return accountNumber; }
     public String getBranchCode() { return branchCode; }

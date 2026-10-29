@@ -3,6 +3,7 @@ import { Injectable, NgZone, OnDestroy, PLATFORM_ID, computed, inject, signal } 
 import { Router } from '@angular/router';
 import { Observable, catchError, finalize, map, of, tap } from 'rxjs';
 import { AuthApiService } from '../services/auth-api.service';
+import { ApiReadinessService } from '../services/api-readiness.service';
 import { AuthResponse, AuthSession, UserRole, toRole } from '../models/auth.models';
 import { NotificationStore } from './notification.store';
 import { AuditStore } from './audit.store';
@@ -21,6 +22,7 @@ type TabAuthMessage =
 @Injectable({ providedIn: 'root' })
 export class AuthStore implements OnDestroy {
   private readonly api = inject(AuthApiService);
+  private readonly readiness = inject(ApiReadinessService);
   private readonly notifications = inject(NotificationStore);
   private readonly audit = inject(AuditStore);
   private readonly router = inject(Router);
@@ -66,7 +68,7 @@ export class AuthStore implements OnDestroy {
   }
 
   register(name: string, email: string, password: string): Observable<AuthSession | null> {
-    return this.handle(this.api.register(name, email, password));
+    return this.handle(this.api.register(name, email, password), undefined, false);
   }
 
   demo(viewRole: UserRole = 'cliente'): Observable<AuthSession | null> {
@@ -80,7 +82,7 @@ export class AuthStore implements OnDestroy {
       this.clearSession();
       return of(false);
     }
-    return this.api.me().pipe(
+    return this.readiness.recover(this.api.me()).pipe(
       map(profile => {
         // Um logout em outra aba pode ocorrer enquanto /me ainda está em voo.
         if (this.sessionState()?.accessToken !== session.accessToken) return false;
@@ -107,9 +109,9 @@ export class AuthStore implements OnDestroy {
     }
   }
 
-  private handle(request: Observable<AuthResponse>, demoViewRole?: UserRole): Observable<AuthSession | null> {
+  private handle(request: Observable<AuthResponse>, demoViewRole?: UserRole, retryTransient = true): Observable<AuthSession | null> {
     this.isLoading.set(true);
-    return request.pipe(
+    return (retryTransient ? this.readiness.recover(request) : request).pipe(
       map(response => ({
         ...response, role: toRole(response.user.role), displayName: response.user.name,
         demoViewRole: response.user.demo ? this.safeDemoRole(demoViewRole) : undefined

@@ -26,6 +26,8 @@ export class LoginPage {
   protected readonly themeStore = inject(ThemeStore);
   readonly mode = signal<'login' | 'register'>('login');
   readonly loginError = signal<string | null>(null);
+  /** Mantém o overlay até o Router realmente sair da página de login. */
+  readonly navigating = signal(false);
 
   // Os dois campos continuam editáveis e começam com o atalho do ambiente demo.
   readonly form = this.fb.group({
@@ -54,7 +56,7 @@ export class LoginPage {
   }
 
   submit(): void {
-    if (this.authStore.isLoading()) return; // impede solicitações duplicadas
+    if (this.authStore.isLoading() || this.navigating()) return; // impede solicitações duplicadas
     this.loginError.set(null);
     if (this.mode() === 'register') {
       if (this.registration.invalid) { this.registration.markAllAsTouched(); return; }
@@ -77,6 +79,16 @@ export class LoginPage {
   }
 
   private finish(session: unknown): void {
-    if (session) void this.router.navigateByUrl('/app/dashboard');
+    if (!session) return;
+    this.navigating.set(true);
+    void this.router.navigateByUrl('/app/dashboard').then(success => {
+      if (!success) {
+        this.navigating.set(false);
+        this.loginError.set('Não foi possível abrir o dashboard. Tente novamente.');
+      }
+    }).catch(() => {
+      this.navigating.set(false);
+      this.loginError.set('Não foi possível abrir o dashboard. Tente novamente.');
+    });
   }
 }

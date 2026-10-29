@@ -1,5 +1,7 @@
 import { TestBed, fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
 import { ApiReadinessService } from './api-readiness.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { defer, of, throwError } from 'rxjs';
 import { MONAVERO_API_URL } from '../config/monavero-api';
 
 function response(body: string, contentType: string): Response {
@@ -43,6 +45,44 @@ describe('ApiReadinessService', () => {
     expect(spy).toHaveBeenCalledTimes(2);
     expect(service.ready()).toBeTrue();
     expect(service.elapsedLabel()).toBe('00:05');
+  }));
+
+
+  it('revalida a API após um novo sono da Blitz', fakeAsync(() => {
+    const spy = spyOn(window, 'fetch').and.returnValue(Promise.resolve(response(
+      JSON.stringify({ application: 'monavero-api', status: 'available' }), 'application/json'
+    )));
+    service = TestBed.inject(ApiReadinessService);
+    service.start();
+    flushMicrotasks();
+    expect(service.ready()).toBeTrue();
+    service.markUnavailable();
+    expect(service.ready()).toBeFalse();
+    flushMicrotasks();
+    expect(service.ready()).toBeTrue();
+    expect(spy).toHaveBeenCalledTimes(2);
+  }));
+
+  it('repete a chamada quando a Blitz devolve 502 e a API acorda', fakeAsync(() => {
+    spyOn(window, 'fetch').and.returnValue(Promise.resolve(response(
+      JSON.stringify({ application: 'monavero-api', status: 'available' }), 'application/json'
+    )));
+    service = TestBed.inject(ApiReadinessService);
+    service.start();
+    flushMicrotasks();
+    let attempts = 0;
+    let result = '';
+    const req = defer(() => {
+      attempts++;
+      return attempts === 1
+        ? throwError(() => new HttpErrorResponse({ status: 502 }))
+        : of('ok');
+    });
+    service.recover(req).subscribe(value => { result = value; });
+    flushMicrotasks();
+    expect(attempts).toBe(2);
+    expect(result).toBe('ok');
+    expect(service.ready()).toBeTrue();
   }));
 
   it('não aceita JSON de outro serviço como confirmação de prontidão', fakeAsync(() => {
