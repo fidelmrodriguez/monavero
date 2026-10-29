@@ -126,6 +126,32 @@ form {
   min-height: 42px;
 }
 
+.demo-role-select {
+  position: relative;
+  width: 100%;
+}
+
+.demo-role-select select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 48px;
+}
+
+.demo-role-select::after {
+  content: '';
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--text);
+  border-bottom: 2px solid var(--text);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+
 .login-error {
   margin: 0;
   line-height: 1.5;

@@ -14,15 +14,22 @@
   </section>
 
   <section class="login-card card">
+    <div class="auth-tabs" role="group" aria-label="Modalidade de acesso">
+      <button type="button" [class.selected]="mode() === 'login'" (click)="changeMode('login')">Entrar</button>
+      <button type="button" [class.selected]="mode() === 'register'" (click)="changeMode('register')">Criar conta</button>
+    </div>
+
     <div class="login-topbar">
       @if (mode() === 'login') {
         <div class="demo-role-top">
           <label for="role">Visualizar como (demonstração)</label>
-          <select id="role" class="input" [formControl]="form.controls.role">
-            <option value="cliente">Cliente</option>
-            <option value="gerente">Gerente</option>
-            <option value="admin">Administrador</option>
-          </select>
+          <div class="demo-role-select">
+            <select id="role" class="input" [formControl]="form.controls.role">
+              <option value="cliente">Cliente</option>
+              <option value="gerente">Gerente</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
         </div>
       }
       <button class="theme-button" type="button" (click)="themeStore.toggle()">
@@ -30,15 +37,9 @@
       </button>
     </div>
 
-    <div class="auth-tabs" role="group" aria-label="Modalidade de acesso">
-      <button type="button" [class.selected]="mode() === 'login'" (click)="changeMode('login')">Entrar</button>
-      <button type="button" [class.selected]="mode() === 'register'" (click)="changeMode('register')">Criar conta</button>
-    </div>
-
     @if (mode() === 'login') {
       <p class="eyebrow">Acesso ao Monavero</p>
       <h2>Entrar na conta</h2>
-      <p class="muted">Use User / 1234 para a demonstração. Para entrar em uma conta criada, informe o <strong>e-mail do cadastro</strong> e a senha que você escolheu.</p>
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="field">
           <label for="username">E-mail ou usuário da demonstração</label>
@@ -67,7 +68,6 @@
       <div class="credentials">
         <strong>Acesso de demonstração</strong>
         <span>Usuário: User · Senha: 1234</span>
-        <small>Escolha Cliente, Gerente ou Administrador no seletor superior. A seleção muda apenas telas de demonstração; o backend não concede privilégios administrativos.</small>
       </div>
     } @else {
       <p class="eyebrow">Conta pessoal</p>
