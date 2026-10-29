@@ -89,8 +89,26 @@ A etapa exige **ambos os workflows verdes** e o teste manual na aplicação publ
 ## Hotfix da Etapa 4 — tipo da coluna de hash da sessão
 
 A migração `V2__authentication_and_sessions.sql` define `auth_sessions.token_hash`
-como `CHAR(64)`. A entidade `AuthSession` deve usar `@Column(columnDefinition = "char(64)")`
-para corresponder ao tipo real do PostgreSQL durante a verificação `ddl-auto=validate`.
+como `CHAR(64)` (`bpchar` no PostgreSQL, `Types.CHAR` no driver JDBC).
+O Hibernate mapeia `String` por padrão como `Types.VARCHAR`: somente
+`@Column(columnDefinition = "char(64)")` **não é suficiente** para alterar o tipo
+JDBC esperado pela verificação `ddl-auto=validate`.
+
+O log de execução da Blitz (commit `733d3a4`) confirmou a divergência de tipos.
+O hotfix proposto aplica o mapeamento conjunto na entidade `AuthSession`:
+
+```java
+@JdbcTypeCode(SqlTypes.CHAR)
+@Column(name = "token_hash", nullable = false, length = 64, unique = true,
+        columnDefinition = "char(64)")
+private String tokenHash;
+```
+
+O erro anterior era `found [bpchar (Types#CHAR)], but expecting [char(64) (Types#VARCHAR)]`.
+`@JdbcTypeCode(SqlTypes.CHAR)` instrui o Hibernate a usar o tipo JDBC `CHAR`,
+compatível com a coluna existente, preservando a coluna, seu índice único e as sessões.
+A eficácia do hotfix ainda depende de validação pelo Backend Java CI e pelo
+reinício bem-sucedido da versão `0.4.0-SNAPSHOT` na Blitz.
 **Não edite a migração V2 já executada nem altere o esquema do Neon manualmente.**
 
 O workflow `Backend Java CI` agora publica `monavero-backend-surefire-reports`

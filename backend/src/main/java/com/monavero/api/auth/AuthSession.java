@@ -2,6 +2,8 @@ package com.monavero.api.auth;
 
 import com.monavero.api.identity.AppUser;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -16,8 +18,9 @@ public class AuthSession {
     @JoinColumn(name = "user_id", nullable = false)
     private AppUser user;
 
-    // A migração V2 criou token_hash como CHAR(64), não VARCHAR(64).
-    // O tipo precisa corresponder exatamente para ddl-auto=validate no PostgreSQL.
+    // PostgreSQL retorna CHAR(64) como bpchar / JDBC Types.CHAR.
+    // columnDefinition sozinho não muda o tipo JDBC padrão de String (VARCHAR).
+    @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "token_hash", nullable = false, length = 64, unique = true,
             columnDefinition = "char(64)")
     private String tokenHash;
