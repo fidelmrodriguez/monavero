@@ -38,3 +38,11 @@ jobs:
         run: docker info --format '{{.ServerVersion}}'
       - name: Compilar e executar testes de integração
         run: mvn -B -ntp clean verify
+      - name: Guardar relatórios dos testes em caso de falha
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monavero-backend-surefire-reports
+          path: backend/target/surefire-reports/
+          if-no-files-found: ignore
+          retention-days: 7

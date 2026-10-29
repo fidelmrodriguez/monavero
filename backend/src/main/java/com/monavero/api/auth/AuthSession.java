@@ -16,7 +16,10 @@ public class AuthSession {
     @JoinColumn(name = "user_id", nullable = false)
     private AppUser user;
 
-    @Column(name = "token_hash", nullable = false, length = 64, unique = true)
+    // A migração V2 criou token_hash como CHAR(64), não VARCHAR(64).
+    // O tipo precisa corresponder exatamente para ddl-auto=validate no PostgreSQL.
+    @Column(name = "token_hash", nullable = false, length = 64, unique = true,
+            columnDefinition = "char(64)")
     private String tokenHash;
 
     @Column(name = "created_at", nullable = false)

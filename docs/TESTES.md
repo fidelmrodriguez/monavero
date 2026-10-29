@@ -84,3 +84,18 @@ Em ambiente próprio com Docker e Java 25: `cd backend && mvn clean verify`. O C
 `AuthIntegrationTest` usa Testcontainers/PostgreSQL 18 e MockMvc para cobrir cadastro, sessão, `GET /me`, logout/revogação, novo login com BCrypt, rejeição de senha incorreta, prevenção de duplicidade, senha curta, demo com papel de cliente e não persistência do token em texto puro. O CI do Angular cobre a tela editável e a integração HTTP de autenticação.
 
 A etapa exige **ambos os workflows verdes** e o teste manual na aplicação publicada: cadastro → logout → login novamente → F5 → logout → token anterior rejeitado. Verifique Flyway V2 na Blitz/Neon. O pacote não recebeu confirmação de execução real de Maven ou de Angular no ambiente de geração; somente o CI após o commit confirma o resultado.
+
+
+## Hotfix da Etapa 4 — tipo da coluna de hash da sessão
+
+A migração `V2__authentication_and_sessions.sql` define `auth_sessions.token_hash`
+como `CHAR(64)`. A entidade `AuthSession` deve usar `@Column(columnDefinition = "char(64)")`
+para corresponder ao tipo real do PostgreSQL durante a verificação `ddl-auto=validate`.
+**Não edite a migração V2 já executada nem altere o esquema do Neon manualmente.**
+
+O workflow `Backend Java CI` agora publica `monavero-backend-surefire-reports`
+como artefato quando houver falhas, incluindo os relatórios de testes e as primeiras
+exceções. O deploy só será considerado validado depois de CI verde, publicação da
+versão `0.4.0-SNAPSHOT` na Blitz e testes reais de cadastro, login, logout e demonstração.
+O Dockerfile atualmente usa `-DskipTests` por tempo de construção; portanto,
+`BUILD SUCCESS` na Blitz **não substitui** o GitHub Actions.
