@@ -162,3 +162,13 @@ O crédito de abertura é **fictício**, exclusivamente para o portfólio, e nã
 - Confirmar que o destinatário visualiza o nome efetivamente cadastrado do remetente, mesmo que a descrição livre contenha outro texto. Reabrir o extrato de transferências anteriores para validar enriquecimento retroativo.
 - Após sucesso, a mensagem de confirmação deve continuar visível, sem aviso vermelho de valor obrigatório no campo limpo. Nova transferência só pode ser enviada após informar novo valor válido.
 - Testes: `TransferIntegrationTest` (contraparte e mascaramento), `TransfersPage` (limpeza da validação), `StatementPage` e `DashboardPage` (renderização). O CI Java e Angular completo devem passar antes do fechamento desta correção.
+
+
+## Navegação, carregamento e responsividade
+
+- Com a API disponível, entre no internet banking, navegue entre dashboard, extrato e transferências e confira o indicador de **Carregando página...** durante mudanças demoradas de rota.
+- No extrato, a consulta pendente deve mostrar **Carregando suas movimentações...**, sem exibir falsamente a mensagem de extrato vazio. Falhas de conexão devem oferecer **Tentar novamente**.
+- Durante a confirmação de uma transferência, o botão deve mostrar o processamento e impedir o reenvio. Ao buscar os saldos atualizados, o botão deve indicar a atualização.
+- Conferir o layout em desktop, janela intermediária e celular: nomes longos de contrapartes e descrições devem quebrar linha sem criar rolagem horizontal na página. Tabelas grandes podem ter rolagem **dentro** do seu contêiner em resoluções intermediárias; no celular os lançamentos aparecem em cartões.
+- Os filtros do extrato atuam localmente sobre os dados recebidos e não devem exibir loaders artificiais a cada tecla digitada.
+- Testes automáticos: `frontend/src/app/features/statement/statement.page.spec.ts` cobre carregamento, resposta, erro e nova tentativa.

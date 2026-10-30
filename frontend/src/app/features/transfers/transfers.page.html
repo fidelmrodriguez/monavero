@@ -10,7 +10,13 @@
   <div class="grid grid-2 transfer-layout">
     <article class="card">
       <h2>Dados da transferência</h2>
-      @if (loading()) { <p class="muted" role="status">Carregando suas contas...</p> }
+      @if (loading() && !overview()) {
+        <div class="data-loading" role="status" aria-live="polite">
+          <span class="monavero-spinner" aria-hidden="true"></span>
+          <span>Carregando suas contas...</span>
+        </div>
+      }
+      @if (!loading() || overview()) {
       <form [formGroup]="form" (ngSubmit)="submit()" class="transfer-form">
         <div class="field">
           <label for="originAccount">Conta de origem</label>
@@ -82,9 +88,11 @@
         @if (success()) { <p class="transfer-message success-note" role="status">{{ success() }}</p> }
         <button class="btn btn-primary" type="submit"
           [disabled]="loading() || submitting() || form.invalid || insufficientBalance() || accountUnavailable()">
-          {{ submitting() ? 'Processando transferência...' : 'Confirmar transferência' }}
+          @if (submitting() || loading()) { <span class="monavero-spinner" aria-hidden="true"></span> }
+          {{ submitting() ? 'Processando transferência...' : loading() ? 'Atualizando saldos...' : 'Confirmar transferência' }}
         </button>
       </form>
+      }
     </article>
 
     <article class="card">

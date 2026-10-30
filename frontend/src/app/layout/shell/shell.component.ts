@@ -1,10 +1,11 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, HostListener, computed, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, computed, inject, signal } from '@angular/core';
+import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthStore } from '../../core/state/auth.store';
 import { NotificationStore } from '../../core/state/notification.store';
 import { ThemeStore } from '../../core/state/theme.store';
 import { UserRole } from '../../core/models/auth.models';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 interface NavigationItem {
   label: string;
@@ -21,6 +22,9 @@ interface NavigationItem {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ShellComponent {
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  protected readonly navigating = signal(false);
   protected readonly authStore = inject(AuthStore);
   protected readonly notificationStore = inject(NotificationStore);
   protected readonly themeStore = inject(ThemeStore);
@@ -29,6 +33,15 @@ export class ShellComponent {
   protected readonly notificationsOpen = signal(false);
   protected readonly userMenuOpen = signal(false);
   protected readonly recentNotifications = computed(() => this.notificationStore.notifications().slice(0, 5));
+
+  constructor() {
+    this.router.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(event => {
+      if (event instanceof NavigationStart) this.navigating.set(true);
+      if (event instanceof NavigationEnd || event instanceof NavigationCancel || event instanceof NavigationError) {
+        this.navigating.set(false);
+      }
+    });
+  }
   private readonly navigation: NavigationItem[] = [
     { label: 'Dashboard', route: '/app/dashboard', icon: '📊' },
     { label: 'Extrato', route: '/app/extrato', icon: '📄' },

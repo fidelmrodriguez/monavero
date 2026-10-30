@@ -74,6 +74,16 @@ a {
 .page {
   display: grid;
   gap: 24px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Os filhos de grids não podem expandir o shell por causa de tabelas ou textos longos. */
+.page > *,
+.grid > *,
+.card {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .page-header {
@@ -238,9 +248,13 @@ h2 {
 }
 
 .table-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
@@ -255,7 +269,8 @@ td {
   padding: 14px 16px;
   border-bottom: 1px solid var(--border);
   text-align: left;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 th {
@@ -511,3 +526,43 @@ td {
 }
 @keyframes monavero-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .monavero-spinner { animation: none; } }
+
+/* Skeletons e feedback de consultas assíncronas, sem saltos de layout. */
+.data-loading {
+  display: grid;
+  place-items: center;
+  gap: 14px;
+  min-height: 220px;
+  color: var(--muted);
+  text-align: center;
+  font-weight: 700;
+}
+
+.data-loading .monavero-spinner {
+  width: 32px;
+  height: 32px;
+}
+
+.data-error {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  color: var(--muted);
+  padding: 24px 0;
+}
+
+.btn .monavero-spinner {
+  width: 17px;
+  height: 17px;
+  border-width: 2px;
+  border-color: rgba(255, 255, 255, .35);
+  border-top-color: currentColor;
+}
+
+/* Evita que nomes, saldos e rótulos quebrem os cartões em qualquer zoom. */
+.metric-card strong,
+.statement-summary strong,
+.summary-box strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

@@ -1,7 +1,7 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { map, startWith } from 'rxjs';
 import { BankingService } from '../../core/services/banking.service';
 import { Transaction, TransactionStatus, TransactionType } from '../../core/models/banking.models';
@@ -26,7 +26,31 @@ interface StatementFilters {
 export class StatementPage {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly bankingService = inject(BankingService);
-  private readonly transactions = toSignal(this.bankingService.getTransactions(), { initialValue: [] as Transaction[] });
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly transactions = signal<Transaction[]>([]);
+  protected readonly loading = signal(true);
+  protected readonly loadError = signal(false);
+
+  constructor() { this.reload(); }
+
+  protected reload(): void {
+    if (this.loading() && this.hasRequested) return;
+    this.hasRequested = true;
+    this.loading.set(true);
+    this.loadError.set(false);
+    this.bankingService.getTransactions().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: transactions => {
+        this.transactions.set(transactions);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loadError.set(true);
+        this.loading.set(false);
+      }
+    });
+  }
+
+  private hasRequested = false;
 
   protected readonly form = this.fb.group({
     text: [''],

@@ -72,3 +72,12 @@ O roteiro de validação está em [docs/TESTE_ETAPAS_5_6_CONSOLE.md](../docs/TES
 ## Limites
 
 O Monavero é um ambiente demonstrativo: não realiza PIX, TED, pagamento real ou investimento. Algumas experiências da interface ainda usam dados locais enquanto a persistência é ampliada nas próximas entregas. O roadmap registra o estado real de cada implementação.
+
+
+### Estados de carregamento e layout
+
+- As mudanças de rota têm indicação visual durante carregamento de módulos, guards e resolvers.
+- Extrato: spinner apenas durante a consulta, mensagem de falha com **Tentar novamente** e tabela após resposta válida; filtros aplicados localmente sem espera simulada.
+- Transferências: indicação ao carregar contas, processar operação e atualizar saldos; formulário permanece protegido contra reenvios durante a operação.
+- Tabelas de extrato e dashboard não devem expandir a página: os textos longos quebram linha, o contêiner limita a largura e o layout móvel usa cartões.
+- Os estados de carregamento são textos normais para o cliente, enquanto diagnósticos das etapas permanecem exclusivamente no console.

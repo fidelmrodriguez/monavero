@@ -19,9 +19,9 @@
       <h3>{{ authStore.isDemo() ? 'Ambiente demonstrativo' : 'Conta pessoal' }}</h3>
       <p>Dados financeiros fictícios e operações simuladas.</p>
       @if (authStore.isDemo()) {
-        <p>Perfil visual para avaliação técnica. Na API, a conta continua CLIENT.</p>
+        <p>Consulte saldos e movimente valores ilustrativos entre contas Monavero.</p>
       } @else {
-        <p>Permissões reais definidas pela API.</p>
+        <p>Acompanhe suas movimentações e gerencie sua conta com tranquilidade.</p>
       }
     </div>
   </aside>
@@ -118,7 +118,15 @@
     }
   </header>
 
-  <main class="content">
+  <main class="content" [attr.aria-busy]="navigating()">
     <router-outlet />
+    @if (navigating()) {
+      <div class="navigation-loading" role="status" aria-live="polite">
+        <div class="navigation-loading-card">
+          <span class="monavero-spinner" aria-hidden="true"></span>
+          <span>Carregando página...</span>
+        </div>
+      </div>
+    }
   </main>
 </div>

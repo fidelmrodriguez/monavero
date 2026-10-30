@@ -8,7 +8,7 @@
     <button class="btn btn-secondary" type="button" (click)="resetFilters()">Limpar filtros</button>
   </header>
 
-  <form class="card filters" [formGroup]="form">
+  <form class="card filters" [formGroup]="form" [attr.aria-busy]="loading()">
     <div class="field">
       <label for="text">Buscar</label>
       <input id="text" class="input" type="search" formControlName="text" placeholder="Descrição ou categoria" />
@@ -60,6 +60,7 @@
   </form>
 
   <article class="card">
+    @if (!loading() && !loadError()) {
     <div class="statement-summary">
       <div>
         <span class="muted">Entradas filtradas</span>
@@ -74,10 +75,21 @@
         <strong>{{ balance() | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
       </div>
     </div>
+    }
 
-    @if (filteredTransactions().length > 0) {
+    @if (loading()) {
+      <div class="data-loading" role="status" aria-live="polite">
+        <span class="monavero-spinner" aria-hidden="true"></span>
+        <span>Carregando suas movimentações...</span>
+      </div>
+    } @else if (loadError()) {
+      <div class="data-error" role="alert">
+        <p>Não foi possível carregar suas movimentações. Verifique sua conexão e tente novamente.</p>
+        <button type="button" class="btn btn-secondary" (click)="reload()">Tentar novamente</button>
+      </div>
+    } @else if (filteredTransactions().length > 0) {
       <div class="table-wrap">
-        <table>
+        <table class="statement-table">
           <thead>
             <tr>
               <th>Data</th>
