@@ -1,4 +1,5 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { BrlCurrencyDirective } from '../../shared/directives/brl-currency.directive';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -18,7 +19,7 @@ interface StatementFilters {
 
 @Component({
   selector: 'app-statement-page',
-  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe, EmptyStateComponent],
+  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe, EmptyStateComponent, BrlCurrencyDirective],
   templateUrl: './statement.page.html',
   styleUrl: './statement.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

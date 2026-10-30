@@ -1,5 +1,6 @@
 import { localDateInputValue } from '../../core/utils/formatters';
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { BrlCurrencyDirective } from '../../shared/directives/brl-currency.directive';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BankingService } from '../../core/services/banking.service';
@@ -10,7 +11,7 @@ import { ScheduledPayment } from '../../core/models/banking.models';
 
 @Component({
   selector: 'app-payments-page',
-  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe],
+  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe, BrlCurrencyDirective],
   templateUrl: './payments.page.html',
   styleUrl: './payments.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -85,3 +85,13 @@ O Monavero é um ambiente demonstrativo: não realiza PIX, TED, pagamento real o
 ### Transferências agendadas
 
 A rota `/app/agendamentos` permite criar, listar e cancelar agendamentos internos. As datas são informadas em horário local e enviadas à API em UTC. O processamento ocorre no backend e não depende de uma aba aberta. O saldo é debitado apenas no vencimento; em hospedagem sob demanda a execução pode ocorrer na próxima ativação do servidor. Não há componentes de QA nas telas.
+
+
+### Entrada de valores monetários
+
+A diretiva compartilhada `src/app/shared/directives/brl-currency.directive.ts`
+formata os campos de transferências imediatas e agendadas, pagamentos e filtros
+do extrato no padrão **R$ 1.234,56**. O controle reativo preserva os valores
+numéricos em reais; a máscara é somente de apresentação. Digite a parte inteira
+normalmente e use a vírgula para informar centavos. Também é possível colar
+valores já formatados.

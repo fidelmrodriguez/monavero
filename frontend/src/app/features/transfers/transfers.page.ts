@@ -1,4 +1,5 @@
 import { CurrencyPipe } from '@angular/common';
+import { BrlCurrencyDirective } from '../../shared/directives/brl-currency.directive';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -12,7 +13,7 @@ import { maskedAccount, testLog } from '../../core/utils/test-diagnostics';
 
 @Component({
   selector: 'app-transfers-page',
-  imports: [ReactiveFormsModule, CurrencyPipe],
+  imports: [ReactiveFormsModule, CurrencyPipe, BrlCurrencyDirective],
   templateUrl: './transfers.page.html',
   styleUrl: './transfers.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -69,7 +69,7 @@
 
         <div class="field">
           <label for="amount">Valor da transferência</label>
-          <input id="amount" class="input" type="number" min="0.01" max="50000" step="0.01" formControlName="amount"
+          <input id="amount" class="input" type="text" inputmode="decimal" autocomplete="off" appBrlCurrency placeholder="R$ 0,00" formControlName="amount"
             aria-describedby="amount-feedback" />
           <div class="field-feedback" id="amount-feedback" aria-live="polite">
             @if (form.controls.amount.touched && form.controls.amount.invalid) {

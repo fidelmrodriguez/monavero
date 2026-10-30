@@ -1,4 +1,5 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { BrlCurrencyDirective } from '../../shared/directives/brl-currency.directive';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -11,7 +12,7 @@ import { maskedAccount, testLog } from '../../core/utils/test-diagnostics';
 
 @Component({
   selector: 'app-scheduled-transfers',
-  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe],
+  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe, BrlCurrencyDirective],
   templateUrl: './scheduled-transfers.page.html',
   styleUrl: './scheduled-transfers.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -91,6 +91,7 @@ describe('TransfersPage', () => {
     fixture.detectChanges();
     expect(bankingService.transfer).toHaveBeenCalledTimes(1);
     expect(bankingService.transfer.calls.mostRecent().args[0].amount).toBe(25);
+    expect(amount.getAttribute('type')).toBe('text');
     expect(fixture.nativeElement.textContent).toContain('realizada com sucesso');
     expect(fixture.nativeElement.querySelector('#amount-feedback').textContent).not.toContain('Informe');
     expect((fixture.nativeElement.querySelector('#amount') as HTMLInputElement).value).toBe('');

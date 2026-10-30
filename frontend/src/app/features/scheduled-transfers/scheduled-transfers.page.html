@@ -43,7 +43,7 @@
           <div class="grid grid-2 schedule-fields">
             <div class="field">
               <label for="schedule-amount">Valor (R$)</label>
-              <input id="schedule-amount" class="input" type="number" step="0.01" min="0.01" max="50000" formControlName="amount" />
+              <input id="schedule-amount" class="input" type="text" inputmode="decimal" autocomplete="off" appBrlCurrency placeholder="R$ 0,00" formControlName="amount" />
               <div class="field-feedback">@if (form.controls.amount.touched && form.controls.amount.invalid) { <span class="error-text">Informe um valor de R$ 0,01 a R$ 50.000,00.</span> }</div>
             </div>
             <div class="field">

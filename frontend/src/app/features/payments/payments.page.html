@@ -30,7 +30,7 @@
         <div class="grid grid-2 inner-grid">
           <div class="field">
             <label for="amount">Valor</label>
-            <input id="amount" class="input" type="number" formControlName="amount" />
+            <input id="amount" class="input" type="text" inputmode="decimal" autocomplete="off" appBrlCurrency placeholder="R$ 0,00" formControlName="amount" />
             @if (isInvalid('amount')) {
               <span class="error-text">Informe um valor válido.</span>
             }

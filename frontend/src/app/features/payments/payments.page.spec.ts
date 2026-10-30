@@ -45,3 +45,21 @@ describe('PaymentsPage', () => {
     expect(component).toBeTruthy();
   });
 });
+
+describe('PaymentsPage - valor BRL', () => {
+  it('exibe reais e centavos sem modificar o número da operação', async () => {
+    await TestBed.configureTestingModule({
+      imports: [PaymentsPage],
+      providers: [provideRouter([]), provideHttpClient(), { provide: BankingService, useValue: bankingServiceStub }]
+    }).compileComponents();
+    const fixture = TestBed.createComponent(PaymentsPage);
+    fixture.detectChanges();
+    const amount = fixture.nativeElement.querySelector('#amount') as HTMLInputElement;
+    expect(amount.value).toBe('R$ 320,00');
+    amount.value = 'R$ 100,50';
+    amount.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    expect(amount.value).toBe('R$ 100,50');
+    expect((fixture.componentInstance as any).form.controls.amount.value).toBe(100.5);
+  });
+});

@@ -50,12 +50,12 @@
 
     <div class="field">
       <label for="minAmount">Valor mínimo</label>
-      <input id="minAmount" class="input" type="number" formControlName="minAmount" placeholder="0,00" />
+      <input id="minAmount" class="input" type="text" inputmode="decimal" autocomplete="off" appBrlCurrency formControlName="minAmount" placeholder="R$ 0,00" />
     </div>
 
     <div class="field">
       <label for="maxAmount">Valor máximo</label>
-      <input id="maxAmount" class="input" type="number" formControlName="maxAmount" placeholder="9999,00" />
+      <input id="maxAmount" class="input" type="text" inputmode="decimal" autocomplete="off" appBrlCurrency formControlName="maxAmount" placeholder="R$ 9.999,00" />
     </div>
   </form>
 

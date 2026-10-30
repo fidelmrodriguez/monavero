@@ -58,3 +58,29 @@ describe('ScheduledTransfersPage', () => {
   });
 
 });
+
+describe('ScheduledTransfersPage - máscara do valor', () => {
+  it('mantém os centavos numéricos para o payload de agendamento', async () => {
+    const banking = jasmine.createSpyObj('BankingService', ['getOverview']);
+    banking.getOverview.and.returnValue(of({ accounts: [
+      { id: '00000000-0000-4000-8000-000000000001', agency: '0001', number: 'MV1234567890', label: 'Conta corrente', balance: 1000, currency: 'BRL' }
+    ], transactions: [], investments: [], cards: [], cashflow: [], expensesByCategory: [] }));
+    const scheduling = jasmine.createSpyObj('ScheduledTransferService', ['list', 'create', 'cancel']);
+    scheduling.list.and.returnValue(of([]));
+    scheduling.create.and.returnValue(of({ id: 'id-1', status: 'agendado' }));
+    await TestBed.configureTestingModule({
+      imports: [ScheduledTransfersPage],
+      providers: [provideHttpClient(), { provide: BankingService, useValue: banking },
+        { provide: ScheduledTransferService, useValue: scheduling },
+        { provide: AuthStore, useValue: { isDemo: () => false } }]
+    }).compileComponents();
+    const fixture = TestBed.createComponent(ScheduledTransfersPage);
+    fixture.detectChanges();
+    const amount = fixture.nativeElement.querySelector('#schedule-amount') as HTMLInputElement;
+    amount.value = 'R$ 123,45';
+    amount.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    expect(amount.value).toBe('R$ 123,45');
+    expect((fixture.componentInstance as any).form.controls.amount.value).toBe(123.45);
+  });
+});

@@ -90,3 +90,30 @@ describe('StatementPage - estados de carregamento', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Não foi possível carregar suas movimentações');
   });
 });
+
+describe('StatementPage - filtros monetários BRL', () => {
+  let fixture: ComponentFixture<StatementPage>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [StatementPage],
+      providers: [{ provide: BankingService, useValue: bankingServiceStub }]
+    }).compileComponents();
+    fixture = TestBed.createComponent(StatementPage);
+    fixture.detectChanges();
+  });
+
+  it('aplica o filtro numérico após digitar um valor em reais com vírgula', () => {
+    const min = fixture.nativeElement.querySelector('#minAmount') as HTMLInputElement;
+    min.value = 'R$ 1.000,00';
+    min.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    expect(min.value).toBe('R$ 1.000,00');
+    expect((fixture.componentInstance as any).form.controls.minAmount.value).toBe(1000);
+    expect((fixture.componentInstance as any).filteredTransactions().length).toBe(1);
+    (fixture.nativeElement.querySelector('.page-header button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(min.value).toBe('');
+    expect((fixture.componentInstance as any).filteredTransactions().length).toBe(2);
+  });
+});

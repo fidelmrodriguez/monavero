@@ -196,3 +196,25 @@ Os logs com prefixo `[Monavero][Teste E7]` aparecem apenas no console (`F12`), j
 6. Caso a execução seja recusada, o log mostrará `status: 'recusado'`; investigar a falta de saldo ou a situação da conta. Em erros HTTP, o console mostra apenas `httpStatus`.
 
 Ao solicitar suporte, compartilhar somente as linhas `[Monavero][Teste E7]`, `[Monavero][Teste E5]` e erros HTTP relevantes, sem credenciais. Os eventos do navegador refletem o estado informado pela API; **não** demonstram, isoladamente, que o banco registrou os dois lançamentos, que devem ser verificados no extrato e nos testes de integração.
+
+
+### Máscara de valores em reais (frontend)
+
+Campos monetários utilizam a diretiva reutilizável `BrlCurrencyDirective`, com
+formatação `R$ 1.234,56`, teclado decimal em dispositivos móveis e suporte a
+vírgula, ponto e colagem de valores monetários. Os controles mantêm `number`
+(ou `null` quando vazios) em vez de enviar textos localizados à API.
+
+Verificar antes da publicação:
+- Transferência imediata: digitar `100`, vírgula, `50`; o campo deve mostrar
+  `R$ 100,50` e a requisição deve conter `amount: 100.5`.
+- Transferência agendada: mesmo comportamento, sem alteração do agendamento.
+- Pagamentos: o valor inicial de `320` deve aparecer como `R$ 320,00`.
+- Extrato: valores mínimo e máximo devem filtrar por números, e **Limpar filtros**
+  deve deixar os dois campos vazios.
+- Colagem: `R$ 1.234,56` deve resultar em `1234.56`; limpar o campo deve
+  restaurar a validação de obrigatório quando aplicável.
+- Limites de R$ 0,01 e R$ 50.000,00 continuam validados no formulário e no backend.
+
+Testes adicionais: `brl-currency.directive.spec.ts`, testes do extrato,
+agendamentos e pagamentos. O frontend publicado reside em `frontend/`.
