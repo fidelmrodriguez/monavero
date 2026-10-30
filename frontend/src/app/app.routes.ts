@@ -30,6 +30,10 @@ export const appRoutes: Routes = [
         loadComponent: () => import('./features/transfers/transfers.page').then((m) => m.TransfersPage)
       },
       {
+        path: 'agendamentos',
+        loadComponent: () => import('./features/scheduled-transfers/scheduled-transfers.page').then((m) => m.ScheduledTransfersPage)
+      },
+      {
         path: 'pagamentos',
         loadComponent: () => import('./features/payments/payments.page').then((m) => m.PaymentsPage)
       },

@@ -16,7 +16,7 @@ describe('BankingService persistente', () => {
   });
   afterEach(() => http.verify());
 
-  it('carrega contas e extrato somente da API autenticada, sem DummyJSON', () => {
+  it('carrega contas e extrato somente da API própria autenticada', () => {
     let total = -1;
     service.getOverview().subscribe(value => {
       expect(value.accounts[0].balance).toBe(450.5);

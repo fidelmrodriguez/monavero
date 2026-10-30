@@ -46,6 +46,7 @@ export class ShellComponent {
     { label: 'Dashboard', route: '/app/dashboard', icon: '📊' },
     { label: 'Extrato', route: '/app/extrato', icon: '📄' },
     { label: 'Transferências', route: '/app/transferencias', icon: '↔️' },
+    { label: 'Agendamentos', route: '/app/agendamentos', icon: '🕒' },
     { label: 'Pagamentos', route: '/app/pagamentos', icon: '📅' },
     { label: 'Notificações', route: '/app/notificacoes', icon: '🔔' },
     { label: 'Auditoria', route: '/app/auditoria', icon: '🧾', roles: ['gerente', 'admin'] },

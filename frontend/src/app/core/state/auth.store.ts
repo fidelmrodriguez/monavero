@@ -236,7 +236,7 @@ export class AuthStore implements OnDestroy {
 
   private restoreSession(): AuthSession | null {
     if (!this.isBrowser) return null;
-    // Nunca reutilizar o token da antiga API DummyJSON.
+    // Nunca reutilizar tokens de sessões anteriores à autenticação própria.
     localStorage.removeItem(OLD_KEY);
     const raw = sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return null;

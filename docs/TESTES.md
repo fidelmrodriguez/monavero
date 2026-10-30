@@ -172,3 +172,27 @@ O crédito de abertura é **fictício**, exclusivamente para o portfólio, e nã
 - Conferir o layout em desktop, janela intermediária e celular: nomes longos de contrapartes e descrições devem quebrar linha sem criar rolagem horizontal na página. Tabelas grandes podem ter rolagem **dentro** do seu contêiner em resoluções intermediárias; no celular os lançamentos aparecem em cartões.
 - Os filtros do extrato atuam localmente sobre os dados recebidos e não devem exibir loaders artificiais a cada tecla digitada.
 - Testes automáticos: `frontend/src/app/features/statement/statement.page.spec.ts` cobre carregamento, resposta, erro e nova tentativa.
+
+
+## Etapa 7 — testes de agendamento
+
+1. Rodar `mvn -B -ntp clean verify` com Java 25 e Docker/Testcontainers. `ScheduledTransferIntegrationTest` cobre V7, cadastro idempotente, ausência de débito na criação, execução uma única vez, os dois lançamentos no extrato, cancelamento e isolamento por titular.
+2. No Angular, executar `npm ci`, `npm run build`, `npm test`. A nova tela usa os mesmos estados de carregamento e validação da interface bancária.
+3. Confirmar nos logs Flyway `Current version of schema public: 7` (ou migração V7 aplicada).
+4. Em uma conta pessoal com saldo, criar agendamento para outra conta Monavero alguns minutos adiante. A transferência deve aparecer como **Agendada**, sem mudar os saldos.
+5. Cancelar um primeiro agendamento e verificar que não houve débito; cadastrar outro e, com a Blitz online, confirmar execução no vencimento. Abrir o extrato dos dois titulares e atualizar com F5: um débito e um crédito persistentes, sem duplicação.
+6. Na hospedagem gratuita da Blitz a API pode dormir. Se isso acontecer antes do vencimento, o processamento depende do próximo despertar. Isso é uma limitação de infraestrutura; não prometer execução na hora exata.
+7. Conferir por busca no repositório que não restam URLs nem chamadas para o serviço externo de dados de teste anterior.
+
+### Diagnósticos no console do navegador — Etapa 7
+
+Os logs com prefixo `[Monavero][Teste E7]` aparecem apenas no console (`F12`), jamais na interface do cliente. Não exibem senhas, tokens, descrição livre nem números completos de contas.
+
+1. Com a V7 aplicada e a API online, entrar em **Agendamentos**, abrir F12 → Console e ativar **Preserve log**. Esperado: `Contas disponíveis para agendamento` e `Lista de agendamentos recebida da API`.
+2. Agendar R$ 10,00 para outra conta em data futura. Esperado: `Enviando agendamento à API` e `Agendamento confirmado pela API`, com `status: 'agendado'` e `debitoAindaPendente: true`. O saldo não deve mudar ao criar.
+3. Cancelar esse agendamento. Esperado: `Solicitando cancelamento` e `Cancelamento confirmado pela API`, com `status: 'cancelado'`. Conferir que nenhum débito ocorreu.
+4. Criar **outro** agendamento para alguns minutos adiante e manter a Blitz online. Depois do horário, clicar **Atualizar** na lista ou dar F5. Esperado: `Estado do agendamento na API`, com `status: 'concluido'`, `executado: true` e `temComprovante: true`. Se a API estiver dormindo, despertar pelo navegador e atualizar a lista; o job pode executar com atraso.
+5. Conferir o extrato de origem e destino; deve existir exatamente um débito e um crédito com o mesmo valor. Após F5, os registros devem persistir.
+6. Caso a execução seja recusada, o log mostrará `status: 'recusado'`; investigar a falta de saldo ou a situação da conta. Em erros HTTP, o console mostra apenas `httpStatus`.
+
+Ao solicitar suporte, compartilhar somente as linhas `[Monavero][Teste E7]`, `[Monavero][Teste E5]` e erros HTTP relevantes, sem credenciais. Os eventos do navegador refletem o estado informado pela API; **não** demonstram, isoladamente, que o banco registrou os dois lançamentos, que devem ser verificados no extrato e nos testes de integração.

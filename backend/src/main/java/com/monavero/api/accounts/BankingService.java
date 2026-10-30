@@ -107,6 +107,9 @@ public class BankingService {
     private record TransferCounterparty(String senderName, String senderAgency, String senderNumber,
                                         String recipientName, String recipientAgency, String recipientNumber) { }
 
+    /** Provisiona o titular dentro da transação do agendamento. */
+    public void ensureAccountForScheduling(AuthenticatedUser principal) { ensurePrimary(principal); }
+
     /** Provisionamento idempotente, com trava compartilhada entre abas e instâncias Java. */
     BankAccount ensurePrimary(AuthenticatedUser principal) {
         jdbc.execute((org.springframework.jdbc.core.ConnectionCallback<Void>) connection -> {

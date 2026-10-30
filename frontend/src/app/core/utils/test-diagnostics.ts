@@ -1,5 +1,5 @@
 /** Diagnóstico mínimo para avaliação técnica (sem credenciais, PII ou payloads). */
-export function testLog(etapa: '4' | '5' | '6', event: string,
+export function testLog(etapa: '4' | '5' | '6' | '7', event: string,
   details: Record<string, string | number | boolean> = {}, failed = false): void {
   const message = `[Monavero][Teste E${etapa}] ${event}`;
   if (failed) {

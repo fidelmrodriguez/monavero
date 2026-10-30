@@ -35,6 +35,14 @@ O **Monavero** é um projeto de portfólio que demonstra a experiência de um ba
 - Mensagens de erro e confirmação são mostradas em linguagem de produto; diagnósticos detalhados ficam no console, não na interface.
 - A identidade demonstrativa pública só transfere entre suas próprias contas; contas pessoais não podem transferir para essa identidade pública.
 
+### Transferências agendadas
+
+- Agendamento de transferências para data/hora futura (entre um minuto e 90 dias), persistido via Flyway V7.
+- Consulta e cancelamento exclusivos do usuário que criou o agendamento, antes da execução.
+- Execução pelo servidor com bloqueio da linha e chave de idempotência ligada ao UUID do agendamento; débito/crédito somente no vencimento.
+- Sem reserva antecipada de saldo: saldo insuficiente no processamento faz a transferência ser recusada, sem débito parcial.
+- Se o servidor dormir, os agendamentos vencidos são processados quando voltar a ficar online; não há garantia de pontualidade na hospedagem gratuita.
+
 ### Experiência e recursos auxiliares
 
 - Layout responsivo, temas claro/escuro, formulários reativos e mensagens de validação acessíveis.
@@ -43,13 +51,13 @@ O **Monavero** é um projeto de portfólio que demonstra a experiência de um ba
 
 ## Limites e funcionalidades futuras
 
-Não há PIX/TED real, integração com instituições financeiras, liquidação de boletos, emissão real de cartões nem investimento financeiro real. Agendamento de transferências, processamento demonstrativo persistido de pagamentos, autorizações administrativas e evolução de auditoria/notificações permanecem no roadmap.
+Não há PIX/TED real, integração com instituições financeiras, liquidação de boletos, emissão real de cartões nem investimento financeiro real. Processamento demonstrativo persistido de pagamentos, autorizações administrativas e evolução de auditoria/notificações permanecem no roadmap.
 
 ## Arquitetura e validação
 
 - **Frontend:** Angular 19/TypeScript, publicado no Netlify como SPA estática.
 - **Backend:** Java 25 e Spring Boot 4.1.1, publicado na Blitz.
-- **Persistência:** PostgreSQL 18 (Neon), migrações Flyway até V6.
+- **Persistência:** PostgreSQL 18 (Neon), migrações Flyway até V7.
 - **Validação:** CI independente para frontend e backend; a implementação de cada funcionalidade não substitui a aprovação de seus testes e verificações em ambiente publicado.
 
 Consulte [a arquitetura](ARQUITETURA.md), [o roteiro de testes](TESTES.md) e [o roadmap](ROADMAP.md) para o estado detalhado de cada etapa.

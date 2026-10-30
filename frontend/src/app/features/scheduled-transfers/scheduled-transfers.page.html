@@ -1,0 +1,107 @@
+<section class="page schedule-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Transferências</p>
+      <h1>Agendar transferência</h1>
+      <p class="muted">Escolha a data de envio para outra conta Monavero. Você pode cancelar enquanto estiver pendente.</p>
+    </div>
+  </header>
+
+  <div class="grid grid-2 schedule-layout">
+    <article class="card">
+      <h2>Dados do agendamento</h2>
+      @if (loading()) {
+        <div class="data-loading" role="status"><span class="monavero-spinner"></span> Carregando suas contas...</div>
+      } @else {
+        <form class="schedule-form" [formGroup]="form" (ngSubmit)="schedule()">
+          <div class="field">
+            <label for="schedule-origin">Conta de origem</label>
+            <select id="schedule-origin" class="select" formControlName="originAccount" (change)="onOriginChange()">
+              @for (account of accounts(); track account.id) {
+                <option [value]="account.id">{{ account.label }} · {{ account.number }} · {{ account.balance | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</option>
+              }
+            </select>
+            @if (selectedAccount(); as account) {
+              <div class="account-summary"><span>Agência <strong>{{ account.agency }}</strong></span><span>Conta <strong>{{ account.number }}</strong></span></div>
+            }
+          </div>
+          <div class="grid grid-2 schedule-fields">
+            <div class="field">
+              <label for="schedule-agency">Agência de destino</label>
+              <input id="schedule-agency" type="text" maxlength="4" inputmode="numeric" autocomplete="off" class="input" formControlName="agency" />
+              <div class="field-feedback">@if (form.controls.agency.touched && form.controls.agency.invalid) { <span class="error-text">Informe uma agência de 4 dígitos.</span> }</div>
+            </div>
+            <div class="field">
+              <label for="schedule-number">Conta de destino</label>
+              <input id="schedule-number" type="text" maxlength="20" autocomplete="off" class="input" formControlName="accountNumber" placeholder="MV..." />
+              <div class="field-feedback">@if (form.controls.accountNumber.touched && form.controls.accountNumber.invalid) { <span class="error-text">Informe uma conta válida.</span> }</div>
+            </div>
+          </div>
+          @if (otherAccount()) {
+            <button type="button" class="own-account-shortcut" (click)="fillOtherAccount()">Usar outra conta minha · {{ otherAccount()?.label }}</button>
+          }
+          <div class="grid grid-2 schedule-fields">
+            <div class="field">
+              <label for="schedule-amount">Valor (R$)</label>
+              <input id="schedule-amount" class="input" type="number" step="0.01" min="0.01" max="50000" formControlName="amount" />
+              <div class="field-feedback">@if (form.controls.amount.touched && form.controls.amount.invalid) { <span class="error-text">Informe um valor de R$ 0,01 a R$ 50.000,00.</span> }</div>
+            </div>
+            <div class="field">
+              <label for="schedule-date">Data e horário</label>
+              <input id="schedule-date" class="input" type="datetime-local" formControlName="scheduledAt" />
+              <div class="field-feedback">@if (form.controls.scheduledAt.touched && form.controls.scheduledAt.invalid) { <span class="error-text">Informe a data e o horário.</span> }</div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="schedule-description">Descrição (opcional)</label>
+            <input id="schedule-description" class="input" maxlength="160" formControlName="description" placeholder="Motivo da transferência" />
+          </div>
+          @if (error()) { <p class="schedule-message error-text" role="alert">{{ error() }}</p> }
+          @if (success()) { <p class="schedule-message success-note" role="status">{{ success() }}</p> }
+          <button type="submit" class="btn btn-primary submit-schedule" [disabled]="submitting() || loading() || form.invalid || !selectedAccount()">
+            @if (submitting()) { <span class="monavero-spinner" aria-hidden="true"></span> Agendando... } @else { Confirmar agendamento }
+          </button>
+        </form>
+      }
+    </article>
+    <article class="card schedule-info">
+      <h2>Como funciona</h2>
+      <p>O valor será debitado somente na data e no horário programados, desde que a conta tenha saldo suficiente.</p>
+      <p>Se o serviço estiver temporariamente indisponível, a transferência será processada quando o atendimento for restabelecido.</p>
+      <p>Transferências entre bancos diferentes não estão disponíveis.</p>
+    </article>
+  </div>
+
+  <article class="card schedule-list">
+    <div class="schedule-list-header">
+      <h2>Meus agendamentos</h2>
+      <button type="button" class="btn btn-secondary" (click)="reloadList()">Atualizar</button>
+    </div>
+    @if (listingLoading()) {
+      <div class="data-loading" role="status"><span class="monavero-spinner" aria-hidden="true"></span> Carregando seus agendamentos...</div>
+    } @else if (listError()) {
+      <p role="alert">Não foi possível consultar seus agendamentos. Tente atualizar.</p>
+    } @else if (items().length === 0) {
+      <p class="muted">Nenhuma transferência agendada até o momento.</p>
+    } @else {
+      <div class="schedule-entries">
+        @for (item of items(); track item.id) {
+          <div class="schedule-entry">
+            <div class="schedule-entry-main">
+              <strong>{{ item.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
+              <span>Para {{ item.destinationAgency }} · {{ item.destinationAccountNumber }}</span>
+              <small>{{ item.scheduledFor | date:'dd/MM/yyyy HH:mm':'':'pt-BR' }} · {{ statusLabel(item.status) }}</small>
+              @if (item.description) { <small>{{ item.description }}</small> }
+              @if (item.failureReason) { <small class="error-text">{{ item.failureReason }}</small> }
+            </div>
+            @if (item.status === 'agendado') {
+              <button type="button" class="btn btn-secondary" [disabled]="cancelingId() !== null" (click)="cancel(item)">
+                {{ cancelingId() === item.id ? 'Cancelando...' : 'Cancelar' }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
+  </article>
+</section>

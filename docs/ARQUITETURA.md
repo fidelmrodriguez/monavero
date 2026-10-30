@@ -59,6 +59,11 @@ O serviço backend hospedado na Blitz pode passar por inicialização a frio. O 
 
 ## Limites explícitos
 
-PIX/TED externos, boletos reais e liquidação de valores não fazem parte desta implementação. Pagamentos demonstrativos persistidos, agendamentos e evolução de auditoria e administração constam do [roadmap](ROADMAP.md).
+PIX/TED externos, boletos reais e liquidação de valores não fazem parte desta implementação. Transferências agendadas estão implementadas na Etapa 7. Pagamentos demonstrativos persistidos, agendamento de pagamentos e evolução de auditoria/administração permanecem no [roadmap](ROADMAP.md).
 
 Veja também [funcionalidades](FUNCIONALIDADES.md), [segurança](SEGURANCA_AUTENTICACAO.md) e [testes](TESTES.md).
+
+
+## Execução de transferências agendadas (Etapa 7)
+
+O frontend envia os dados para a API autenticada; a tabela `scheduled_transfers` mantém a intenção de transferência até o vencimento. O serviço `ScheduledTransferWorker` consulta agendamentos vencidos; `ScheduledTransferExecutionService` trava cada agendamento com `FOR UPDATE SKIP LOCKED` e utiliza `TransferService` para as mesmas validações de titularidade, status, saldo, limite, idempotência e gravação atômica de dois lançamentos. Uma execução concluída é associada ao agendamento, e nenhuma tentativa de execução ocorre no navegador. Um scheduler executa somente enquanto o backend está online; agendamentos atrasados são recuperados na próxima ativação da aplicação.

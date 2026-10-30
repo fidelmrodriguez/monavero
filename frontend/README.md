@@ -81,3 +81,7 @@ O Monavero é um ambiente demonstrativo: não realiza PIX, TED, pagamento real o
 - Transferências: indicação ao carregar contas, processar operação e atualizar saldos; formulário permanece protegido contra reenvios durante a operação.
 - Tabelas de extrato e dashboard não devem expandir a página: os textos longos quebram linha, o contêiner limita a largura e o layout móvel usa cartões.
 - Os estados de carregamento são textos normais para o cliente, enquanto diagnósticos das etapas permanecem exclusivamente no console.
+
+### Transferências agendadas
+
+A rota `/app/agendamentos` permite criar, listar e cancelar agendamentos internos. As datas são informadas em horário local e enviadas à API em UTC. O processamento ocorre no backend e não depende de uma aba aberta. O saldo é debitado apenas no vencimento; em hospedagem sob demanda a execução pode ocorrer na próxima ativação do servidor. Não há componentes de QA nas telas.

@@ -11,7 +11,7 @@ O Monavero evolui de um frontend Angular demonstrativo para um sistema full stac
 | 4 | Autenticação própria, cadastro, sessão e autorização no servidor | **Validada funcionalmente** — Spring Security, Flyway V3, login, logout e sessão entre abas |
 | 5 | Contas, saldos, dashboard e extrato persistidos | **Validada funcionalmente** — V4, dashboard e extrato persistentes verificados após F5; CI da mudança atual pendente |
 | 6 | Transferências internas, lançamentos atômicos, idempotência e concorrência | **Validada funcionalmente** — V5, transferência comprovada e dois lançamentos persistidos após F5; CI da mudança atual pendente |
-| 7 | Agendamento seguro de transferências | Planejada |
+| 7 | Agendamento seguro de transferências e remoção da integração externa legada | **Implementada — aguardando CI, Flyway V7 e teste real** |
 | 8 | Pagamentos demonstrativos e agendamentos persistidos | Planejada |
 | 9 | Administração, autorização e auditoria de operações | Planejada |
 | 10 | Notificações, perfil e módulos complementares | Planejada |
@@ -50,3 +50,7 @@ Transferências **imediatas** entre contas Monavero, com validação de titulari
 ### Complemento da Etapa 6 — contas pessoais de titulares distintos
 
 Antes da Etapa 7, as transferências internas passam a ser testáveis entre dois cadastros pessoais diferentes. O Flyway V6 inclui marcador persistente para **crédito de abertura fictício e único** de R$ 1.000,00 por conta pessoal nova ou preexistente sem saldo/movimentações, com lançamento próprio em extrato. Contas com histórico não recebem crédito retroativo. Não existe recarga pública. O teste integrado verifica transferência A → B, saldos finais, idempotência, isolamento dos extratos e bloqueio de operações com a identidade demonstrativa pública. **Pendente:** backend CI e teste ponta a ponta após deploy da V6.
+
+### Atualização — Etapa 7
+
+Implementadas transferências agendadas com ciclo `agendado → concluido/recusado` ou `agendado → cancelado`, API autenticada, chave idempotente, persistência Flyway V7, bloqueio concorrente e execução no backend. Nenhuma cobrança ou débito ocorre na criação. O executor retoma agendamentos vencidos após o início da aplicação; na Blitz gratuita a execução não pode ser garantida durante o período em que a API permanece dormindo. Removidas todas as referências e chamadas remanescentes ao provedor externo de dados fictícios, inclusive na árvore Angular histórica da raiz; o frontend publicado utiliza somente a API própria. **CI e deploy ainda não verificados**.

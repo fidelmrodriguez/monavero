@@ -12,6 +12,7 @@ O Monavero utiliza **PostgreSQL 18 no Neon**, gerenciado por migrações **Flywa
 | V4 | Lançamentos `account_transactions` e provisionamento de contas/saldos da demonstração |
 | V5 | `bank_transfers`, vínculo `transfer_id` entre lançamentos e transferência, idempotência e integridade referencial |
 | V6 | `bank_accounts.sandbox_credit_provisioned`: controle persistente da concessão única do crédito fictício de abertura |
+| V7 | `scheduled_transfers`: agendamentos por titular, estados, cancelamento, chave de idempotência e relação com a transferência efetivamente executada |
 
 **Nunca editar migrações já aplicadas** em um ambiente compartilhado. O Flyway valida histórico e checksums antes de avançar a versão. O Hibernate usa `ddl-auto=validate` e não cria tabelas automaticamente.
 
@@ -26,6 +27,12 @@ O Monavero utiliza **PostgreSQL 18 no Neon**, gerenciado por migrações **Flywa
 - Crédito inicial fictício configurável por `MONAVERO_PERSONAL_OPENING_CREDIT` (padrão R$ 1.000,00, máximo R$ 10.000,00; valor 0 desativa). O crédito é aplicado atomicamente com lançamento no extrato, uma única vez por conta pessoal elegível.
 - Contas pessoais anteriores à V6 só recebem o crédito quando saldo e extrato estiverem vazios; contas com histórico são preservadas sem crédito retroativo.
 - Não há endpoint de depósitos ou de recargas. Uma nova autenticação, F5 e chamadas concorrentes não concedem crédito adicional.
+
+## Agendamentos
+
+`scheduled_transfers` armazena data UTC, origem/destino, valor e status (`PENDING`, `EXECUTED`, `CANCELED`, `FAILED`). O registro pertence a um único titular; somente `PENDING` pode ser cancelado. O executor usa `FOR UPDATE SKIP LOCKED` e depois o mesmo mecanismo transacional de transferência imediata, identificando cada execução pelo UUID do agendamento. Uma execução concluída referencia `bank_transfers`; os lançamentos de débito/crédito permanecem apenas em `account_transactions`.
+
+Agendar não reserva saldo: a validação é repetida no vencimento. No plano gratuito da Blitz o executor só roda quando a instância está online, e agendamentos vencidos são recuperados depois do despertar. A interface não deve prometer pontualidade absoluta.
 
 ## Conexão e segredos
 
@@ -43,7 +50,8 @@ FROM information_schema.tables
 WHERE table_schema = 'public'
   AND table_name IN (
     'app_users', 'bank_accounts', 'account_holders',
-    'auth_sessions', 'account_transactions', 'bank_transfers'
+    'auth_sessions', 'account_transactions', 'bank_transfers',
+    'scheduled_transfers'
   )
 ORDER BY table_name;
 ```

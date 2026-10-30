@@ -4,7 +4,7 @@ Backend transacional de um banco digital **demonstrativo**. Não movimenta moeda
 
 ## Stack
 
-Java 25, Spring Boot 4.1.1, Spring Security e BCrypt, tokens opacos com sessão revogável, Spring Data JPA/Hibernate, PostgreSQL 18 (Neon), Flyway V1–V6, Spring Modulith, MockMvc e Testcontainers.
+Java 25, Spring Boot 4.1.1, Spring Security e BCrypt, tokens opacos com sessão revogável, Spring Data JPA/Hibernate, PostgreSQL 18 (Neon), Flyway V1–V7, Spring Modulith, MockMvc e Testcontainers.
 
 ## Funcionalidades
 
@@ -13,6 +13,10 @@ Java 25, Spring Boot 4.1.1, Spring Security e BCrypt, tokens opacos com sessão 
 - `GET /api/v1/auth/me`: identidade autenticada.
 - `GET /api/v1/banking/overview`: contas e extrato vinculados ao titular, com dados persistidos.
 - `POST /api/v1/banking/transfers`: transferência interna imediata entre contas, inclusive entre usuários pessoais distintos; valida origem, destino, saldo, status e limites, com débito e crédito transacionais e chave de idempotência.
+- `POST /api/v1/banking/scheduled-transfers`: cadastra transferência futura com chave de idempotência.
+- `GET /api/v1/banking/scheduled-transfers`: lista somente agendamentos do titular.
+- `DELETE /api/v1/banking/scheduled-transfers/{id}`: cancela enquanto pendente.
+- Processamento automático no vencimento por `@Scheduled`, com trava PostgreSQL, execução transacional e recuperação após reinício do processo.
 - `GET /actuator/health`: disponibilidade da API.
 
 ### Crédito de abertura no ambiente de demonstração

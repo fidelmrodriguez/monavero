@@ -38,6 +38,9 @@ management:
     health:
       show-details: never
 monavero:
+  scheduling:
+    scan-delay-ms: ${MONAVERO_SCHEDULING_SCAN_DELAY_MS:15000}
+    initial-delay-ms: ${MONAVERO_SCHEDULING_INITIAL_DELAY_MS:20000}
   sandbox:
     # Crédito de abertura puramente fictício; 0 desativa novos créditos.
     personal-opening-credit: ${MONAVERO_PERSONAL_OPENING_CREDIT:1000.00}

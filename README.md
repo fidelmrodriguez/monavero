@@ -17,20 +17,26 @@
 | Contas | Contas e saldos por titular, com crédito de abertura fictício e único para contas pessoais, persistidos no PostgreSQL |
 | Dashboard | Visão consolidada de contas e movimentações; cartões e investimentos apresentados como dados ilustrativos |
 | Extrato | Lançamentos persistentes, pesquisa e filtros |
-| Transferências | Operações imediatas entre contas pessoais de titulares distintos ou entre contas próprias no Monavero com débito/crédito atômicos, validações no backend e idempotência |
+| Transferências | Operações imediatas e agendadas entre contas Monavero, inclusive titulares distintos; débito/crédito atômicos, cancelamento antes da execução e idempotência |
 | Pagamentos | Fluxo demonstrativo no frontend; persistência e processamento serão implementados em etapa posterior |
 | Outros | Notificações, perfil, tema, responsividade e áreas visuais de gestão em evolução |
 
 Contas pessoais recebem R$ 1.000,00 de crédito fictício de abertura uma única vez, inclusive contas antigas sem movimentações. Não existe endpoint de recarga ou depósito. A aplicação usa contas de demonstração com agência e número próprios. Para explorar o produto, o login demonstrativo é `User / 1234`. O seletor de perfil modifica apenas a apresentação; não altera privilégios de acesso à API.
+
+Agendamentos são processados pelo backend na data solicitada, sujeitos à disponibilidade do serviço; não há reserva antecipada do saldo. Quando a hospedagem gratuita está em repouso, agendamentos vencidos são processados na próxima ativação.
 
 ## Stack técnica
 
 - **Frontend:** Angular 19, TypeScript, SCSS, Signals, RxJS, Reactive Forms, lazy loading e Jasmine/Karma.
 - **Publicação frontend:** Netlify, SPA estática com regras de redirecionamento para rotas internas e health check.
 - **Backend:** Java 25, Spring Boot 4.1.1, Spring Security, Spring Data JPA, Spring Modulith, Actuator e OpenAPI.
-- **Persistência:** PostgreSQL 18 no Neon, Hibernate e migrações Flyway V1–V6.
+- **Persistência:** PostgreSQL 18 no Neon, Hibernate e migrações Flyway V1–V7.
 - **Testes/CI:** GitHub Actions para Angular e Java; integração com PostgreSQL de teste via Testcontainers.
 - **Disponibilidade:** a API usa hospedagem sob demanda na Blitz; inicializações a frio podem causar espera antes do login.
+
+## Integrações externas
+
+A aplicação não utiliza serviços públicos de dados fictícios para contas, autenticação ou extrato. Os fluxos do produto utilizam exclusivamente a API Monavero. A árvore Angular histórica em `src/` tem apenas pontos de compatibilidade com os serviços atuais; a aplicação distribuída está em `frontend/`.
 
 ## Organização
 
