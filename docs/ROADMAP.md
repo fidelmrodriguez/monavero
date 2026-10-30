@@ -10,7 +10,7 @@ O Monavero evolui de um frontend Angular demonstrativo para um sistema full stac
 | 3 | PostgreSQL, Spring Data JPA, modelo e migrações Flyway | **Validada** — CI verde, Flyway V1 aplicada na Blitz, tabelas e histórico confirmados no Neon |
 | 4 | Autenticação própria, cadastro, sessão e autorização no servidor | **Validada funcionalmente** — Spring Security, Flyway V3, login, logout e sessão entre abas |
 | 5 | Contas, saldos, dashboard e extrato persistidos | **Implementada; validação operacional pendente** — V4, dashboard, extrato e CI backend verde |
-| 6 | Transferências internas, lançamentos atômicos, idempotência e concorrência | **Código preparado; aguardando CI e deploy** |
+| 6 | Transferências internas, lançamentos atômicos, idempotência e concorrência | **Em validação** — Flyway V5 aplicada; teste ponta a ponta e CI ainda a confirmar |
 | 7 | Agendamento seguro de transferências | Planejada |
 | 8 | Pagamentos demonstrativos e agendamentos persistidos | Planejada |
 | 9 | Administração, autorização e auditoria de operações | Planejada |
@@ -45,4 +45,4 @@ Implementação preparada: provisionamento de contas por usuário, movimentaçõ
 
 ### Atualização — Etapa 6
 
-Transferências **imediatas** entre contas Monavero, com validação de titularidade e saldo no servidor, travas PostgreSQL ordenadas, dois lançamentos simétricos em uma transação de banco, chave de idempotência e Flyway V5. A identidade demo possui duas contas fictícias e só pode transferir entre elas. Não há PIX/TED externo nem agendamento antecipado (Etapa 7). **Validação pendente:** Backend Java CI, Frontend Angular CI, V5 no Neon e teste pela interface na Blitz/Netlify.
+Transferências **imediatas** entre contas Monavero, com validação de titularidade e saldo no servidor, travas PostgreSQL ordenadas, dois lançamentos simétricos em uma transação de banco, chave de idempotência e Flyway V5. A identidade demo possui duas contas fictícias e só pode transferir entre elas. Não há PIX/TED externo nem agendamento antecipado (Etapa 7). **Validação pendente:** confirmação dos dois pipelines de CI e teste ponta a ponta pela interface. A Blitz registrou o Flyway na versão 5 e iniciou o Spring Boot 0.6.0.

@@ -37,7 +37,7 @@ export class TransfersPage {
     originAccount: ['', [Validators.required]],
     agency: ['0001', [Validators.required, Validators.pattern(/^\d{4}$/)]],
     accountNumber: ['', [Validators.required, Validators.pattern(/^[A-Za-z0-9-]{5,20}$/)]],
-    amount: [100, [Validators.required, Validators.min(0.01), Validators.max(50000)]],
+    amount: ['', [Validators.required, Validators.min(0.01), Validators.max(50000)]],
     description: ['', [Validators.maxLength(160)]]
   });
   private readonly formValues = toSignal(
@@ -47,10 +47,8 @@ export class TransfersPage {
   protected readonly selectedAccount = computed(() =>
     this.accounts().find(account => account.id === this.formValues().originAccount)
   );
-  protected readonly demoTarget = computed(() =>
-    this.authStore.isDemo()
-      ? this.accounts().find(account => account.id !== this.formValues().originAccount)
-      : undefined
+  protected readonly otherAccount = computed(() =>
+    this.accounts().find(account => account.id !== this.formValues().originAccount)
   );
   protected readonly accountUnavailable = computed(() => !this.selectedAccount());
   protected readonly insufficientBalance = computed(() =>
@@ -59,7 +57,7 @@ export class TransfersPage {
 
   constructor() { this.loadAccounts(); }
 
-  /** Permite copiar/preencher uma conta real recebida da API, sem digitar identificadores. */
+  /** Preenche um destino pertencente ao mesmo titular. */
   protected fillDestination(account: AccountSummary): void {
     if (account.id === this.form.controls.originAccount.value) return;
     this.form.patchValue({ agency: account.agency, accountNumber: account.number });
@@ -70,15 +68,15 @@ export class TransfersPage {
     testLog('6', 'Destino preenchido a partir da API', { conta: maskedAccount(account.number), agenciaValida: /^\d{4}$/.test(account.agency) });
   }
 
-  protected fillDemoDestination(): void {
-    const target = this.demoTarget();
+  protected fillOtherAccount(): void {
+    const target = this.otherAccount();
     if (target) this.fillDestination(target);
   }
 
   protected onOriginChange(): void {
     this.error.set('');
     this.success.set('');
-    if (this.authStore.isDemo()) this.fillDemoDestination();
+    if (this.authStore.isDemo()) this.fillOtherAccount();
   }
 
   protected normalizeDestination(): void {
@@ -130,14 +128,14 @@ export class TransfersPage {
     this.bankingService.transfer(request).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: receipt => {
         this.pendingRequest = null;
-        this.success.set(`Transferência ${receipt.id.slice(0, 8)} confirmada e registrada no extrato.`);
+        this.success.set('Transferência realizada com sucesso. Confira os detalhes no extrato.');
         this.notifications.addNotification({
           title: 'Transferência concluída',
           description: `R$ ${receipt.amount.toFixed(2).replace('.', ',')} enviado entre contas Monavero.`,
           type: 'success'
         });
         this.audit.register('Transferência interna confirmada pela API', 'Transferências', 'sucesso', this.authStore.role());
-        this.form.patchValue({ amount: 100, description: '' });
+        this.form.patchValue({ amount: '', description: '' });
         this.loadAccounts(receipt, current.amount);
         this.submitting.set(false);
       },
@@ -146,9 +144,9 @@ export class TransfersPage {
         const status = Number(err?.status ?? 0);
         this.error.set(status === 422
           ? 'Transferência recusada: confira saldo, destino e situação das contas.'
-          : status === 403 ? 'Transferência não autorizada. A conta demo só envia para outra conta demonstrativa.'
-          : status === 409 ? 'Essa chave já foi usada com outros dados. Altere os dados ou aguarde.'
-          : 'Não foi possível confirmar a operação. Tente novamente sem alterar os dados para evitar duplicidade.');
+          : status === 403 ? 'Transferência não permitida para a conta informada.'
+          : status === 409 ? 'Não foi possível processar esta solicitação. Revise os dados e tente novamente.'
+          : 'Não foi possível confirmar a transferência. Tente novamente sem alterar os dados.');
         testLog('6', 'Transferência NÃO confirmada', { httpStatus: status, reenvioSeguro: true }, true);
       }
     });
@@ -163,7 +161,7 @@ export class TransfersPage {
         if (!data.accounts.some(account => account.id === current)) {
           this.form.controls.originAccount.setValue(data.accounts[0]?.id ?? '');
         }
-        // O demo dispõe de duas contas no Neon: deixa a conta de destino pronta para teste.
+        // Para contas de demonstração, facilita o preenchimento de outro destino do mesmo titular.
         if (this.authStore.isDemo() && !this.form.controls.accountNumber.value.trim()) {
           const target = data.accounts.find(a => a.id !== this.form.controls.originAccount.value);
           if (target) this.fillDestination(target);

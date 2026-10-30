@@ -7,7 +7,7 @@ A configuração de CI fica em [`.github/workflows/frontend-ci.yml`](../.github/
 | Verificação | Comando (em `frontend/`) | Objetivo |
 | --- | --- | --- |
 | Tipagem TypeScript | `npm run typecheck` | Identificar erros de tipos no código Angular. |
-| Build | `npm run build` | Compilar frontend, templates e artefatos SSR. |
+| Build | `npm run build` | Compilar frontend estático, TypeScript e templates Angular. |
 | Testes unitários | `npm test` | Executar Jasmine/Karma em Chrome Headless. |
 
 Em Codespaces ou ambiente local:
@@ -31,7 +31,7 @@ Quando o registro npm estiver acessível, execute `npm install` dentro de `front
 ## Revisão funcional no Netlify
 
 - Login demonstrativo com `User` / `1234` editáveis, cadastro pessoal, login posterior, atualização de página e logout. Verificar que não é possível selecionar privilégios de administrador pelo navegador.
-- Atualização direta de rotas internas sem erro 404; verificar SSR e hidratação.
+- Atualização direta de rotas internas sem erro 404; verificar fallback SPA no Netlify.
 - Dashboard, extrato, filtros, notificações, auditoria e perfil.
 - Formulários de transferências: validações de saldo, limite, origem e dados obrigatórios.
 - Pagamentos demonstrativos e estados vazios.
@@ -140,3 +140,7 @@ A classe `TransferIntegrationTest` usa Testcontainers/PostgreSQL real no CI para
 - Saldo insuficiente e origem igual ao destino são rejeitados.
 
 Os testes Angular verificam a chamada HTTP, confirmação somente após sucesso e tratamento de falha. **Não executar `-DskipTests` como critério de aprovação da etapa**: usar `mvn -B -ntp clean verify` no CI e `npm test -- --watch=false` conforme workflow Angular. Não considerar a etapa validada sem CI e deploy.
+
+### Qualidade da interface de transferências
+
+O produto não deve exibir mensagens como “Teste da Etapa”, instruções de QA ou nomes de tecnologia interna para clientes. A agência e a conta de origem precisam permanecer visíveis, os campos não devem se deslocar ao validar erros e o valor inicia vazio. Os testes da `TransfersPage` cobrem essas condições. Logs de autenticação, carregamento e transferências são restritos ao console, sem credenciais, tokens ou números integrais de conta.

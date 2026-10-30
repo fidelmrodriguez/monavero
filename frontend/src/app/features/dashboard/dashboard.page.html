@@ -1,9 +1,9 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">Dashboard</p>
+      <p class="eyebrow">Visão geral</p>
       <h1>Olá, {{ authStore.displayName() }}.</h1>
-      <p class="muted">Saldos e movimentações vinculados à sua conta no PostgreSQL.</p>
+      <p class="muted">Consulte seus saldos e acompanhe suas movimentações em um só lugar.</p>
     </div>
     <a class="btn btn-primary" routerLink="/app/transferencias">Nova transferência</a>
   </header>
@@ -19,12 +19,12 @@
     <article class="card compact metric-card">
       <span class="metric-label">Investimentos</span>
       <strong>{{ totalInvestments() | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
-      <small>{{ authStore.isDemo() ? 'Carteira fictícia da demonstração' : 'Em preparação' }}</small>
+      <small>{{ authStore.isDemo() ? 'Carteira demonstrativa' : 'Ainda não disponível' }}</small>
     </article>
     <article class="card compact metric-card">
       <span class="metric-label">Cartões</span>
       <strong>{{ totalCardUsed() | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
-      <small>{{ authStore.isDemo() ? 'Cartão fictício da demonstração' : 'Em preparação' }}</small>
+      <small>{{ authStore.isDemo() ? 'Cartão demonstrativo' : 'Ainda não disponível' }}</small>
     </article>
   </div>
 
@@ -60,7 +60,7 @@
             </div>
           </div>
         }
-        @if (overview.investments.length === 0) { <p class="muted">Disponível em uma próxima etapa.</p> }
+        @if (overview.investments.length === 0) { <p class="muted">Nenhum produto disponível no momento.</p> }
       </div>
     </article>
 
@@ -85,7 +85,7 @@
             <small>Vencimento dia {{ card.dueDay }} · {{ card.status }}</small>
           </article>
         }
-        @if (overview.cards.length === 0) { <p class="muted">Disponível em uma próxima etapa.</p> }
+        @if (overview.cards.length === 0) { <p class="muted">Nenhum produto disponível no momento.</p> }
       </div>
     </article>
   </div>

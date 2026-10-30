@@ -2,15 +2,15 @@
   <header class="page-header">
     <div>
       <p class="eyebrow">Transferências</p>
-      <h1>Transferências imediatas</h1>
-      <p class="muted">Movimente saldos fictícios entre contas existentes no Monavero, com registro persistente no extrato.</p>
+      <h1>Nova transferência</h1>
+      <p class="muted">Envie valores entre contas Monavero de forma prática e acompanhe cada movimentação no extrato.</p>
     </div>
   </header>
 
   <div class="grid grid-2 transfer-layout">
     <article class="card">
-      <h2>Nova transferência</h2>
-      @if (loading()) { <p class="muted" role="status">Carregando contas do Neon...</p> }
+      <h2>Dados da transferência</h2>
+      @if (loading()) { <p class="muted" role="status">Carregando suas contas...</p> }
       <form [formGroup]="form" (ngSubmit)="submit()" class="transfer-form">
         <div class="field">
           <label for="originAccount">Conta de origem</label>
@@ -29,13 +29,6 @@
             </div>
           }
         </div>
-
-        @if (demoTarget(); as target) {
-          <div class="test-guide">
-            <strong>Teste da Etapa 6</strong>
-            <p>Destino demonstrativo já preenchido. Para testar, mantenha a agência <b>{{ target.agency }}</b>, a conta <b>{{ target.number }}</b>, informe R$ 10 e confirme.</p>
-          </div>
-        }
 
         <div class="grid grid-2 inner-grid">
           <div class="field transfer-field">
@@ -62,9 +55,9 @@
             </div>
           </div>
         </div>
-        @if (demoTarget(); as target) {
-          <button class="btn demo-fill" type="button" (click)="fillDemoDestination()">
-            Usar destino demonstrativo · Ag. {{ target.agency }} · {{ target.number }}
+        @if (otherAccount(); as target) {
+          <button class="btn own-account-shortcut" type="button" (click)="fillOtherAccount()">
+            Transferir para outra conta minha · {{ target.label }}
           </button>
         }
 
@@ -89,26 +82,23 @@
         @if (success()) { <p class="transfer-message success-note" role="status">{{ success() }}</p> }
         <button class="btn btn-primary" type="submit"
           [disabled]="loading() || submitting() || form.invalid || insufficientBalance() || accountUnavailable()">
-          {{ submitting() ? 'Confirmando na API...' : 'Confirmar transferência' }}
+          {{ submitting() ? 'Processando transferência...' : 'Confirmar transferência' }}
         </button>
       </form>
     </article>
 
     <article class="card">
-      <p class="eyebrow">Operação segura</p>
+      <p class="eyebrow">Conferir dados</p>
       <h2>Resumo</h2>
-      <div class="summary-box"><span>Perfil autenticado</span><strong>{{ authStore.role() }}</strong></div>
+      <div class="summary-box"><span>Tipo de acesso</span><strong>{{ authStore.role() }}</strong></div>
       <div class="summary-box"><span>Agência de origem</span><strong>{{ selectedAccount()?.agency ?? '—' }}</strong></div>
       <div class="summary-box"><span>Conta selecionada</span><strong class="account-number">{{ selectedAccount()?.number ?? '—' }}</strong></div>
       <div class="summary-box"><span>Saldo disponível</span><strong>{{ (selectedAccount()?.balance ?? 0) | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong></div>
       <div class="summary-box"><span>Limite por operação</span><strong>R$ 50.000,00</strong></div>
       <div class="security-note">
-        <strong>Transferência imediata entre contas Monavero</strong>
-        <p>Débito e crédito são feitos juntos no PostgreSQL. Reenvios não duplicam a operação.
-          Não são realizados PIX ou TED para instituições externas. Agendamentos virão na Etapa 7.</p>
-        @if (authStore.isDemo()) {
-          <p>Na demonstração, as transferências só podem ocorrer entre as contas demonstrativas.</p>
-        }
+        <strong>Antes de confirmar</strong>
+        <p>O valor é debitado da conta de origem e creditado na conta de destino após a confirmação.
+          Confira os dados do destinatário e o valor antes de concluir. Transferências para outros bancos não estão disponíveis.</p>
       </div>
     </article>
   </div>

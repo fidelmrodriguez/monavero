@@ -6,7 +6,7 @@ O backend Java 25 / Spring Boot 4.1.1 está hospedado na **Blitz Cloud** no serv
 
 | Camada | Serviço | Observação |
 | --- | --- | --- |
-| Interface | Netlify | Angular 19, ainda com dados fictícios/DummyJSON |
+| Interface | Netlify | Angular 19 SPA estática; dados financeiros bancários consumidos pela API Java |
 | API | Blitz Cloud | `https://monavero-api.fidelmrodriguez.blitz.cloud` |
 | Banco | Neon | Projeto `monavero`, branch `production`, database `neondb`, PostgreSQL 18 (Ohio) |
 

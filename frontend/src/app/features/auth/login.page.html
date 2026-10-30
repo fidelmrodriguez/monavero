@@ -7,9 +7,9 @@
       <p>Explore contas, cartões, investimentos e operações em um ambiente bancário demonstrativo.</p>
     </div>
     <div class="hero-grid">
-      <article><strong>Conta digital</strong><span>Interface de contas e saldos fictícios.</span></article>
-      <article><strong>Acesso protegido</strong><span>Autenticação e permissões definidas pela API Java.</span></article>
-      <article><strong>Agenda inteligente</strong><span>Agendamentos e notificações simulados para exploração.</span></article>
+      <article><strong>Conta digital</strong><span>Acompanhe suas contas e movimentações em um só lugar.</span></article>
+      <article><strong>Acesso protegido</strong><span>Proteção da conta em cada acesso.</span></article>
+      <article><strong>Agenda inteligente</strong><span>Acompanhe seus compromissos e notificações.</span></article>
     </div>
   </section>
 
@@ -18,7 +18,7 @@
       <div class="auth-progress" role="status" aria-live="polite">
         <span class="monavero-spinner" aria-hidden="true"></span>
         <strong>{{ mode() === 'login' ? 'Autenticando...' : 'Criando sua conta...' }}</strong>
-        <span>Aguarde a confirmação da API Java.</span>
+        <span>Estamos verificando seus dados com segurança.</span>
       </div>
     }
     <div class="auth-tabs" role="group" aria-label="Modalidade de acesso">
@@ -79,7 +79,7 @@
     } @else {
       <p class="eyebrow">Conta pessoal</p>
       <h2>Criar conta</h2>
-      <p class="muted">O cadastro cria um acesso com perfil de cliente. Contas bancárias serão vinculadas nas próximas etapas.</p>
+      <p class="muted">Crie seu acesso para consultar sua conta digital e acompanhar suas movimentações.</p>
       <form [formGroup]="registration" (ngSubmit)="submit()" novalidate>
         <div class="field">
           <label for="name">Nome completo</label>

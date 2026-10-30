@@ -6,13 +6,26 @@
       <div class="api-wakeup-logo" aria-hidden="true">M</div>
       <p class="api-wakeup-kicker">MONAVERO · INTERNET BANKING</p>
       <h1>Preparando seu acesso</h1>
-      <p class="api-wakeup-description">Conectando ao servidor bancário de demonstração.</p>
+      <p class="api-wakeup-description">Estabelecendo sua conexão com segurança.</p>
       <div class="api-wakeup-status">
         <span class="monavero-spinner" aria-hidden="true"></span>
-        <span>Aguardando a API Java despertar na Blitz Cloud</span>
+        <span>Conectando aos serviços Monavero...</span>
       </div>
       <p class="api-wakeup-time" aria-label="Tempo decorrido" aria-live="off">{{ apiReadiness.elapsedLabel() }}</p>
-      <p class="api-wakeup-hint">No plano gratuito, o primeiro acesso pode levar alguns minutos. A conexão é verificada automaticamente.</p>
+      @if (apiReadiness.elapsedSeconds() >= 8) {
+        <div class="api-wakeup-action">
+          <p>Sua conexão está demorando mais que o esperado. Você pode tentar restabelecê-la.</p>
+          <a class="api-wakeup-link"
+             [href]="apiReadiness.wakeUrl"
+             target="_blank"
+             rel="noopener noreferrer">
+            Tentar restabelecer conexão <span aria-hidden="true">↗</span>
+          </a>
+          <p class="api-wakeup-instructions">Uma nova aba será aberta. Depois, volte para continuar seu acesso.</p>
+        </div>
+      } @else {
+        <p class="api-wakeup-hint">Aguarde enquanto finalizamos sua conexão.</p>
+      }
     </section>
   </main>
 }
