@@ -7,14 +7,14 @@
     </div>
   </header>
 
-  <div class="grid grid-2">
+  <div class="grid grid-2 transfer-layout">
     <article class="card">
       <h2>Nova transferência</h2>
-      @if (loading()) { <p class="muted" role="status">Carregando contas...</p> }
+      @if (loading()) { <p class="muted" role="status">Carregando contas do Neon...</p> }
       <form [formGroup]="form" (ngSubmit)="submit()" class="transfer-form">
         <div class="field">
           <label for="originAccount">Conta de origem</label>
-          <select id="originAccount" class="select" formControlName="originAccount">
+          <select id="originAccount" class="select" formControlName="originAccount" (change)="onOriginChange()">
             @for (account of accounts(); track account.id) {
               <option [value]="account.id">{{ account.label }} · {{ account.number }} · {{ account.balance | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</option>
             }
@@ -22,55 +22,84 @@
           @if (!loading() && accountUnavailable()) {
             <span class="error-text" role="alert">Nenhuma conta disponível.</span>
           }
+          @if (selectedAccount(); as selected) {
+            <div class="account-details" aria-label="Dados da conta de origem">
+              <span><small>Sua agência</small><strong>{{ selected.agency }}</strong></span>
+              <span><small>Sua conta</small><strong class="account-number">{{ selected.number }}</strong></span>
+            </div>
+          }
         </div>
-        <div class="grid grid-2 inner-grid">
-          <div class="field">
-            <label for="agency">Agência de destino</label>
-            <input id="agency" class="input" type="text" maxlength="4" inputmode="numeric" formControlName="agency" placeholder="0001" />
-            @if (form.controls.agency.touched && form.controls.agency.invalid) {
-              <span class="error-text">Informe os 4 dígitos da agência.</span>
-            }
+
+        @if (demoTarget(); as target) {
+          <div class="test-guide">
+            <strong>Teste da Etapa 6</strong>
+            <p>Destino demonstrativo já preenchido. Para testar, mantenha a agência <b>{{ target.agency }}</b>, a conta <b>{{ target.number }}</b>, informe R$ 10 e confirme.</p>
           </div>
-          <div class="field">
+        }
+
+        <div class="grid grid-2 inner-grid">
+          <div class="field transfer-field">
+            <label for="agency">Agência de destino</label>
+            <input id="agency" class="input" type="text" maxlength="4" inputmode="numeric"
+              autocomplete="off" formControlName="agency" placeholder="4 dígitos" aria-describedby="agency-feedback"
+              [attr.aria-invalid]="form.controls.agency.touched && form.controls.agency.invalid ? 'true' : null" />
+            <div class="field-feedback" id="agency-feedback" aria-live="polite">
+              @if (form.controls.agency.touched && form.controls.agency.invalid) {
+                <span class="error-text">Informe os 4 dígitos da agência.</span>
+              }
+            </div>
+          </div>
+          <div class="field transfer-field">
             <label for="accountNumber">Conta de destino</label>
-            <input id="accountNumber" class="input" type="text" maxlength="20" formControlName="accountNumber" placeholder="MV..." />
-            @if (form.controls.accountNumber.touched && form.controls.accountNumber.invalid) {
-              <span class="error-text">Informe uma conta Monavero válida.</span>
-            }
+            <input id="accountNumber" class="input" type="text" maxlength="20"
+              autocomplete="off" formControlName="accountNumber" placeholder="MV..."
+              (blur)="normalizeDestination()" aria-describedby="account-feedback"
+              [attr.aria-invalid]="form.controls.accountNumber.touched && form.controls.accountNumber.invalid ? 'true' : null" />
+            <div class="field-feedback" id="account-feedback" aria-live="polite">
+              @if (form.controls.accountNumber.touched && form.controls.accountNumber.invalid) {
+                <span class="error-text">Informe uma conta Monavero válida.</span>
+              }
+            </div>
           </div>
         </div>
         @if (demoTarget(); as target) {
           <button class="btn demo-fill" type="button" (click)="fillDemoDestination()">
-            Usar conta de destino demonstrativa ({{ target.label }} · {{ target.number }})
+            Usar destino demonstrativo · Ag. {{ target.agency }} · {{ target.number }}
           </button>
         }
+
         <div class="field">
           <label for="amount">Valor da transferência</label>
-          <input id="amount" class="input" type="number" min="0.01" max="50000" step="0.01" formControlName="amount" />
-          @if (form.controls.amount.touched && form.controls.amount.invalid) {
-            <span class="error-text">Informe de R$ 0,01 a R$ 50.000,00.</span>
-          }
-          @if (insufficientBalance()) {
-            <span class="error-text" role="alert">Saldo insuficiente.</span>
-          }
+          <input id="amount" class="input" type="number" min="0.01" max="50000" step="0.01" formControlName="amount"
+            aria-describedby="amount-feedback" />
+          <div class="field-feedback" id="amount-feedback" aria-live="polite">
+            @if (form.controls.amount.touched && form.controls.amount.invalid) {
+              <span class="error-text">Informe de R$ 0,01 a R$ 50.000,00.</span>
+            } @else if (insufficientBalance()) {
+              <span class="error-text" role="alert">Saldo insuficiente.</span>
+            }
+          </div>
         </div>
         <div class="field">
           <label for="description">Descrição (opcional)</label>
-          <textarea id="description" class="textarea" maxlength="160" formControlName="description" placeholder="Motivo da transferência"></textarea>
+          <textarea id="description" class="textarea" maxlength="160" formControlName="description"
+            placeholder="Motivo da transferência"></textarea>
         </div>
-        @if (error()) { <p class="error-text" role="alert">{{ error() }}</p> }
-        @if (success()) { <p class="success-note" role="status">{{ success() }}</p> }
+        @if (error()) { <p class="transfer-message error-text" role="alert">{{ error() }}</p> }
+        @if (success()) { <p class="transfer-message success-note" role="status">{{ success() }}</p> }
         <button class="btn btn-primary" type="submit"
           [disabled]="loading() || submitting() || form.invalid || insufficientBalance() || accountUnavailable()">
-          {{ submitting() ? 'Confirmando...' : 'Confirmar transferência' }}
+          {{ submitting() ? 'Confirmando na API...' : 'Confirmar transferência' }}
         </button>
       </form>
     </article>
+
     <article class="card">
       <p class="eyebrow">Operação segura</p>
       <h2>Resumo</h2>
       <div class="summary-box"><span>Perfil autenticado</span><strong>{{ authStore.role() }}</strong></div>
-      <div class="summary-box"><span>Conta selecionada</span><strong>{{ selectedAccount()?.number ?? '—' }}</strong></div>
+      <div class="summary-box"><span>Agência de origem</span><strong>{{ selectedAccount()?.agency ?? '—' }}</strong></div>
+      <div class="summary-box"><span>Conta selecionada</span><strong class="account-number">{{ selectedAccount()?.number ?? '—' }}</strong></div>
       <div class="summary-box"><span>Saldo disponível</span><strong>{{ (selectedAccount()?.balance ?? 0) | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong></div>
       <div class="summary-box"><span>Limite por operação</span><strong>R$ 50.000,00</strong></div>
       <div class="security-note">
@@ -78,7 +107,7 @@
         <p>Débito e crédito são feitos juntos no PostgreSQL. Reenvios não duplicam a operação.
           Não são realizados PIX ou TED para instituições externas. Agendamentos virão na Etapa 7.</p>
         @if (authStore.isDemo()) {
-          <p>A conta demonstrativa é compartilhada. Para sua segurança, ela só transfere para outra conta da própria demonstração.</p>
+          <p>Na demonstração, as transferências só podem ocorrer entre as contas demonstrativas.</p>
         }
       </div>
     </article>

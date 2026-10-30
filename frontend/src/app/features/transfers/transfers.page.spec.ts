@@ -50,6 +50,37 @@ describe('TransfersPage', () => {
       .toBe(overviewFixture.accounts[1].number);
   });
 
+it('mostra agência e número da origem e preenche o destino demo automaticamente', () => {
+  expect(fixture.nativeElement.querySelector('.account-details').textContent).toContain('0001');
+  expect(fixture.nativeElement.querySelector('.account-details').textContent).toContain('MV123456789012');
+  expect((fixture.nativeElement.querySelector('#agency') as HTMLInputElement).value).toBe('0001');
+  expect((fixture.nativeElement.querySelector('#accountNumber') as HTMLInputElement).value)
+    .toBe(overviewFixture.accounts[1].number);
+});
+
+it('reserva feedback para os dois campos, sem desalinhá-los ao invalidar a agência', () => {
+  const agency = fixture.nativeElement.querySelector('#agency') as HTMLInputElement;
+  const target = fixture.nativeElement.querySelector('#accountNumber') as HTMLInputElement;
+  agency.value = '000';
+  agency.dispatchEvent(new Event('input'));
+  agency.dispatchEvent(new Event('blur'));
+  fixture.detectChanges();
+  expect(fixture.nativeElement.querySelectorAll('.inner-grid .field-feedback').length).toBe(2);
+  expect(fixture.nativeElement.querySelector('#agency-feedback').textContent).toContain('4 dígitos');
+  expect(target.value).toBe(overviewFixture.accounts[1].number);
+  expect((fixture.nativeElement.querySelector('button[type=submit]') as HTMLButtonElement).disabled).toBeTrue();
+  expect(bankingService.transfer).not.toHaveBeenCalled();
+});
+
+it('troca a origem e reconfigura o destino demo sem usar a mesma conta', () => {
+  const source = fixture.nativeElement.querySelector('#originAccount') as HTMLSelectElement;
+  source.value = overviewFixture.accounts[1].id;
+  source.dispatchEvent(new Event('change'));
+  fixture.detectChanges();
+  expect((fixture.nativeElement.querySelector('#accountNumber') as HTMLInputElement).value)
+    .toBe(overviewFixture.accounts[0].number);
+});
+
   it('envia para a API e confirma somente depois da resposta', () => {
     (fixture.nativeElement.querySelector('.demo-fill') as HTMLButtonElement).click();
     const amount = fixture.nativeElement.querySelector('#amount') as HTMLInputElement;
@@ -61,6 +92,18 @@ describe('TransfersPage', () => {
     expect(bankingService.transfer).toHaveBeenCalledTimes(1);
     expect(bankingService.transfer.calls.mostRecent().args[0].amount).toBe(25);
     expect(fixture.nativeElement.textContent).toContain('confirmada e registrada');
+  });
+
+  it('mantém formulário utilizável e mostra HTTP 422 sem simular sucesso', () => {
+    bankingService.transfer.and.returnValue(throwError(() => ({ status: 422 })));
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('button[type=submit]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Transferência recusada');
+    expect((fixture.nativeElement.querySelector('#agency') as HTMLInputElement).value).toBe('0001');
+    expect((fixture.nativeElement.querySelector('#accountNumber') as HTMLInputElement).value)
+      .toBe(overviewFixture.accounts[1].number);
+    expect(fixture.nativeElement.textContent).not.toContain('confirmada e registrada');
   });
 
   it('não reporta sucesso diante de falha da API', () => {

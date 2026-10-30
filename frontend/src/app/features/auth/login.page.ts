@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthStore } from '../../core/state/auth.store';
 import { ThemeStore } from '../../core/state/theme.store';
 import { UserRole } from '../../core/models/auth.models';
+import { testLog } from '../../core/utils/test-diagnostics';
 
 /** O backend identifica contas pessoais pelo e-mail único; apenas User é um atalho demo. */
 export function loginIdentifierValidator(control: AbstractControl): ValidationErrors | null {
@@ -61,7 +62,11 @@ export class LoginPage {
     if (this.mode() === 'register') {
       if (this.registration.invalid) { this.registration.markAllAsTouched(); return; }
       const { name, email, password } = this.registration.getRawValue();
-      this.authStore.register(name, email, password).subscribe(session => this.finish(session));
+      testLog('4', 'Cadastro enviado à API', { credenciaisRegistradasNoConsole: false });
+      this.authStore.register(name, email, password).subscribe(session => {
+        if (!session) testLog('4', 'Cadastro NÃO confirmado', {}, true);
+        this.finish(session);
+      });
       return;
     }
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
@@ -70,8 +75,10 @@ export class LoginPage {
     const guest = identifier.toLowerCase() === 'user' && password === '1234';
     // A opção de perfil vale apenas para User/1234; contas reais usam o papel da API.
     const request = guest ? this.authStore.demo(role) : this.authStore.login(identifier, password);
+    testLog('4', 'Login enviado à API', { tipo: guest ? 'demo' : 'pessoal', papelVisualDemo: guest ? role : 'nao_aplicavel' });
     request.subscribe(session => {
       if (session) { this.finish(session); return; }
+      testLog('4', 'Login NÃO confirmado', { tipo: guest ? 'demo' : 'pessoal' }, true);
       this.loginError.set(guest
         ? 'Não foi possível abrir a demonstração. Verifique a conexão e tente novamente.'
         : 'Não foi possível entrar. Para uma conta criada, use o e-mail do cadastro e a senha escolhida (não o nome nem a senha 1234 da demonstração).');
@@ -80,6 +87,7 @@ export class LoginPage {
 
   private finish(session: unknown): void {
     if (!session) return;
+    testLog('4', 'Autenticação confirmada; abrindo dashboard');
     this.navigating.set(true);
     void this.router.navigateByUrl('/app/dashboard').then(success => {
       if (!success) {

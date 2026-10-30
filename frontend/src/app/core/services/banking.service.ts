@@ -1,11 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { catchError, map, Observable, tap, throwError } from 'rxjs';
 import { MONAVERO_API_URL } from '../config/monavero-api';
 import { AccountSummary, DashboardOverview, FinancePoint, ScheduledPayment, Transaction, TransferReceipt, TransferRequest } from '../models/banking.models';
 import { AuthStore } from '../state/auth.store';
 import { ApiReadinessService } from './api-readiness.service';
 import { uid } from '../utils/formatters';
+import { testLog } from '../utils/test-diagnostics';
 
 interface BankingResponse {
   accounts: AccountSummary[];
@@ -32,7 +33,12 @@ export class BankingService {
   /** Sem cache compartilhado entre usuários: logout/login não reutiliza saldos antigos. */
   getOverview(): Observable<DashboardOverview> {
     return this.apiReadiness.recover(this.http.get<BankingResponse>(this.url)).pipe(
-      map(response => this.toOverview(response))
+      map(response => this.toOverview(response)),
+      tap(overview => testLog('5', 'Dashboard/contas recebidos da API', {
+        contas: overview.accounts.length, lancamentos: overview.transactions.length,
+        saldosDisponiveis: overview.accounts.every(account => Number.isFinite(account.balance))
+      })),
+      catchError(error => this.logApiFailure('5', 'Falha no carregamento do dashboard', error))
     );
   }
 
@@ -40,13 +46,40 @@ export class BankingService {
   transfer(request: TransferRequest): Observable<TransferReceipt> {
     return this.apiReadiness.recover(
       this.http.post<TransferReceipt>(`${MONAVERO_API_URL}/api/v1/banking/transfers`, request)
+    ).pipe(
+      map(receipt => {
+        // Uma resposta inesperada não pode ser apresentada como operação confirmada.
+        if (!receipt || receipt.status !== 'concluido' || !receipt.id ||
+            !receipt.destinationAccountId || receipt.destinationAccountId === receipt.originAccountId ||
+            receipt.originAccountId !== request.originAccountId ||
+            !Number.isFinite(Number(receipt.amount)) || Math.abs(Number(receipt.amount) - request.amount) > 0.001) {
+          throw new Error('Comprovante inválido retornado pela API');
+        }
+        return { ...receipt, amount: Number(receipt.amount) };
+      }),
+      tap(receipt => testLog('6', 'API confirmou transferência', {
+        status: receipt.status, valor: receipt.amount, comprovanteRecebido: Boolean(receipt.id),
+        referencia: receipt.id.slice(0, 8)
+      })),
+      catchError(error => this.logApiFailure('6', 'API não confirmou transferência', error))
     );
   }
 
   getTransactions(): Observable<Transaction[]> {
     return this.apiReadiness.recover(this.http.get<BankingResponse>(this.url)).pipe(
-      map(response => response.transactions)
+      map(response => response.transactions),
+      tap(transactions => testLog('5', 'Extrato recebido da API', { lancamentos: transactions.length,
+        debitos: transactions.filter(tx => tx.amount < 0).length,
+        creditos: transactions.filter(tx => tx.amount > 0).length })),
+      catchError(error => this.logApiFailure('5', 'Falha no carregamento do extrato', error))
     );
+  }
+
+  private logApiFailure(etapa: '5' | '6', label: string, error: unknown): Observable<never> {
+    const status = Number((error as { status?: number })?.status ?? 0);
+    testLog(etapa, label, { httpStatus: status,
+      orientacao: status === 0 ? 'Verificar conectividade/CORS da API' : 'Consultar a aba Rede (Network)' }, true);
+    return throwError(() => error);
   }
 
   getScheduledPayments(): ScheduledPayment[] { return [...this.scheduledPayments]; }

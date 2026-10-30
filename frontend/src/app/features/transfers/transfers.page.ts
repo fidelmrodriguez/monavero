@@ -7,7 +7,8 @@ import { BankingService } from '../../core/services/banking.service';
 import { NotificationStore } from '../../core/state/notification.store';
 import { AuditStore } from '../../core/state/audit.store';
 import { AuthStore } from '../../core/state/auth.store';
-import { AccountSummary, DashboardOverview, TransferRequest } from '../../core/models/banking.models';
+import { AccountSummary, DashboardOverview, TransferRequest, TransferReceipt } from '../../core/models/banking.models';
+import { maskedAccount, testLog } from '../../core/utils/test-diagnostics';
 
 @Component({
   selector: 'app-transfers-page',
@@ -47,7 +48,9 @@ export class TransfersPage {
     this.accounts().find(account => account.id === this.formValues().originAccount)
   );
   protected readonly demoTarget = computed(() =>
-    this.authStore.isDemo() ? this.accounts().find(account => account.id !== this.formValues().originAccount) : undefined
+    this.authStore.isDemo()
+      ? this.accounts().find(account => account.id !== this.formValues().originAccount)
+      : undefined
   );
   protected readonly accountUnavailable = computed(() => !this.selectedAccount());
   protected readonly insufficientBalance = computed(() =>
@@ -56,23 +59,50 @@ export class TransfersPage {
 
   constructor() { this.loadAccounts(); }
 
+  /** Permite copiar/preencher uma conta real recebida da API, sem digitar identificadores. */
+  protected fillDestination(account: AccountSummary): void {
+    if (account.id === this.form.controls.originAccount.value) return;
+    this.form.patchValue({ agency: account.agency, accountNumber: account.number });
+    this.form.controls.agency.markAsUntouched();
+    this.form.controls.accountNumber.markAsUntouched();
+    this.error.set('');
+    this.success.set('');
+    testLog('6', 'Destino preenchido a partir da API', { conta: maskedAccount(account.number), agenciaValida: /^\d{4}$/.test(account.agency) });
+  }
+
   protected fillDemoDestination(): void {
     const target = this.demoTarget();
-    if (!target) return;
-    this.form.patchValue({ agency: target.agency, accountNumber: target.number });
+    if (target) this.fillDestination(target);
+  }
+
+  protected onOriginChange(): void {
+    this.error.set('');
+    this.success.set('');
+    if (this.authStore.isDemo()) this.fillDemoDestination();
+  }
+
+  protected normalizeDestination(): void {
+    const original = this.form.controls.accountNumber.value;
+    const normalized = original.trim().toUpperCase();
+    if (original !== normalized) this.form.controls.accountNumber.setValue(normalized);
   }
 
   protected submit(): void {
     if (this.submitting() || this.loading()) return;
     this.error.set('');
     this.success.set('');
+    this.normalizeDestination();
     if (this.form.invalid || this.accountUnavailable() || this.insufficientBalance()) {
       this.form.markAllAsTouched();
+      testLog('6', 'Formulário bloqueado pela validação local', {
+        origemValida: !this.accountUnavailable(),
+        agenciaValida: this.form.controls.agency.valid,
+        destinoValido: this.form.controls.accountNumber.valid,
+        valorValido: this.form.controls.amount.valid && !this.insufficientBalance()
+      }, true);
       return;
     }
     const values = this.form.getRawValue();
-    // Reutilizar a mesma chave ao tentar novamente uma requisição de resultado incerto.
-    // Qualquer alteração nos dados do formulário cria uma nova operação.
     const current = {
       originAccountId: values.originAccount,
       destinationAgency: values.agency.trim(),
@@ -80,6 +110,7 @@ export class TransfersPage {
       amount: Number(values.amount),
       description: values.description.trim()
     };
+    // Retentativas idênticas conservam a chave para impedir débito duplicado.
     const request: TransferRequest = this.pendingRequest &&
       this.pendingRequest.originAccountId === current.originAccountId &&
       this.pendingRequest.destinationAgency === current.destinationAgency &&
@@ -87,8 +118,15 @@ export class TransfersPage {
       this.pendingRequest.amount === current.amount &&
       this.pendingRequest.description === current.description
       ? this.pendingRequest : { ...current, idempotencyKey: crypto.randomUUID() };
+    const retryMesmaOperacao = request === this.pendingRequest;
     this.pendingRequest = request;
     this.submitting.set(true);
+    testLog('6', 'Enviando transferência à API', {
+      origem: maskedAccount(this.selectedAccount()?.number ?? ''),
+      destino: maskedAccount(current.destinationAccountNumber),
+      valor: current.amount,
+      retryMesmaOperacao
+    });
     this.bankingService.transfer(request).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: receipt => {
         this.pendingRequest = null;
@@ -100,22 +138,23 @@ export class TransfersPage {
         });
         this.audit.register('Transferência interna confirmada pela API', 'Transferências', 'sucesso', this.authStore.role());
         this.form.patchValue({ amount: 100, description: '' });
-        this.loadAccounts();
+        this.loadAccounts(receipt, current.amount);
         this.submitting.set(false);
       },
       error: err => {
         this.submitting.set(false);
-        const status = err?.status;
+        const status = Number(err?.status ?? 0);
         this.error.set(status === 422
           ? 'Transferência recusada: confira saldo, destino e situação das contas.'
-          : status === 403 ? 'Você não tem permissão para transferir para essa conta.'
-          : status === 409 ? 'Identificador já utilizado em outra transferência. Revise os dados.'
-          : 'Não foi possível confirmar a operação. Você pode tentar novamente sem duplicar a transferência.');
+          : status === 403 ? 'Transferência não autorizada. A conta demo só envia para outra conta demonstrativa.'
+          : status === 409 ? 'Essa chave já foi usada com outros dados. Altere os dados ou aguarde.'
+          : 'Não foi possível confirmar a operação. Tente novamente sem alterar os dados para evitar duplicidade.');
+        testLog('6', 'Transferência NÃO confirmada', { httpStatus: status, reenvioSeguro: true }, true);
       }
     });
   }
 
-  private loadAccounts(): void {
+  private loadAccounts(receipt?: TransferReceipt, transferredAmount?: number): void {
     this.loading.set(true);
     this.bankingService.getOverview().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: data => {
@@ -124,11 +163,26 @@ export class TransfersPage {
         if (!data.accounts.some(account => account.id === current)) {
           this.form.controls.originAccount.setValue(data.accounts[0]?.id ?? '');
         }
+        // O demo dispõe de duas contas no Neon: deixa a conta de destino pronta para teste.
+        if (this.authStore.isDemo() && !this.form.controls.accountNumber.value.trim()) {
+          const target = data.accounts.find(a => a.id !== this.form.controls.originAccount.value);
+          if (target) this.fillDestination(target);
+        }
         this.loading.set(false);
+        if (receipt) {
+          const originFound = data.accounts.some(a => a.id === receipt.originAccountId);
+          const destinationFound = data.accounts.some(a => a.id === receipt.destinationAccountId);
+          testLog('6', 'Saldos consultados novamente após confirmação', {
+            origemVisivel: originFound, destinoVisivel: destinationFound,
+            valorTransferido: transferredAmount ?? receipt.amount,
+            orientacao: 'Confira débito e crédito no extrato'
+          });
+        }
       },
-      error: () => {
+      error: err => {
         this.error.set('Não foi possível carregar suas contas. Atualize a página para tentar novamente.');
         this.loading.set(false);
+        testLog('6', 'Falha ao carregar contas', { httpStatus: Number(err?.status ?? 0) }, true);
       }
     });
   }

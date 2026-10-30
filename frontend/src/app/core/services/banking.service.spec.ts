@@ -48,6 +48,23 @@ describe('BankingService persistente', () => {
     expect(completed).toBeTrue();
   });
 
+it('rejeita comprovante com status inesperado para não simular sucesso', () => {
+  const request = { originAccountId: 'abc', destinationAgency: '0001', destinationAccountNumber: 'MV1234567',
+    amount: 10, description: '', idempotencyKey: 'c94f8c31-abd6-49b1-bd99-d91d4072d2a9' };
+  let succeeded = false;
+  let rejected = false;
+  service.transfer(request).subscribe({
+    next: () => { succeeded = true; },
+    error: () => { rejected = true; }
+  });
+  http.expectOne(`${MONAVERO_API_URL}/api/v1/banking/transfers`).flush({
+    id: 't1', originAccountId: 'abc', destinationAccountId: 'xyz',
+    amount: 10, executedAt: new Date().toISOString(), status: 'pendente'
+  });
+  expect(succeeded).toBeFalse();
+  expect(rejected).toBeTrue();
+});
+
   it('não inventa saldos quando a API responde sem contas', () => {
     service.getOverview().subscribe(value => {
       expect(value.accounts).toEqual([]);
