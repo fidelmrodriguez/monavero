@@ -94,6 +94,19 @@ class BankingIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void lancamentosSemTransferIdNaoQuebramConsultaNemInventamContraparte() throws Exception {
+        String token = register("sem-transfer-" + UUID.randomUUID() + "@example.test");
+        mvc.perform(get("/api/v1/banking/overview")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.transactions.length()").value(1))
+            .andExpect(jsonPath("$.transactions[0].description").value("Crédito de abertura"))
+            .andExpect(jsonPath("$.transactions[0].counterpartyName").doesNotExist())
+            .andExpect(jsonPath("$.transactions[0].counterpartyAgency").doesNotExist())
+            .andExpect(jsonPath("$.transactions[0].counterpartyAccount").doesNotExist());
+    }
+
+    @Test
     void contaPessoalAntigaVaziaRecebeCreditoUmaUnicaVezSemDuplicarEmF5() throws Exception {
         String token = register("antiga-" + UUID.randomUUID() + "@example.test");
         String first = mvc.perform(get("/api/v1/banking/overview")

@@ -59,7 +59,9 @@ public class BankingService {
         // de transferências vinculadas a lançamentos das próprias contas.
         Map<UUID, TransferCounterparty> counterparties = transferCounterparties(recent);
         List<BankingDtos.Movement> movements = recent.stream().map(tx -> {
-            TransferCounterparty counterparty = counterparties.get(tx.getTransferId());
+            // Lançamentos sem transferência (ex.: crédito de abertura) não têm contraparte.
+            TransferCounterparty counterparty = tx.getTransferId() == null
+                ? null : counterparties.get(tx.getTransferId());
             boolean incoming = tx.getAmount().signum() > 0;
             return new BankingDtos.Movement(tx.getId(), tx.getOccurredAt(), tx.getDescription(),
                 tx.getCategory(), tx.getMovementType().toLowerCase(Locale.ROOT), "concluido",
