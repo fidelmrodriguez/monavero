@@ -11,6 +11,7 @@ O Monavero utiliza **PostgreSQL 18 no Neon**, gerenciado por migrações **Flywa
 | V3 | Ajuste de tipo da coluna `auth_sessions.token_hash` para compatibilidade JDBC |
 | V4 | Lançamentos `account_transactions` e provisionamento de contas/saldos da demonstração |
 | V5 | `bank_transfers`, vínculo `transfer_id` entre lançamentos e transferência, idempotência e integridade referencial |
+| V6 | `bank_accounts.sandbox_credit_provisioned`: controle persistente da concessão única do crédito fictício de abertura |
 
 **Nunca editar migrações já aplicadas** em um ambiente compartilhado. O Flyway valida histórico e checksums antes de avançar a versão. O Hibernate usa `ddl-auto=validate` e não cria tabelas automaticamente.
 
@@ -21,7 +22,10 @@ O Monavero utiliza **PostgreSQL 18 no Neon**, gerenciado por migrações **Flywa
 - Transferência interna usa transação de banco única: debita origem, credita destino e grava os dois lançamentos correlacionados.
 - Contas envolvidas são bloqueadas durante a execução para evitar concorrência inconsistente.
 - A chave de idempotência associa uma tentativa do solicitante ao comprovante já gerado, evitando duplicação em retentativas.
-- Acesso de demonstração não pode transferir saldo para contas pessoais.
+- Acesso de demonstração não pode transferir saldo para contas pessoais, e contas pessoais não podem creditar a identidade pública de demonstração.
+- Crédito inicial fictício configurável por `MONAVERO_PERSONAL_OPENING_CREDIT` (padrão R$ 1.000,00, máximo R$ 10.000,00; valor 0 desativa). O crédito é aplicado atomicamente com lançamento no extrato, uma única vez por conta pessoal elegível.
+- Contas pessoais anteriores à V6 só recebem o crédito quando saldo e extrato estiverem vazios; contas com histórico são preservadas sem crédito retroativo.
+- Não há endpoint de depósitos ou de recargas. Uma nova autenticação, F5 e chamadas concorrentes não concedem crédito adicional.
 
 ## Conexão e segredos
 

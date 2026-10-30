@@ -43,6 +43,10 @@ public class BankAccount {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal balance = BigDecimal.ZERO.setScale(2);
 
+    /** Marcador persistido: o crédito de abertura nunca é concedido duas vezes. */
+    @Column(name = "sandbox_credit_provisioned", nullable = false)
+    private boolean sandboxCreditProvisioned;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -71,7 +75,7 @@ public class BankAccount {
         updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
-    /** Apenas dados fictícios iniciais; operações financeiras terão regras próprias na Etapa 6. */
+    /** Saldo inicial da identidade pública de demonstração. */
     void setDemonstrationBalance(BigDecimal initialBalance) {
         if (initialBalance == null || initialBalance.signum() < 0) {
             throw new IllegalArgumentException("Saldo de demonstração inválido");
@@ -79,6 +83,22 @@ public class BankAccount {
         balance = initialBalance.setScale(2);
     }
 
+    /** Aplicado exclusivamente no onboarding de uma conta pessoal sem movimentações. */
+    void provisionSandboxOpeningCredit(BigDecimal credit) {
+        if (sandboxCreditProvisioned || credit == null || credit.signum() <= 0 ||
+                balance.signum() != 0) {
+            throw new IllegalStateException("Crédito inicial indisponível para esta conta");
+        }
+        balance = credit.setScale(2);
+        sandboxCreditProvisioned = true;
+    }
+
+    /** Contas existentes que já operaram não recebem crédito retroativo. */
+    void markSandboxCreditProvisioned() {
+        sandboxCreditProvisioned = true;
+    }
+
+    public boolean isSandboxCreditProvisioned() { return sandboxCreditProvisioned; }
     public UUID getId() { return id; }
     public String getAccountNumber() { return accountNumber; }
     public String getBranchCode() { return branchCode; }

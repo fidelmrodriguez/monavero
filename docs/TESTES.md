@@ -144,3 +144,14 @@ Os testes Angular verificam a chamada HTTP, confirmação somente após sucesso 
 ### Qualidade da interface de transferências
 
 O produto não deve exibir mensagens como “Teste da Etapa”, instruções de QA ou nomes de tecnologia interna para clientes. A agência e a conta de origem precisam permanecer visíveis, os campos não devem se deslocar ao validar erros e o valor inicia vazio. Os testes da `TransfersPage` cobrem essas condições. Logs de autenticação, carregamento e transferências são restritos ao console, sem credenciais, tokens ou números integrais de conta.
+
+## Transferências entre titulares distintos — teste de aceitação
+
+1. Criar uma conta pessoal A pelo cadastro, entrar e abrir o dashboard. Conferir o crédito de abertura de R$ 1.000,00 e anotar agência e número da conta (não é necessário compartilhar credenciais).
+2. Sair, criar a conta pessoal B com **outro e-mail**, entrar e anotar a agência e número da conta B. Conferir seu crédito único de abertura.
+3. Voltar ao login de A, abrir Transferências, selecionar a origem A, preencher agência e número de B e transferir R$ 100,00.
+4. Conferir saldo A = R$ 900,00, um débito no extrato e confirmação da API (caso não haja outras operações).
+5. Entrar na conta B e conferir saldo B = R$ 1.100,00, um crédito no extrato; repetir F5 e verificar persistência.
+6. Verificar no backend CI os testes de idempotência, origem não pertencente ao usuário, limite de saldo, proibição de envio à conta pública demo e migração V6.
+
+O crédito de abertura é **fictício**, exclusivamente para o portfólio, e não representa fundos reais. Mensagens de QA não são exibidas nas telas do produto; diagnósticos técnicos permanecem no console.

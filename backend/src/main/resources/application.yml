@@ -38,6 +38,9 @@ management:
     health:
       show-details: never
 monavero:
+  sandbox:
+    # Crédito de abertura puramente fictício; 0 desativa novos créditos.
+    personal-opening-credit: ${MONAVERO_PERSONAL_OPENING_CREDIT:1000.00}
   demo:
     enabled: ${MONAVERO_DEMO_ENABLED:true}
   cors:

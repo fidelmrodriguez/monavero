@@ -95,6 +95,16 @@ public class TransferService {
                 "Transferências demonstrativas só podem ocorrer entre contas de demonstração.");
         }
 
+        // Impede que dinheiro fictício de contas pessoais seja enviado à identidade demo pública.
+        if (!user.demo() && Boolean.TRUE.equals(jdbc.queryForObject(
+                "SELECT EXISTS(SELECT 1 FROM account_holders h " +
+                "JOIN app_users u ON u.id = h.user_id " +
+                "WHERE h.account_id = ? AND u.is_demo = true)",
+                Boolean.class, destinationId))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                "Transferências para a conta pública de demonstração não são permitidas.");
+        }
+
         // Ordem global consistente impede deadlocks em transferências simultâneas A -> B / B -> A.
         List<UUID> orderedIds = new ArrayList<>(List.of(request.originAccountId(), destinationId));
         orderedIds.sort(Comparator.naturalOrder());

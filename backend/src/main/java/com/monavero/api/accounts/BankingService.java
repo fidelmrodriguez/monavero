@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +19,20 @@ public class BankingService {
     private final AccountHolderRepository holders;
     private final BankTransactionRepository transactions;
     private final JdbcTemplate jdbc;
+    private final BigDecimal openingCredit;
 
     public BankingService(BankAccountRepository accounts, AccountHolderRepository holders,
-                          BankTransactionRepository transactions, JdbcTemplate jdbc) {
+                          BankTransactionRepository transactions, JdbcTemplate jdbc,
+                          @Value("${monavero.sandbox.personal-opening-credit:1000.00}") BigDecimal openingCredit) {
         this.accounts = accounts;
         this.holders = holders;
         this.transactions = transactions;
         this.jdbc = jdbc;
+        if (openingCredit.signum() < 0 || openingCredit.compareTo(new BigDecimal("10000.00")) > 0 ||
+                openingCredit.scale() > 2) {
+            throw new IllegalArgumentException("Crédito de abertura deve estar entre 0 e 10000 BRL, com duas casas decimais");
+        }
+        this.openingCredit = openingCredit.setScale(2);
     }
 
     /** Consulta contas e extrato sempre com filtro por titular; nenhuma conta de terceiro aparece. */
@@ -67,6 +75,7 @@ public class BankingService {
                 .findFirst().orElse(belonging.get(0));
             BankAccount account = accounts.findById(primary.getAccountId()).orElseThrow();
             if (principal.demo() && belonging.size() == 1) createDemoDestination(principal.id());
+            if (!principal.demo()) provisionPersonalOpeningCredit(account);
             return account;
         }
         BankAccount account = accounts.saveAndFlush(new BankAccount(uniqueNumber(), "0001", AccountType.CHECKING));
@@ -74,8 +83,31 @@ public class BankingService {
         if (principal.demo()) {
             seedDemo(account);
             createDemoDestination(principal.id());
+        } else {
+            provisionPersonalOpeningCredit(account);
         }
         return account;
+    }
+
+    /**
+     * Crédito fictício de abertura, sem endpoint público para recarga.
+     * A trava transacional por usuário em ensurePrimary e o marcador no PostgreSQL
+     * garantem que F5, logins novos e requisições concorrentes não dupliquem o crédito.
+     * Contas antigas vazias recebem uma vez; contas com histórico não são modificadas.
+     */
+    private void provisionPersonalOpeningCredit(BankAccount account) {
+        if (account.isSandboxCreditProvisioned()) return;
+        if (openingCredit.signum() > 0 && account.getBalance().signum() == 0 &&
+                transactions.countByAccountId(account.getId()) == 0) {
+            account.provisionSandboxOpeningCredit(openingCredit);
+            accounts.saveAndFlush(account);
+            transactions.saveAndFlush(new BankTransaction(account.getId(),
+                OffsetDateTime.now(ZoneOffset.UTC), "Crédito de abertura",
+                "Recebimentos", "ENTRADA", openingCredit));
+        } else {
+            account.markSandboxCreditProvisioned();
+            accounts.saveAndFlush(account);
+        }
     }
 
     private void createDemoDestination(UUID userId) {

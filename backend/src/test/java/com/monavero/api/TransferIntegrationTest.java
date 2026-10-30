@@ -102,6 +102,62 @@ class TransferIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void usuariosPessoaisDiferentesTransferemSaldoComExtratoPersistenteEIdempotencia() throws Exception {
+        String tokenA = register();
+        String tokenB = register();
+        String overviewA = overview(tokenA);
+        String overviewB = overview(tokenB);
+        String source = JsonPath.read(overviewA, "$.accounts[0].id");
+        String target = JsonPath.read(overviewB, "$.accounts[0].id");
+        String agency = JsonPath.read(overviewB, "$.accounts[0].agency");
+        String number = JsonPath.read(overviewB, "$.accounts[0].number");
+        assertThat(balance(source)).isEqualByComparingTo("1000.00");
+        assertThat(balance(target)).isEqualByComparingTo("1000.00");
+        String payload = request(source, agency, number, "125.50", UUID.randomUUID().toString(),
+            "Transferência entre titulares");
+        String result = mvc.perform(post("/api/v1/banking/transfers")
+                .header("Authorization", "Bearer " + tokenA)
+                .contentType(MediaType.APPLICATION_JSON).content(payload))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("concluido"))
+            .andReturn().getResponse().getContentAsString();
+        String id = JsonPath.read(result, "$.id");
+        assertThat(balance(source)).isEqualByComparingTo("874.50");
+        assertThat(balance(target)).isEqualByComparingTo("1125.50");
+        assertThat(jdbc.queryForObject(
+            "SELECT COUNT(*) FROM account_transactions WHERE transfer_id = ?",
+            Integer.class, UUID.fromString(id))).isEqualTo(2);
+        // Ambos visualizam apenas seus próprios lançamentos, incluindo o crédito de abertura.
+        String afterA = overview(tokenA);
+        String afterB = overview(tokenB);
+        assertThat((String) JsonPath.read(afterA, "$.accounts[0].id")).isEqualTo(source);
+        assertThat((String) JsonPath.read(afterB, "$.accounts[0].id")).isEqualTo(target);
+        assertThat((String) JsonPath.read(afterA, "$.transactions[0].type")).isEqualTo("transferencia");
+        assertThat((String) JsonPath.read(afterB, "$.transactions[0].type")).isEqualTo("transferencia");
+        mvc.perform(post("/api/v1/banking/transfers")
+                .header("Authorization", "Bearer " + tokenA)
+                .contentType(MediaType.APPLICATION_JSON).content(payload))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(id));
+        assertThat(balance(source)).isEqualByComparingTo("874.50");
+        assertThat(balance(target)).isEqualByComparingTo("1125.50");
+    }
+
+    @Test
+    void contaPessoalNaoPodeTransferirParaContaDemoPublica() throws Exception {
+        String token = register();
+        String account = overview(token);
+        String demo = overview(demoToken());
+        mvc.perform(post("/api/v1/banking/transfers")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(request(JsonPath.read(account, "$.accounts[0].id"),
+                    JsonPath.read(demo, "$.accounts[0].agency"),
+                    JsonPath.read(demo, "$.accounts[0].number"),
+                    "10.00", UUID.randomUUID().toString(), "Teste")))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
     void bloqueiaSemTokenSaldoInsuficienteContaPropriaEDestinoPessoalDoDemo() throws Exception {
         String token = demoToken();
         String overview = overview(token);

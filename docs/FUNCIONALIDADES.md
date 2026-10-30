@@ -14,6 +14,8 @@ O **Monavero** é um projeto de portfólio que demonstra a experiência de um ba
 ### Contas e painel
 
 - Contas por titular autenticado, com agência, número, tipo e saldo consultados no PostgreSQL (Neon).
+- Crédito fictício de abertura de R$ 1.000,00, uma única vez por conta pessoal, para viabilizar operações entre usuários cadastrados; não é dinheiro real nem recarregável pela API.
+- Contas antigas vazias e sem movimentações também podem receber o crédito uma única vez; contas com histórico permanecem inalteradas.
 - Painel com saldo consolidado, contas e movimentações recentes.
 - Cartões e investimentos exibidos no acesso demonstrativo são dados de apresentação locais, ainda não persistidos.
 
@@ -25,13 +27,13 @@ O **Monavero** é um projeto de portfólio que demonstra a experiência de um ba
 
 ### Transferências internas
 
-- Transferência imediata entre contas Monavero, identificadas por agência e número.
+- Transferência imediata entre contas Monavero, identificadas por agência e número, inclusive entre contas pessoais de usuários distintos.
 - Validação de titularidade da origem, status de contas, saldo, limite por operação e formato dos dados no servidor.
 - Registro atômico de débito, crédito e lançamento bancário no PostgreSQL.
 - Chave de idempotência para proteger contra repetição da mesma transferência após falha de rede.
 - A interface apresenta agência e conta da origem e permite selecionar outra conta do mesmo titular como destino.
 - Mensagens de erro e confirmação são mostradas em linguagem de produto; diagnósticos detalhados ficam no console, não na interface.
-- O acesso demonstrativo permite transferências somente entre contas da própria demonstração.
+- A identidade demonstrativa pública só transfere entre suas próprias contas; contas pessoais não podem transferir para essa identidade pública.
 
 ### Experiência e recursos auxiliares
 
@@ -47,7 +49,7 @@ Não há PIX/TED real, integração com instituições financeiras, liquidação
 
 - **Frontend:** Angular 19/TypeScript, publicado no Netlify como SPA estática.
 - **Backend:** Java 25 e Spring Boot 4.1.1, publicado na Blitz.
-- **Persistência:** PostgreSQL 18 (Neon), migrações Flyway até V5.
+- **Persistência:** PostgreSQL 18 (Neon), migrações Flyway até V6.
 - **Validação:** CI independente para frontend e backend; a implementação de cada funcionalidade não substitui a aprovação de seus testes e verificações em ambiente publicado.
 
 Consulte [a arquitetura](ARQUITETURA.md), [o roteiro de testes](TESTES.md) e [o roadmap](ROADMAP.md) para o estado detalhado de cada etapa.

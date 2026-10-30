@@ -14,21 +14,21 @@
 | Área | Implementação atual |
 | --- | --- |
 | Autenticação | Cadastro e login na API Java, BCrypt, sessão opaca persistida, logout e proteção de rotas |
-| Contas | Contas e saldos por titular, persistidos no PostgreSQL |
+| Contas | Contas e saldos por titular, com crédito de abertura fictício e único para contas pessoais, persistidos no PostgreSQL |
 | Dashboard | Visão consolidada de contas e movimentações; cartões e investimentos apresentados como dados ilustrativos |
 | Extrato | Lançamentos persistentes, pesquisa e filtros |
-| Transferências | Operações imediatas entre contas Monavero com débito/crédito atômicos, validações no backend e idempotência |
+| Transferências | Operações imediatas entre contas pessoais de titulares distintos ou entre contas próprias no Monavero com débito/crédito atômicos, validações no backend e idempotência |
 | Pagamentos | Fluxo demonstrativo no frontend; persistência e processamento serão implementados em etapa posterior |
 | Outros | Notificações, perfil, tema, responsividade e áreas visuais de gestão em evolução |
 
-A aplicação usa contas de demonstração com agência e número próprios. Para explorar o produto, o login demonstrativo é `User / 1234`. O seletor de perfil modifica apenas a apresentação; não altera privilégios de acesso à API.
+Contas pessoais recebem R$ 1.000,00 de crédito fictício de abertura uma única vez, inclusive contas antigas sem movimentações. Não existe endpoint de recarga ou depósito. A aplicação usa contas de demonstração com agência e número próprios. Para explorar o produto, o login demonstrativo é `User / 1234`. O seletor de perfil modifica apenas a apresentação; não altera privilégios de acesso à API.
 
 ## Stack técnica
 
 - **Frontend:** Angular 19, TypeScript, SCSS, Signals, RxJS, Reactive Forms, lazy loading e Jasmine/Karma.
 - **Publicação frontend:** Netlify, SPA estática com regras de redirecionamento para rotas internas e health check.
 - **Backend:** Java 25, Spring Boot 4.1.1, Spring Security, Spring Data JPA, Spring Modulith, Actuator e OpenAPI.
-- **Persistência:** PostgreSQL 18 no Neon, Hibernate e migrações Flyway V1–V5.
+- **Persistência:** PostgreSQL 18 no Neon, Hibernate e migrações Flyway V1–V6.
 - **Testes/CI:** GitHub Actions para Angular e Java; integração com PostgreSQL de teste via Testcontainers.
 - **Disponibilidade:** a API usa hospedagem sob demanda na Blitz; inicializações a frio podem causar espera antes do login.
 
