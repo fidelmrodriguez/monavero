@@ -53,3 +53,10 @@ Não há PIX/TED real, integração com instituições financeiras, liquidação
 - **Validação:** CI independente para frontend e backend; a implementação de cada funcionalidade não substitui a aprovação de seus testes e verificações em ambiente publicado.
 
 Consulte [a arquitetura](ARQUITETURA.md), [o roteiro de testes](TESTES.md) e [o roadmap](ROADMAP.md) para o estado detalhado de cada etapa.
+
+### Identificação de transferências entre titulares
+
+- Extrato e movimentações recentes identificam o **remetente** nos créditos e o **destinatário** nos débitos, com nome cadastrado, agência e número de conta mascarado.
+- A identificação é consultada a partir dos registros transacionais existentes; a descrição escrita pelo usuário não é usada como prova de titularidade. Transferências já realizadas também exibem a contraparte após a atualização.
+- Uma transferência concluída limpa a validação do campo de valor, evitando alertas de formulário inválido junto à confirmação de sucesso.
+- A API expõe os dados de contraparte apenas na consulta autenticada de lançamentos pertencentes ao usuário; os nomes não são registrados nos logs de diagnóstico do navegador.

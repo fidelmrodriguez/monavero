@@ -11,6 +11,8 @@ public final class BankingDtos {
     public record Account(UUID id, String label, String agency, String number,
                           BigDecimal balance, String currency) { }
     public record Movement(UUID id, OffsetDateTime date, String description, String category,
-                           String type, String status, BigDecimal amount, String channel) { }
+                           String type, String status, BigDecimal amount, String channel,
+                           String counterpartyName, String counterpartyAgency,
+                           String counterpartyAccount) { }
     public record Overview(List<Account> accounts, List<Movement> transactions) { }
 }

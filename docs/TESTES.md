@@ -155,3 +155,10 @@ O produto não deve exibir mensagens como “Teste da Etapa”, instruções de 
 6. Verificar no backend CI os testes de idempotência, origem não pertencente ao usuário, limite de saldo, proibição de envio à conta pública demo e migração V6.
 
 O crédito de abertura é **fictício**, exclusivamente para o portfólio, e não representa fundos reais. Mensagens de QA não são exibidas nas telas do produto; diagnósticos técnicos permanecem no console.
+
+### Contraparte e confirmação visual — regressão
+
+- Testar A → B com dois titulares pessoais de **nomes diferentes**: no extrato de A deve aparecer `Enviado para <nome B>`, e no extrato de B, `Recebido de <nome A>`; número da conta da contraparte exibido com apenas os quatro últimos caracteres.
+- Confirmar que o destinatário visualiza o nome efetivamente cadastrado do remetente, mesmo que a descrição livre contenha outro texto. Reabrir o extrato de transferências anteriores para validar enriquecimento retroativo.
+- Após sucesso, a mensagem de confirmação deve continuar visível, sem aviso vermelho de valor obrigatório no campo limpo. Nova transferência só pode ser enviada após informar novo valor válido.
+- Testes: `TransferIntegrationTest` (contraparte e mascaramento), `TransfersPage` (limpeza da validação), `StatementPage` e `DashboardPage` (renderização). O CI Java e Angular completo devem passar antes do fechamento desta correção.

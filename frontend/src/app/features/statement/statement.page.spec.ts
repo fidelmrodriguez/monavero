@@ -5,7 +5,11 @@ import { BankingService } from '../../core/services/banking.service';
 import { StatementPage } from './statement.page';
 
 const transactionsFixture: Transaction[] = [
-  { id: 'trx-1', date: new Date().toISOString(), description: 'Recebimento via TED', category: 'Recebimentos', type: 'entrada', status: 'concluido', amount: 1000, channel: 'app' }
+  { id: 'trx-1', date: new Date().toISOString(), description: 'Recebimento via TED', category: 'Recebimentos', type: 'entrada', status: 'concluido', amount: 1000, channel: 'app' },
+  { id: 'trx-2', date: new Date().toISOString(), description: 'Pagamento compartilhado',
+    category: 'Transferências', type: 'transferencia', status: 'concluido', amount: 100,
+    channel: 'internet banking', counterpartyName: 'Remetente Exemplo',
+    counterpartyAgency: '0001', counterpartyAccount: '••••A8A9' }
 ];
 
 const bankingServiceStub = {
@@ -29,5 +33,12 @@ describe('StatementPage', () => {
 
   it('deve criar a página de extrato', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('identifica o remetente real e a conta mascarada em transferências recebidas', () => {
+    const html = fixture.nativeElement.textContent as string;
+    expect(html).toContain('Recebido de');
+    expect(html).toContain('Remetente Exemplo');
+    expect(html).toContain('••••A8A9');
   });
 });

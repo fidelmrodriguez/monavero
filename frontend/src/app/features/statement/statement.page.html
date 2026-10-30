@@ -93,7 +93,17 @@
             @for (transaction of filteredTransactions(); track transaction.id) {
               <tr>
                 <td data-label="Data">{{ transaction.date | date:'dd/MM/yyyy HH:mm':'':'pt-BR' }}</td>
-                <td data-label="Descrição">{{ transaction.description }}</td>
+                <td data-label="Descrição">
+                  <span>{{ transaction.description }}</span>
+                  @if (transaction.counterpartyName) {
+                    <small class="transaction-counterparty">
+                      {{ transaction.amount > 0 ? 'Recebido de' : 'Enviado para' }} {{ transaction.counterpartyName }}
+                      @if (transaction.counterpartyAccount) {
+                        · Ag. {{ transaction.counterpartyAgency }} · Conta {{ transaction.counterpartyAccount }}
+                      }
+                    </small>
+                  }
+                </td>
                 <td data-label="Categoria">{{ transaction.category }}</td>
                 <td data-label="Tipo">{{ transaction.type }}</td>
                 <td data-label="Canal">{{ transaction.channel }}</td>

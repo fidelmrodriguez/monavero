@@ -16,7 +16,11 @@ const overviewFixture: DashboardOverview = {
     { id: 'card-1', holder: 'User', brand: 'Visa', finalDigits: '1234', limit: 5000, used: 1200, dueDay: 10, status: 'ativo' }
   ],
   transactions: [
-    { id: 'trx-1', date: new Date().toISOString(), description: 'Recebimento via TED', category: 'Recebimentos', type: 'entrada', status: 'concluido', amount: 1000, channel: 'app' }
+    { id: 'trx-1', date: new Date().toISOString(), description: 'Recebimento via TED', category: 'Recebimentos', type: 'entrada', status: 'concluido', amount: 1000, channel: 'app' },
+    { id: 'trx-2', date: new Date().toISOString(), description: 'Compra dividida',
+      category: 'Transferências', type: 'transferencia', status: 'concluido', amount: -50,
+      channel: 'internet banking', counterpartyName: 'Destinatário Exemplo',
+      counterpartyAgency: '0001', counterpartyAccount: '••••8899' }
   ],
   cashflow: [{ label: 'Jan', value: 1000 }],
   expensesByCategory: [{ label: 'Cartões', value: 400 }]
@@ -49,5 +53,10 @@ describe('DashboardPage', () => {
 
   it('deve criar a página de dashboard', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('mostra o destinatário no extrato recente de transferências enviadas', () => {
+    expect(fixture.nativeElement.textContent).toContain('Enviado para Destinatário Exemplo');
+    expect(fixture.nativeElement.textContent).toContain('••••8899');
   });
 });

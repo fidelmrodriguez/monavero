@@ -92,6 +92,9 @@ describe('TransfersPage', () => {
     expect(bankingService.transfer).toHaveBeenCalledTimes(1);
     expect(bankingService.transfer.calls.mostRecent().args[0].amount).toBe(25);
     expect(fixture.nativeElement.textContent).toContain('realizada com sucesso');
+    expect(fixture.nativeElement.querySelector('#amount-feedback').textContent).not.toContain('Informe');
+    expect((fixture.nativeElement.querySelector('#amount') as HTMLInputElement).value).toBe('');
+    expect((fixture.nativeElement.querySelector('#amount') as HTMLInputElement).getAttribute('aria-invalid')).toBeNull();
   });
 
   it('mantém formulário utilizável e mostra HTTP 422 sem simular sucesso', () => {

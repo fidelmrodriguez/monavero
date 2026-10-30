@@ -37,6 +37,10 @@ export interface Transaction {
   status: TransactionStatus;
   amount: number;
   channel: 'app' | 'internet banking' | 'agencia' | 'api';
+  /** Contraparte devolvida pela API somente para transferências da conta autenticada. */
+  counterpartyName?: string | null;
+  counterpartyAgency?: string | null;
+  counterpartyAccount?: string | null;
 }
 
 export interface FinancePoint {

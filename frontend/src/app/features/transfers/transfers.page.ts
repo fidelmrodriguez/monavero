@@ -136,6 +136,12 @@ export class TransfersPage {
         });
         this.audit.register('Transferência interna confirmada pela API', 'Transferências', 'sucesso', this.authStore.role());
         this.form.patchValue({ amount: '', description: '' });
+        // Um novo formulário começa intocado. Caso contrário, o campo vazio
+        // exibe um erro de validação mesmo após uma transferência concluída.
+        this.form.controls.amount.markAsUntouched();
+        this.form.controls.amount.markAsPristine();
+        this.form.controls.description.markAsUntouched();
+        this.form.controls.description.markAsPristine();
         this.loadAccounts(receipt, current.amount);
         this.submitting.set(false);
       },

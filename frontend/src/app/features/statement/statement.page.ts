@@ -51,7 +51,7 @@ export class StatementPage {
 
     return this.transactions().filter((transaction) => {
       const absoluteAmount = Math.abs(transaction.amount);
-      const inText = !text || `${transaction.description} ${transaction.category}`.toLowerCase().includes(text);
+      const inText = !text || `${transaction.description} ${transaction.category} ${transaction.counterpartyName ?? ''} ${transaction.counterpartyAccount ?? ''}`.toLowerCase().includes(text);
       const inType = !filters.type || transaction.type === filters.type;
       const inStatus = !filters.status || transaction.status === filters.status;
       const inMin = min === null || min === undefined || absoluteAmount >= Number(min);

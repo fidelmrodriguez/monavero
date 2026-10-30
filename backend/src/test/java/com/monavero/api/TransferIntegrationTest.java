@@ -29,9 +29,11 @@ class TransferIntegrationTest extends PostgresIntegrationTest {
         return JsonPath.read(body, "$.accessToken");
     }
 
-    private String register() throws Exception {
+    private String register() throws Exception { return register("Cliente Exemplo"); }
+
+    private String register(String name) throws Exception {
         String email = "transfer-" + UUID.randomUUID() + "@example.test";
-        String body = "{\"name\":\"Cliente Exemplo\",\"email\":\"" + email +
+        String body = "{\"name\":\"" + name + "\",\"email\":\"" + email +
             "\",\"password\":\"senha-segura-2026\"}";
         String json = mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
             .content(body)).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
@@ -103,8 +105,8 @@ class TransferIntegrationTest extends PostgresIntegrationTest {
 
     @Test
     void usuariosPessoaisDiferentesTransferemSaldoComExtratoPersistenteEIdempotencia() throws Exception {
-        String tokenA = register();
-        String tokenB = register();
+        String tokenA = register("Remetente Exemplo");
+        String tokenB = register("Destinatário Exemplo");
         String overviewA = overview(tokenA);
         String overviewB = overview(tokenB);
         String source = JsonPath.read(overviewA, "$.accounts[0].id");
@@ -134,6 +136,20 @@ class TransferIntegrationTest extends PostgresIntegrationTest {
         assertThat((String) JsonPath.read(afterB, "$.accounts[0].id")).isEqualTo(target);
         assertThat((String) JsonPath.read(afterA, "$.transactions[0].type")).isEqualTo("transferencia");
         assertThat((String) JsonPath.read(afterB, "$.transactions[0].type")).isEqualTo("transferencia");
+        // A API identifica ambas as contrapartes, inclusive em transferências antigas,
+        // sem revelar ao destinatário o número completo da conta do remetente.
+        assertThat((String) JsonPath.read(afterA, "$.transactions[0].counterpartyName"))
+            .isEqualTo("Destinatário Exemplo");
+        assertThat((String) JsonPath.read(afterB, "$.transactions[0].counterpartyName"))
+            .isEqualTo("Remetente Exemplo");
+        assertThat((String) JsonPath.read(afterB, "$.transactions[0].counterpartyAgency"))
+            .isEqualTo("0001");
+        String originNumber = JsonPath.read(overviewA, "$.accounts[0].number");
+        assertThat((String) JsonPath.read(afterB, "$.transactions[0].counterpartyAccount"))
+            .isEqualTo("••••" + originNumber.substring(originNumber.length() - 4));
+        assertThat(afterB).doesNotContain(originNumber);
+        assertThat((String) JsonPath.read(afterB, "$.transactions[1].description"))
+            .isEqualTo("Crédito de abertura");
         mvc.perform(post("/api/v1/banking/transfers")
                 .header("Authorization", "Bearer " + tokenA)
                 .contentType(MediaType.APPLICATION_JSON).content(payload))

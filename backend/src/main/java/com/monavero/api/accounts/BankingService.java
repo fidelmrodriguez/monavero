@@ -6,10 +6,13 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,16 +51,61 @@ public class BankingService {
                 account.getAccountType() == AccountType.SAVINGS ? "Conta poupança" : "Conta corrente",
                 account.getBranchCode(), account.getAccountNumber(), account.getBalance(), account.getCurrency()))
             .toList();
-        List<BankingDtos.Movement> movements = ownedAccounts.stream()
+        List<BankTransaction> recent = ownedAccounts.stream()
             .flatMap(account -> transactions.findTop100ByAccountIdOrderByOccurredAtDesc(account.getId()).stream())
             .sorted(java.util.Comparator.comparing(BankTransaction::getOccurredAt).reversed())
-            .limit(100)
-            .map(tx -> new BankingDtos.Movement(tx.getId(), tx.getOccurredAt(), tx.getDescription(),
+            .limit(100).toList();
+        // Enriquecimento em lote: os titulares só recebem os dados da contraparte
+        // de transferências vinculadas a lançamentos das próprias contas.
+        Map<UUID, TransferCounterparty> counterparties = transferCounterparties(recent);
+        List<BankingDtos.Movement> movements = recent.stream().map(tx -> {
+            TransferCounterparty counterparty = counterparties.get(tx.getTransferId());
+            boolean incoming = tx.getAmount().signum() > 0;
+            return new BankingDtos.Movement(tx.getId(), tx.getOccurredAt(), tx.getDescription(),
                 tx.getCategory(), tx.getMovementType().toLowerCase(Locale.ROOT), "concluido",
-                tx.getAmount(), "internet banking"))
-            .toList();
+                tx.getAmount(), "internet banking",
+                counterparty == null ? null : incoming ? counterparty.senderName() : counterparty.recipientName(),
+                counterparty == null ? null : incoming ? counterparty.senderAgency() : counterparty.recipientAgency(),
+                counterparty == null ? null : maskAccount(incoming ? counterparty.senderNumber() : counterparty.recipientNumber()));
+        }).toList();
         return new BankingDtos.Overview(summaries, movements);
     }
+
+    private Map<UUID, TransferCounterparty> transferCounterparties(List<BankTransaction> recent) {
+        List<UUID> ids = recent.stream().map(BankTransaction::getTransferId)
+            .filter(java.util.Objects::nonNull).distinct().toList();
+        if (ids.isEmpty()) return Map.of();
+        Map<UUID, TransferCounterparty> result = new HashMap<>();
+        new NamedParameterJdbcTemplate(jdbc).query("""
+            SELECT t.id, sender.full_name AS sender_name,
+                   origin.branch_code AS sender_agency, origin.account_number AS sender_number,
+                   recipient.full_name AS recipient_name,
+                   destination.branch_code AS recipient_agency,
+                   destination.account_number AS recipient_number
+            FROM bank_transfers t
+            JOIN bank_accounts origin ON origin.id = t.origin_account_id
+            JOIN app_users sender ON sender.id = t.requester_id
+            JOIN bank_accounts destination ON destination.id = t.destination_account_id
+            JOIN account_holders destination_holder
+              ON destination_holder.account_id = t.destination_account_id
+             AND destination_holder.holder_role = 'PRIMARY'
+            JOIN app_users recipient ON recipient.id = destination_holder.user_id
+            WHERE t.id IN (:ids)
+            """, Map.of("ids", ids), rs -> {
+                result.put((UUID) rs.getObject("id"), new TransferCounterparty(
+                    rs.getString("sender_name"), rs.getString("sender_agency"),
+                    rs.getString("sender_number"), rs.getString("recipient_name"),
+                    rs.getString("recipient_agency"), rs.getString("recipient_number")));
+            });
+        return result;
+    }
+
+    private static String maskAccount(String number) {
+        return "••••" + number.substring(Math.max(0, number.length() - 4));
+    }
+
+    private record TransferCounterparty(String senderName, String senderAgency, String senderNumber,
+                                        String recipientName, String recipientAgency, String recipientNumber) { }
 
     /** Provisionamento idempotente, com trava compartilhada entre abas e instâncias Java. */
     BankAccount ensurePrimary(AuthenticatedUser principal) {
