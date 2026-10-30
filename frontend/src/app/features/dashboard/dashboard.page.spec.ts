@@ -9,12 +9,8 @@ const overviewFixture: DashboardOverview = {
   accounts: [
     { id: 'acc-1', label: 'Conta corrente', agency: '0001', number: '12345-6', balance: 1000, currency: 'BRL' }
   ],
-  investments: [
-    { product: 'CDB Liquidez Diária', value: 2500, profitability: 4.2, risk: 'baixo' }
-  ],
-  cards: [
-    { id: 'card-1', holder: 'User', brand: 'Visa', finalDigits: '1234', limit: 5000, used: 1200, dueDay: 10, status: 'ativo' }
-  ],
+  investments: [],
+  cards: [],
   transactions: [
     { id: 'trx-1', date: new Date().toISOString(), description: 'Recebimento via TED', category: 'Recebimentos', type: 'entrada', status: 'concluido', amount: 1000, channel: 'app' },
     { id: 'trx-2', date: new Date().toISOString(), description: 'Compra dividida',
@@ -58,5 +54,11 @@ describe('DashboardPage', () => {
   it('mostra o destinatário no extrato recente de transferências enviadas', () => {
     expect(fixture.nativeElement.textContent).toContain('Enviado para Destinatário Exemplo');
     expect(fixture.nativeElement.textContent).toContain('••••8899');
+  });
+
+  it('não mostra cartões ou investimentos fictícios', () => {
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).not.toContain('CDB demonstrativo');
+    expect(text).not.toContain('Visa');
   });
 });

@@ -21,6 +21,8 @@ describe('BankingService persistente', () => {
     service.getOverview().subscribe(value => {
       expect(value.accounts[0].balance).toBe(450.5);
       expect(value.transactions.length).toBe(1);
+      expect(value.cards).toEqual([]);
+      expect(value.investments).toEqual([]);
       total = value.accounts[0].balance;
     });
     http.expectOne(`${MONAVERO_API_URL}/api/v1/banking/overview`).flush({

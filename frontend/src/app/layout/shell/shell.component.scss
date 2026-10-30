@@ -537,3 +537,13 @@
 @media (max-width: 1232px) {
   .navigation-loading { inset: 72px 0 0; }
 }
+
+/* Sidebar compacta e legível em contas pessoais e demonstrativas. */
+.side-card { padding: 14px; border-radius: 18px; }
+.side-card h3 { font-size: .96rem; margin: 8px 0 3px; line-height: 1.25; }
+.side-card p { font-size: .81rem; line-height: 1.35; }
+.side-card .badge { min-height: 24px; padding: 3px 9px; font-size: .72rem; }
+.notification-empty { color: var(--muted); padding: 16px; margin: 0; font-size: .9rem; }
+.navigation-failed { display: grid; text-align: center; justify-items: center; max-width: 450px; }
+.navigation-failed p { color: var(--muted); font-weight: 400; line-height: 1.5; margin: 0; }
+.notification-dropdown-footer a { display: inline-block; color: var(--primary-strong); }

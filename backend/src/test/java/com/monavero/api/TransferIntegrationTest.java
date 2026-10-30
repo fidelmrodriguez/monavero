@@ -101,6 +101,11 @@ class TransferIntegrationTest extends PostgresIntegrationTest {
             .andExpect(status().isConflict());
         String after = overview(token);
         assertThat((String) JsonPath.read(after, "$.transactions[0].type")).isEqualTo("transferencia");
+        // A conta poupança demonstrativa possui vínculo CO_HOLDER, não PRIMARY.
+        // Ainda assim as duas pontas devem ser identificadas no extrato.
+        assertThat((String) JsonPath.read(after, "$.transactions[0].counterpartyName")).isNotBlank();
+        assertThat((String) JsonPath.read(after, "$.transactions[0].counterpartyAccount"))
+            .matches("••••[A-Za-z0-9]{4}");
     }
 
     @Test

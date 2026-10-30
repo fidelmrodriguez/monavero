@@ -125,15 +125,5 @@
   overflow-wrap: anywhere;
 }
 
-.dashboard-table {
-  min-width: 760px;
-}
-.dashboard-table th:nth-child(1) { width: 17%; }
-.dashboard-table th:nth-child(2) { width: 38%; }
-.dashboard-table th:nth-child(3) { width: 18%; }
-.dashboard-table th:nth-child(4) { width: 13%; }
-.dashboard-table th:nth-child(5) { width: 14%; }
-
-@media (max-width: 767px) {
-  .dashboard-table { min-width: 0; }
-}
+.dashboard-table { min-width: 720px; }
+@media (max-width: 1450px) { .dashboard-table { min-width: 0; } }

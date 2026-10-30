@@ -86,9 +86,12 @@ public class BankingService {
             JOIN bank_accounts origin ON origin.id = t.origin_account_id
             JOIN app_users sender ON sender.id = t.requester_id
             JOIN bank_accounts destination ON destination.id = t.destination_account_id
-            JOIN account_holders destination_holder
-              ON destination_holder.account_id = t.destination_account_id
-             AND destination_holder.holder_role = 'PRIMARY'
+            JOIN LATERAL (
+              SELECT h.user_id FROM account_holders h
+              WHERE h.account_id = t.destination_account_id
+              ORDER BY CASE WHEN h.holder_role = 'PRIMARY' THEN 0 ELSE 1 END, h.user_id
+              LIMIT 1
+            ) destination_holder ON true
             JOIN app_users recipient ON recipient.id = destination_holder.user_id
             WHERE t.id IN (:ids)
             """, Map.of("ids", ids), rs -> {

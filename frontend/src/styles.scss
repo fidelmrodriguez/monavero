@@ -566,3 +566,44 @@ td {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* Tabelas financeiras: não partir palavras nem valores monetários. */
+.statement-table, .dashboard-table { table-layout: auto; width: 100%; }
+.statement-table th, .statement-table td,
+.dashboard-table th, .dashboard-table td { word-break: normal; overflow-wrap: normal; hyphens: none; }
+.statement-table td:nth-child(2), .dashboard-table td:nth-child(2) { overflow-wrap: break-word; }
+.statement-table td:nth-child(3), .statement-table td:nth-child(4),
+.statement-table td:nth-child(5), .statement-table td:nth-child(6),
+.statement-table td:nth-child(7), .dashboard-table td:nth-child(3),
+.dashboard-table td:nth-child(4), .dashboard-table td:nth-child(5) { white-space: nowrap; }
+.statement-table td:nth-child(7), .dashboard-table td:nth-child(5) { font-variant-numeric: tabular-nums; }
+
+/* Em janelas menores, mostrar linhas como cartões antes de comprimir categorias/status. */
+@media (max-width: 1450px) {
+  .statement-table, .dashboard-table { display: block; min-width: 0; background: transparent; }
+  .statement-table thead, .dashboard-table thead { display: none; }
+  .statement-table tbody, .dashboard-table tbody { display: grid; gap: 10px; }
+  .statement-table tr, .dashboard-table tr {
+    display: grid; border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden; background: var(--surface);
+  }
+  .statement-table td, .dashboard-table td {
+    display: grid; grid-template-columns: minmax(106px, 30%) minmax(0, 1fr);
+    gap: 12px; align-items: baseline; padding: 10px 14px;
+    white-space: normal; overflow-wrap: normal; word-break: normal;
+  }
+  .statement-table td::before, .dashboard-table td::before {
+    content: attr(data-label); color: var(--muted);
+    text-transform: uppercase; font-size: .74rem; font-weight: 800;
+  }
+  .statement-table td:last-child, .dashboard-table td:last-child { border-bottom: 0; }
+  .statement-table .transaction-counterparty, .dashboard-table .transaction-counterparty {
+    overflow-wrap: break-word; word-break: normal;
+  }
+  .table-wrap:has(.statement-table), .table-wrap:has(.dashboard-table) {
+    overflow-x: hidden; border: 0; border-radius: 0;
+  }
+}
+@media (max-width: 520px) {
+  .statement-table td, .dashboard-table td { grid-template-columns: 1fr; gap: 4px; }
+}

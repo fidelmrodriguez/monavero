@@ -218,3 +218,12 @@ Verificar antes da publicação:
 
 Testes adicionais: `brl-currency.directive.spec.ts`, testes do extrato,
 agendamentos e pagamentos. O frontend publicado reside em `frontend/`.
+
+
+## Estabilização pós-Etapa 7
+- Navegar entre todas as rotas, inclusive após deploy, com Chrome DevTools aberto; falhas de chunk devem provocar uma única recarga de recuperação. Se persistirem, a aplicação deve oferecer atualização manual sem loop.
+- Confirmar que menu e dashboard não exibem notificações criadas por temporizador, cartões ou investimentos fictícios. Notificações em sessão podem surgir somente de ações efetuadas.
+- A tela de pagamentos não deve criar agenda local; o módulo permanece indisponível até a implantação persistente da Etapa 8.
+- Conferir identificação de contrapartes também entre conta corrente e poupança da demonstração (CO_HOLDER).
+- Verificar extrato e dashboard em 1920px, 1440px, 1280px, tablet e mobile: palavras de status/tipo e valores monetários não devem ser partidos em sílabas.
+- Em indisponibilidade 502 da Blitz, exibir tentativa de recuperação da API, sem alegar operação financeira confirmada.

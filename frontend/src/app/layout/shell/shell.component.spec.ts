@@ -21,4 +21,13 @@ describe('ShellComponent', () => {
   it('deve criar o layout autenticado', () => {
     expect(component).toBeTruthy();
   });
+
+  it('mantém navegação e sidebar compacta sem conteúdo de teste', () => {
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Transferências');
+    expect(text).toContain('Agendamentos');
+    expect(text).toContain('Pagamentos');
+    expect(text).not.toContain('Simulação de Pix');
+    expect(text).not.toContain('Consulte saldos e movimente valores ilustrativos');
+  });
 });

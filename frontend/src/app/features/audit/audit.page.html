@@ -2,8 +2,8 @@
   <header class="page-header">
     <div>
       <p class="eyebrow">Auditoria</p>
-      <h1>Rastro de ações</h1>
-      <p class="muted">Monitoramento de login, permissões e operações sensíveis.</p>
+      <h1>Atividade da sessão</h1>
+      <p class="muted">Acompanhe as ações realizadas nesta sessão.</p>
     </div>
     <div class="field search-field">
       <label for="auditSearch">Buscar evento</label>
@@ -39,6 +39,9 @@
           }
         </tbody>
       </table>
+      @if (filteredEntries().length === 0) {
+        <p class="muted">Nenhuma atividade registrada nesta sessão.</p>
+      }
     </div>
   </article>
 </section>

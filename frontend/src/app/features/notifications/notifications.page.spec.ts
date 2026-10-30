@@ -18,4 +18,9 @@ describe('NotificationsPage', () => {
   it('deve criar a página de notificações', () => {
     expect(component).toBeTruthy();
   });
+
+  it('não mostra notificações inventadas ao entrar', () => {
+    expect(fixture.nativeElement.textContent).toContain('Nenhuma notificação no momento');
+    expect(fixture.nativeElement.textContent).not.toContain('Simulação de Pix');
+  });
 });

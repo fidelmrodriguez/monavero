@@ -16,13 +16,8 @@
 
     <div class="side-card">
       <span class="badge">{{ authStore.viewRole() }}</span>
-      <h3>{{ authStore.isDemo() ? 'Ambiente demonstrativo' : 'Conta pessoal' }}</h3>
-      <p>Dados financeiros fictícios e operações simuladas.</p>
-      @if (authStore.isDemo()) {
-        <p>Consulte saldos e movimente valores ilustrativos entre contas Monavero.</p>
-      } @else {
-        <p>Acompanhe suas movimentações e gerencie sua conta com tranquilidade.</p>
-      }
+      <h3>{{ authStore.isDemo() ? 'Conta demonstração' : 'Conta pessoal' }}</h3>
+      <p>Valores ilustrativos.</p>
     </div>
   </aside>
 
@@ -65,6 +60,9 @@
             </header>
 
             <div class="notification-dropdown-list">
+              @if (recentNotifications().length === 0) {
+                <p class="notification-empty">Nenhuma notificação no momento.</p>
+              }
               @for (notification of recentNotifications(); track notification.id) {
                 <button
                   class="notification-preview"
@@ -85,7 +83,7 @@
             </div>
 
             <footer class="notification-dropdown-footer">
-              Central completa disponível no menu lateral.
+              <a routerLink="/app/notificacoes" (click)="closeNotifications()">Ver notificações</a>
             </footer>
           </section>
         }
@@ -125,6 +123,14 @@
         <div class="navigation-loading-card">
           <span class="monavero-spinner" aria-hidden="true"></span>
           <span>Carregando página...</span>
+        </div>
+      </div>
+    } @else if (navigationFailed()) {
+      <div class="navigation-loading" role="alert">
+        <div class="navigation-loading-card navigation-failed">
+          <strong>Não foi possível abrir esta página.</strong>
+          <p>Atualize para carregar a versão mais recente do Monavero.</p>
+          <button class="btn btn-primary" type="button" (click)="retryNavigation()">Atualizar</button>
         </div>
       </div>
     }

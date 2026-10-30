@@ -2,10 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { catchError, map, Observable, tap, throwError } from 'rxjs';
 import { MONAVERO_API_URL } from '../config/monavero-api';
-import { AccountSummary, DashboardOverview, FinancePoint, ScheduledPayment, Transaction, TransferReceipt, TransferRequest } from '../models/banking.models';
-import { AuthStore } from '../state/auth.store';
+import { AccountSummary, DashboardOverview, FinancePoint, Transaction, TransferReceipt, TransferRequest } from '../models/banking.models';
 import { ApiReadinessService } from './api-readiness.service';
-import { uid } from '../utils/formatters';
 import { testLog } from '../utils/test-diagnostics';
 
 interface BankingResponse {
@@ -17,18 +15,8 @@ interface BankingResponse {
 @Injectable({ providedIn: 'root' })
 export class BankingService {
   private readonly http = inject(HttpClient);
-  private readonly auth = inject(AuthStore);
   private readonly apiReadiness = inject(ApiReadinessService);
   private readonly url = `${MONAVERO_API_URL}/api/v1/banking/overview`;
-
-  private readonly scheduledPayments: ScheduledPayment[] = [
-    {
-      id: 'pay-001',
-      barCode: '34191.79001 01043.510047 91020.150008 8 93740000032000',
-      beneficiary: 'Energia Brasil', amount: 320,
-      date: new Date(Date.now() + 2 * 86400000).toISOString(), status: 'agendado'
-    }
-  ];
 
   /** Sem cache compartilhado entre usuários: logout/login não reutiliza saldos antigos. */
   getOverview(): Observable<DashboardOverview> {
@@ -82,29 +70,14 @@ export class BankingService {
     return throwError(() => error);
   }
 
-  getScheduledPayments(): ScheduledPayment[] { return [...this.scheduledPayments]; }
-
-  addScheduledPayment(payment: Omit<ScheduledPayment, 'id' | 'status'>): ScheduledPayment {
-    const scheduled: ScheduledPayment = { ...payment, id: uid('pay'), status: 'agendado' };
-    this.scheduledPayments.unshift(scheduled);
-    return scheduled;
-  }
-
   private toOverview(response: BankingResponse): DashboardOverview {
     const transactions = response.transactions ?? [];
-    // Investimentos e cartões pertencem a etapas futuras: somente a conta demo
-    // exibe amostras explicitamente fictícias. Saldos e extrato nunca são inventados.
-    const demo = this.auth.isDemo();
+    // Nenhum produto financeiro é inventado pelo frontend.
     return {
       accounts: response.accounts ?? [],
       transactions,
-      investments: demo ? [
-        { product: 'CDB demonstrativo', value: 15000, profitability: 4.8, risk: 'baixo' }
-      ] : [],
-      cards: demo ? [
-        { id: 'demo-card', holder: 'Demonstração Monavero', brand: 'Visa', finalDigits: '4219',
-          limit: 12000, used: 2500, dueDay: 12, status: 'ativo' }
-      ] : [],
+      investments: [],
+      cards: [],
       cashflow: this.monthlyCashflow(transactions),
       expensesByCategory: this.expenses(transactions)
     };

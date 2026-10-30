@@ -85,3 +85,11 @@ npm test
 - [Roadmap](docs/ROADMAP.md): entregas planejadas e estado de validação.
 
 **Status:** autenticação, contas, extrato e transferências internas implementados. O roadmap diferencia código entregue de funcionalidade validada por CI e em produção.
+
+
+### Interface e confiabilidade
+- Navegação Angular com uma tentativa controlada de atualização automática quando um deploy substitui os chunks lazy; sem loop de recarga.
+- Notificações somente originadas de ações desta sessão, sem alertas aleatórios ou fixtures precárias.
+- Pagamentos aguardam backend persistente; nenhum agendamento de pagamento fictício é apresentado como executável.
+- Demonstração bancária conserva histórico ilustrativo de abertura, mas não inventa cartões e investimentos no frontend.
+- Contrapartes das transferências identificadas inclusive no modo demonstração; detalhes da conta de terceiro permanecem mascarados.

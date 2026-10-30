@@ -68,3 +68,11 @@ Consulte [a arquitetura](ARQUITETURA.md), [o roteiro de testes](TESTES.md) e [o 
 - A identificação é consultada a partir dos registros transacionais existentes; a descrição escrita pelo usuário não é usada como prova de titularidade. Transferências já realizadas também exibem a contraparte após a atualização.
 - Uma transferência concluída limpa a validação do campo de valor, evitando alertas de formulário inválido junto à confirmação de sucesso.
 - A API expõe os dados de contraparte apenas na consulta autenticada de lançamentos pertencentes ao usuário; os nomes não são registrados nos logs de diagnóstico do navegador.
+
+
+### Consistência visual após Etapa 7
+- Removidos alertas aleatórios de notificações e agenda temporária de pagamentos que não tinha persistência.
+- Agendamentos de transferências da Etapa 7 permanecem reais na API/PostgreSQL, sujeitos ao despertar do servidor gratuito.
+- Ausentes produtos de cartões e investimentos fabricados pelo frontend; permanecem exemplos históricos de demonstração explicitamente ilustrativos no ambiente demo.
+- Área administrativa sem ações fictícias; permissões e auditoria reais serão implementadas na Etapa 9.
+- Histórico local de auditoria, quando disponível, refere-se apenas às ações da sessão atual, não a uma trilha persistente do backend.

@@ -95,3 +95,7 @@ do extrato no padrão **R$ 1.234,56**. O controle reativo preserva os valores
 numéricos em reais; a máscara é somente de apresentação. Digite a parte inteira
 normalmente e use a vírgula para informar centavos. Também é possível colar
 valores já formatados.
+
+
+### Dados apresentados ao usuário
+A interface não cria notificações por temporizador, cartões, investimentos nem agendamentos de pagamentos em memória. A área de pagamentos permanece indisponível até existir API persistente. Os agendamentos de **transferências** usam o serviço Java; a conta demonstrativa tem lançamentos ilustrativos históricos no backend. Um erro de carregamento de chunk após deploy gera uma tentativa limitada de atualização de página.

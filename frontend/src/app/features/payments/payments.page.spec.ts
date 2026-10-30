@@ -1,65 +1,18 @@
-import { provideHttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
-import { BankingService } from '../../core/services/banking.service';
 import { PaymentsPage } from './payments.page';
 
-const bankingServiceStub = {
-  getScheduledPayments: () => [
-    {
-      id: 'pay-1',
-      barCode: '34191790010104351004791020150008893740000032000',
-      beneficiary: 'Energia Brasil',
-      amount: 320,
-      date: new Date().toISOString(),
-      status: 'agendado' as const
-    }
-  ],
-  addScheduledPayment: (payment: { barCode: string; beneficiary: string; amount: number; date: string }) => ({
-    ...payment,
-    id: 'pay-created',
-    status: 'agendado' as const
-  })
-};
-
 describe('PaymentsPage', () => {
-  let component: PaymentsPage;
   let fixture: ComponentFixture<PaymentsPage>;
-
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [PaymentsPage],
-      providers: [
-        provideRouter([]),
-        provideHttpClient(),
-        { provide: BankingService, useValue: bankingServiceStub }
-      ]
-    }).compileComponents();
-
+    await TestBed.configureTestingModule({ imports: [PaymentsPage] }).compileComponents();
     fixture = TestBed.createComponent(PaymentsPage);
-    component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
-  it('deve criar a página de pagamentos', () => {
-    expect(component).toBeTruthy();
-  });
-});
-
-describe('PaymentsPage - valor BRL', () => {
-  it('exibe reais e centavos sem modificar o número da operação', async () => {
-    await TestBed.configureTestingModule({
-      imports: [PaymentsPage],
-      providers: [provideRouter([]), provideHttpClient(), { provide: BankingService, useValue: bankingServiceStub }]
-    }).compileComponents();
-    const fixture = TestBed.createComponent(PaymentsPage);
-    fixture.detectChanges();
-    const amount = fixture.nativeElement.querySelector('#amount') as HTMLInputElement;
-    expect(amount.value).toBe('R$ 320,00');
-    amount.value = 'R$ 100,50';
-    amount.dispatchEvent(new Event('input', { bubbles: true }));
-    fixture.detectChanges();
-    expect(amount.value).toBe('R$ 100,50');
-    expect((fixture.componentInstance as any).form.controls.amount.value).toBe(100.5);
+  it('não simula um pagamento sem backend', () => {
+    const html = fixture.nativeElement as HTMLElement;
+    expect(html.textContent).toContain('Pagamentos indisponíveis');
+    expect(html.querySelector('form')).toBeNull();
+    expect(html.querySelector('button[type="submit"]')).toBeNull();
   });
 });

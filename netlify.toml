@@ -1,8 +1,27 @@
-# Build e publicação Angular SSR a partir da pasta frontend/.
+# Configuração única do deploy do frontend Angular em monorepositório.
+# Todos os caminhos de build e publicação são relativos a "frontend".
 [build]
   base = "frontend"
   command = "npm run build"
   publish = "dist/monavero/browser"
 
-[build.environment]
-  NODE_VERSION = "22"
+# HTML sempre revalidado; chunks com hash podem ser trocados entre deploys.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/app/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/login"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
