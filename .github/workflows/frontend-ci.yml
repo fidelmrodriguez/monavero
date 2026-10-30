@@ -35,8 +35,18 @@ jobs:
       - name: Validar TypeScript
         run: npm run typecheck
 
-      - name: Compilar Angular e SSR
+      - name: Compilar Angular como SPA estática
         run: npm run build
+
+      - name: Conferir saída SPA e proxy de readiness
+        run: |
+          test -f dist/monavero/browser/index.html
+          test -f dist/monavero/browser/_redirects
+          grep -Eq '^/api/monavero-readiness[[:space:]]' dist/monavero/browser/_redirects
+          if test -d dist/monavero/server; then
+            echo 'ERRO: build gerou SSR; a Edge Function pode interceptar o proxy Netlify.'
+            exit 1
+          fi
 
       - name: Preparar Chrome Headless
         id: chrome

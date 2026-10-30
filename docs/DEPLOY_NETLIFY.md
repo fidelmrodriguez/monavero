@@ -1,10 +1,12 @@
 # Deploy do frontend Angular no Netlify
 
-O Netlify publica o frontend demonstrativo do Monavero. **A autenticação já depende da API Java hospedada na Blitz.** A renderização no servidor usa Angular SSR e `@netlify/angular-runtime`.
+O Netlify publica o Monavero como **Angular SPA estática**, sem SSR ou Edge Function
+Angular para interceptar rotas. Autenticação e dados financeiros continuam na API
+Java hospedada na Blitz, com autorização no servidor.
 
 ## Configuração versionada
 
-O arquivo `netlify.toml` fica na raiz do repositório:
+O arquivo `netlify.toml` da raiz mantém:
 
 ```toml
 [build]
@@ -16,27 +18,33 @@ O arquivo `netlify.toml` fica na raiz do repositório:
   NODE_VERSION = "22"
 ```
 
-A base `frontend` determina onde as dependências são instaladas e o comando de build é executado; `publish` é relativo a essa base, apontando portanto para `frontend/dist/monavero/browser`. O frontend também possui `.nvmrc` com a versão principal do Node.js.
+O `frontend/angular.json` publica `outputMode: static` e não gera bundle SSR.
+O arquivo `frontend/public/_redirects` é copiado pelo Angular para a pasta publicada.
+Sua primeira regra faz proxy de `/api/monavero-readiness` para
+`https://monavero-api.fidelmrodriguez.blitz.cloud/actuator/health`.
+A segunda regra `/* /index.html 200` mantém refresh e links diretos nas rotas Angular.
+As regras são processadas de cima para baixo; a rota da API deve vir primeiro.
 
 ## Publicação e validação
 
-1. Conecte o repositório Monavero à branch `main` no Netlify.
-2. Confirme que a configuração adotada é a do `netlify.toml` da raiz, com base `frontend` e Node.js 22. O arquivo versionado prevalece sobre opções equivalentes da interface.
-3. Inicie um deploy e revise o log de instalação e de compilação Angular/SSR.
-4. Confira login demonstrativo `User`/`1234`, cadastro pessoal, logout, login posterior e demais páginas.
-5. Atualize diretamente `/app/dashboard` e outras rotas internas para verificar a resposta do runtime SSR, em vez de confiar apenas na navegação client-side.
-6. Teste menu mobile, responsividade e tema claro/escuro.
-7. Confira o resultado do workflow em `Actions > Frontend Angular CI`; uma compilação aprovada no Netlify não substitui os testes do CI.
+1. Confirme o **Frontend Angular CI** verde. Ele verifica que o build é estático,
+   contém `_redirects` e não contém bundle de servidor Angular.
+2. Publique a branch `main` no Netlify com o `netlify.toml` versionado.
+3. Acesse `/api/monavero-readiness` no Netlify. Deve retornar **JSON** de health
+   quando o Spring estiver ativo; se indisponível, pode retornar erro HTTP, mas
+   **não** deve renderizar o HTML/visual do aplicativo Angular.
+4. Com a API online, confira `status: "UP"` e o carregamento do dashboard.
+5. Teste login demonstrativo, login pessoal, F5, logout, extrato e transferências.
 
-Não adicione um redirecionamento global para `/index.html` sem verificar seu impacto no SSR; o runtime Angular é responsável pela integração da renderização.
+O endpoint de readiness é anônimo e não deve transmitir tokens ou senhas.
 
-## Problemas comuns
+## Diagnóstico
 
-- **Build executado na raiz:** verifique se `base` está sendo interpretado como `frontend` e se não há configuração conflitante de diretório de pacote no painel do Netlify.
-- **Diretório publicado inexistente:** confira a saída em `frontend/dist/monavero/browser` após o build.
-- **404 ao recarregar:** examine se o deploy inclui o runtime SSR e se suas rotas estão configuradas corretamente.
-- **Falha de autenticação:** o login depende da API Java na Blitz e do CORS que autoriza a origem exata do Netlify. Verifique health, logs e variáveis da Blitz; DummyJSON é usada somente para os dados financeiros fictícios.
-
-## Limites atuais
-
-Transferências e pagamentos continuam simulados; o frontend não deve receber senhas do banco ou tokens secretos de servidor. Apenas o endereço público da API fica no TypeScript; PostgreSQL e Flyway residem no backend.
+- Se `/api/monavero-readiness` mostrar a página Angular, verifique se o deploy
+  ainda tem SSR/Edge Function interceptando a rota ou se `_redirects` não foi publicado.
+- Se o proxy devolver `502`/`503`, verifique a disponibilidade da Blitz; esses
+  erros não são, por si só, problemas de CORS do backend.
+- Se o Java estiver online e a rota devolver JSON `UP`, mas o loading continuar,
+  investigue `ApiReadinessService` no navegador.
+- A existência do proxy não garante o despertar automático se a hospedagem
+  bloquear acessos programáticos. Não tratar essa limitação como erro de login.

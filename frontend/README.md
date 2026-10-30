@@ -26,7 +26,7 @@ Interface demonstrativa de banco digital desenvolvida com **Angular 19, TypeScri
 | RxJS + HttpClient | Consumo da API Java para login e DummyJSON apenas para dados financeiros fictícios |
 | Reactive Forms | Formulários de login, transferências e pagamentos |
 | Angular Router | Guards, resolver do dashboard, redirecionamentos e lazy loading |
-| Angular SSR | Renderização no servidor, hidratação e event replay |
+| Angular SPA (CSR) | Renderização no navegador, preservando o roteamento Angular e o proxy Netlify |
 | Jasmine + Karma | Testes unitários em Chrome Headless |
 
 ## Organização do código
@@ -55,11 +55,11 @@ frontend/
 ├── angular.json
 ├── karma.conf.js
 ├── package.json
-├── server.ts                 # Integração SSR com o Netlify
+├── server.ts                 # Código legado de SSR, não incluído no build SPA
 └── README.md
 ```
 
-As rotas ficam em `src/app/app.routes.ts`. A configuração de serviços, hidratação e interceptors está em `src/app/app.config.ts`. A renderização de servidor é preparada em `src/app/app.config.server.ts` e `server.ts`.
+As rotas ficam em `src/app/app.routes.ts`. A configuração dos serviços e interceptors está em `src/app/app.config.ts`. O build publicado é SPA, sem servidor SSR; os arquivos antigos de servidor não fazem parte da saída de produção.
 
 ## Autenticação e dados de demonstração
 
@@ -83,16 +83,16 @@ A interface de desenvolvimento estará em `http://localhost:4200`.
 
 ```bash
 npm run typecheck   # Verificação TypeScript
-npm run build       # Build Angular com saída browser + server
+npm run build       # Build Angular SPA estática
 npm test            # Testes Jasmine/Karma; requer Chrome/Chromium
-npm run serve:ssr   # Servidor SSR local após o build
+npm run serve:ssr   # Comando legado; não utilizado no deploy SPA
 ```
 
-O build gera `dist/monavero/browser` e `dist/monavero/server` dentro de `frontend/`. O [workflow de CI](../.github/workflows/frontend-ci.yml) prepara Node.js e Chrome para executar essas verificações. O `package-lock.json` ainda não foi versionado; até sua geração, a instalação usa `npm install` em vez de `npm ci`.
+O build gera `dist/monavero/browser` dentro de `frontend/`, sem `dist/monavero/server`. O [workflow de CI](../.github/workflows/frontend-ci.yml) prepara Node.js e Chrome para executar essas verificações. O `package-lock.json` ainda não foi versionado; até sua geração, a instalação usa `npm install` em vez de `npm ci`.
 
 ## Publicação
 
-O Angular é publicado separadamente pelo Netlify. A configuração está em [`../netlify.toml`](../netlify.toml), com `base = "frontend"`, comando `npm run build` e saída `dist/monavero/browser`. A integração SSR usa `@netlify/angular-runtime`; rotas internas precisam ser testadas após o deploy, especialmente ao atualizar a página diretamente.
+O Angular é publicado separadamente pelo Netlify. A configuração está em [`../netlify.toml`](../netlify.toml), com `base = "frontend"`, comando `npm run build` e saída `dist/monavero/browser`. O frontend usa SPA estática: a regra `/api/monavero-readiness` em `public/_redirects` deve operar antes do fallback `/*`, sem Edge Function SSR interceptando a rota. O `@netlify/angular-runtime` continua listado como dependência, mas o build não publica servidor SSR. Teste `/api/monavero-readiness` após o deploy: deve retornar JSON do health check ou erro HTTP da Blitz, nunca o HTML do Angular.
 
 A API Java será construída em `backend/`. Quando existir, os serviços do Angular migrarão de dados demonstrativos para contratos próprios, mantendo as telas e as validações de experiência. A autenticação e autorização verdadeiras ficarão exclusivamente a cargo do servidor.
 
@@ -124,16 +124,15 @@ para a rota de readiness. Em produção, confirme em
 `https://monavero.netlify.app/api/monavero-readiness` que o resultado, após
 o servidor acordar, seja JSON com `status: "UP"` (não HTML do Angular).
 
-### Verificação de disponibilidade: proxy e API direta
+## Hotfix: o Angular SSR interceptava a rota de readiness
 
-O carregamento inicial do Angular confirma a disponibilidade por duas fontes independentes:
-`/api/monavero-readiness` (proxy Netlify para `/actuator/health`, espera `status: UP`)
-e `https://monavero-api.fidelmrodriguez.blitz.cloud/api/v1/system/info`
-(espera `application: monavero-api` e `status: available`). Qualquer resposta válida
-libera a aplicação, evitando ficar preso no loading quando o proxy apresenta problemas
-mas o backend já está online. Respostas HTML, HTTP 502/503 e JSON inválido não liberam.
-
-**Limitação da hospedagem:** o plano gratuito da Blitz pode não acordar por fetch/proxy.
-A verificação dupla corrige a detecção da API **já online**, não garante despertar
-automático de uma instância adormecida. Para demonstração sem interação humana,
-considerar backend sempre ativo ou outro provedor.
+Com SSR habilitado, a Edge Function criada pelo runtime Angular no Netlify pode
+responder à URL `/api/monavero-readiness` antes de avaliar o proxy `_redirects`,
+retornando HTML da SPA em vez do JSON do Spring Boot. O `angular.json` agora
+produz uma **SPA estática** (`outputMode: static`), sem bundle SSR.
+O CI confere a existência de `dist/monavero/browser/_redirects` e a ausência
+do bundle `dist/monavero/server`. O proxy Netlify já existente mantém o endereço
+de saúde na mesma origem e libera o aplicativo somente com `status: UP`.
+Um proxy corretamente configurado **não garante**, por si só, que a plataforma
+de hospedagem permita despertar aplicações em suspensão; isso deve ser validado
+no deploy real.
