@@ -1,0 +1,6 @@
+# Proxy de readiness como no Orquestria: navegador -> Netlify -> Blitz.
+# Primeira regra: a resposta 503/HTML do Blitz não é considerada pronta.
+/api/monavero-readiness  https://monavero-api.fidelmrodriguez.blitz.cloud/actuator/health  200!
+
+# Angular Router: atualizar /login e /app/dashboard não pode dar 404.
+/*  /index.html  200

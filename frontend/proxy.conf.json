@@ -1,0 +1,10 @@
+{
+  "/api/monavero-readiness": {
+    "target": "https://monavero-api.fidelmrodriguez.blitz.cloud",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api/monavero-readiness$": "/actuator/health"
+    }
+  }
+}

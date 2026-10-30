@@ -1,15 +1,16 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, OnDestroy, PLATFORM_ID, computed, inject, signal } from '@angular/core';
-import { MONAVERO_API_URL } from '../config/monavero-api';
 import { HttpErrorResponse } from '@angular/common/http';
 import { from, Observable, retry, throwError } from 'rxjs';
 
 const RETRY_MS = 5_000;
 const TIMEOUT_MS = 12_000;
+const READINESS_PATH = '/api/monavero-readiness';
 
 /**
  * Aguarda a API Java despertar na Blitz antes de fazer login, cadastro ou /me.
- * /api/v1/system/info já tem CORS para o Netlify; /actuator/health não tem.
+ * Usa o mesmo proxy do Orquestria: /api/monavero-readiness (Netlify)
+ * -> /actuator/health (Blitz). Mesmo durante 503, a requisição é same-origin.
  * Nunca aceita HTML de "waking up" como confirmação de disponibilidade.
  */
 @Injectable({ providedIn: 'root' })
@@ -89,7 +90,7 @@ export class ApiReadinessService implements OnDestroy {
 
     try {
       // Sem token e sem interceptor: um token expirado não bloqueia o despertar.
-      const response = await fetch(`${MONAVERO_API_URL}/api/v1/system/info`, {
+      const response = await fetch(READINESS_PATH, {
         method: 'GET',
         headers: { Accept: 'application/json' },
         cache: 'no-store',
@@ -100,8 +101,7 @@ export class ApiReadinessService implements OnDestroy {
       if (response.ok && contentType.includes('json')) {
         const body: unknown = await response.json();
         available = body !== null && typeof body === 'object' &&
-          'application' in body && body.application === 'monavero-api' &&
-          'status' in body && body.status === 'available';
+          'status' in body && body.status === 'UP';
       }
     } catch {
       // Timeout, indisponibilidade e cold start são esperados no plano gratuito.

@@ -14,7 +14,7 @@ Interface demonstrativa de banco digital desenvolvida com **Angular 19, TypeScri
 - **Notificações e auditoria:** feedback das ações do usuário e registro local de eventos de demonstração.
 - **Administração e perfis:** áreas visuais de cliente, gerente e administrador para avaliação técnica. Com `User` / `1234`, o seletor do login escolhe a **visualização de demonstração** (inclusive auditoria/administração). O backend continua atribuindo `CLIENT` à conta demo; nenhum privilégio de API pode ser concedido pelo seletor. Para contas pessoais, sempre vale o perfil recebido do Java.
 - **Responsividade:** navegação lateral e menu adaptáveis, tema claro/escuro, estados vazios e carregamento de páginas sob demanda.
-- **Carregamento e despertar:** a tela inicial exibe um indicador antes do bootstrap Angular; depois, o aplicativo aguarda o endpoint público `/api/v1/system/info` da API Java na Blitz. Só considera o backend pronto quando recebe JSON com `application: monavero-api` e `status: available`, não quando a Blitz responde HTML de cold start. Consulta automaticamente a cada 5 segundos com limite de 12 segundos por tentativa e contador visual. Os guards aguardam o servidor antes de validar a sessão; login e cadastro mostram progresso e bloqueiam envios duplicados. A consulta é anônima e não envia credenciais nem tokens.
+- **Carregamento e despertar:** a tela inicial exibe um indicador antes do bootstrap Angular; depois, consulta `/api/monavero-readiness` pela mesma origem Netlify. O proxy encaminha a requisição para `/actuator/health` da Blitz. Só libera a aplicação com JSON `status: UP`; ignora 503, HTML de cold start e respostas inválidas. Consulta a cada 5 segundos com limite de 12 segundos por tentativa. Os guards aguardam o servidor antes de validar a sessão; login e cadastro mostram progresso e bloqueiam envios duplicados. A consulta é anônima e não envia credenciais nem tokens.
 
 ## Tecnologias e responsabilidades
 
@@ -107,3 +107,19 @@ A API Java será construída em `backend/`. Quando existir, os serviços do Angu
 ### Etapa 6 — transferências internas
 
 A página **Transferências** consulta contas reais da API, valida dados no formulário e executa `POST /api/v1/banking/transfers`. O spinner permanece durante a confirmação. Sucesso só é exibido após retorno da API e o saldo é recarregado. Se a conexão com a Blitz cair, a mesma chave de idempotência pode ser reutilizada sem duplicar o débito. A conta demo oferece um botão para preencher a segunda conta fictícia de destino. Agendamentos ainda não são implementados.
+
+## Despertar da API na Blitz via proxy Netlify
+
+O `ApiReadinessService` verifica `GET /api/monavero-readiness` na **mesma origem** do frontend, sem autenticação.
+A primeira regra de `frontend/public/_redirects` faz proxy HTTP 200! para
+`https://monavero-api.fidelmrodriguez.blitz.cloud/actuator/health`, como no Orquestria.
+Isso evita o bloqueio de CORS quando a Blitz responde 503 durante o despertar.
+O aplicativo **só** libera a navegação ao receber JSON com `status: "UP"`, e ignora HTML da Blitz,
+respostas 503, JSON inválido e outros estados. Repete a tentativa a cada 5 segundos.
+A última regra do `_redirects` mantém as rotas Angular funcionando no F5.
+
+Em `npm run dev`, `frontend/proxy.conf.json` encaminha o mesmo caminho para o
+health da Blitz pelo proxy de desenvolvimento Angular. Não enviar tokens nem senhas
+para a rota de readiness. Em produção, confirme em
+`https://monavero.netlify.app/api/monavero-readiness` que o resultado, após
+o servidor acordar, seja JSON com `status: "UP"` (não HTML do Angular).

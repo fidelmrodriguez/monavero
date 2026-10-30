@@ -2,7 +2,6 @@ import { TestBed, fakeAsync, flushMicrotasks, tick } from '@angular/core/testing
 import { ApiReadinessService } from './api-readiness.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { defer, of, throwError } from 'rxjs';
-import { MONAVERO_API_URL } from '../config/monavero-api';
 
 /**
  * O JSON de um Response nativo usa Web Streams e pode resolver fora da fila
@@ -10,9 +9,9 @@ import { MONAVERO_API_URL } from '../config/monavero-api';
  * os campos efetivamente consumidos pelo ApiReadinessService, mantendo o
  * parse JSON assíncrono de forma determinística nos testes.
  */
-function response(body: string, contentType: string): Response {
+function response(body: string, contentType: string, ok = true): Response {
   return {
-    ok: true,
+    ok,
     headers: new Headers({ 'Content-Type': contentType }),
     json: () => Promise.resolve(JSON.parse(body))
   } as Response;
@@ -27,9 +26,9 @@ describe('ApiReadinessService', () => {
 
   afterEach(() => service?.ngOnDestroy());
 
-  it('libera a aplicação somente após o JSON da API Monavero', fakeAsync(() => {
+  it('libera a aplicação somente após health UP retornado pelo proxy do Netlify', fakeAsync(() => {
     const spy = spyOn(window, 'fetch').and.returnValue(Promise.resolve(response(
-      JSON.stringify({ application: 'monavero-api', status: 'available' }), 'application/json'
+      JSON.stringify({ application: 'monavero-api', status: 'UP' }), 'application/json'
     )));
     service = TestBed.inject(ApiReadinessService);
     let resolved = false;
@@ -38,13 +37,13 @@ describe('ApiReadinessService', () => {
     expect(service.ready()).toBeTrue();
     expect(resolved).toBeTrue();
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy.calls.mostRecent().args[0]).toBe(`${MONAVERO_API_URL}/api/v1/system/info`);
+    expect(spy.calls.mostRecent().args[0]).toBe('/api/monavero-readiness');
   }));
 
   it('ignora a página HTML do Blitz e tenta novamente sem liberar login', fakeAsync(() => {
     const spy = spyOn(window, 'fetch').and.returnValues(
       Promise.resolve(response('<html>Waking up...</html>', 'text/html')),
-      Promise.resolve(response(JSON.stringify({ application: 'monavero-api', status: 'available' }), 'application/json'))
+      Promise.resolve(response(JSON.stringify({ application: 'monavero-api', status: 'UP' }), 'application/json'))
     );
     service = TestBed.inject(ApiReadinessService);
     service.start();
@@ -58,9 +57,24 @@ describe('ApiReadinessService', () => {
   }));
 
 
+  it('não libera a aplicação em 503 e tenta novamente até o health UP', fakeAsync(() => {
+    const spy = spyOn(window, 'fetch').and.returnValues(
+      Promise.resolve(response('<html>API sleeping</html>', 'text/html', false)),
+      Promise.resolve(response(JSON.stringify({ status: 'UP' }), 'application/json'))
+    );
+    service = TestBed.inject(ApiReadinessService);
+    service.start();
+    flushMicrotasks();
+    expect(service.ready()).toBeFalse();
+    tick(5_000);
+    flushMicrotasks();
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(service.ready()).toBeTrue();
+  }));
+
   it('revalida a API após um novo sono da Blitz', fakeAsync(() => {
     const spy = spyOn(window, 'fetch').and.returnValue(Promise.resolve(response(
-      JSON.stringify({ application: 'monavero-api', status: 'available' }), 'application/json'
+      JSON.stringify({ application: 'monavero-api', status: 'UP' }), 'application/json'
     )));
     service = TestBed.inject(ApiReadinessService);
     service.start();
@@ -75,7 +89,7 @@ describe('ApiReadinessService', () => {
 
   it('repete a chamada quando a Blitz devolve 502 e a API acorda', fakeAsync(() => {
     spyOn(window, 'fetch').and.returnValue(Promise.resolve(response(
-      JSON.stringify({ application: 'monavero-api', status: 'available' }), 'application/json'
+      JSON.stringify({ application: 'monavero-api', status: 'UP' }), 'application/json'
     )));
     service = TestBed.inject(ApiReadinessService);
     service.start();
@@ -95,9 +109,9 @@ describe('ApiReadinessService', () => {
     expect(service.ready()).toBeTrue();
   }));
 
-  it('não aceita JSON de outro serviço como confirmação de prontidão', fakeAsync(() => {
+  it('não aceita health DOWN como confirmação de prontidão', fakeAsync(() => {
     const spy = spyOn(window, 'fetch').and.returnValue(Promise.resolve(response(
-      JSON.stringify({ application: 'outra-api', status: 'available' }), 'application/json'
+      JSON.stringify({ status: 'DOWN' }), 'application/json'
     )));
     service = TestBed.inject(ApiReadinessService);
     service.start();
