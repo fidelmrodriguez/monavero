@@ -123,3 +123,17 @@ health da Blitz pelo proxy de desenvolvimento Angular. Não enviar tokens nem se
 para a rota de readiness. Em produção, confirme em
 `https://monavero.netlify.app/api/monavero-readiness` que o resultado, após
 o servidor acordar, seja JSON com `status: "UP"` (não HTML do Angular).
+
+### Verificação de disponibilidade: proxy e API direta
+
+O carregamento inicial do Angular confirma a disponibilidade por duas fontes independentes:
+`/api/monavero-readiness` (proxy Netlify para `/actuator/health`, espera `status: UP`)
+e `https://monavero-api.fidelmrodriguez.blitz.cloud/api/v1/system/info`
+(espera `application: monavero-api` e `status: available`). Qualquer resposta válida
+libera a aplicação, evitando ficar preso no loading quando o proxy apresenta problemas
+mas o backend já está online. Respostas HTML, HTTP 502/503 e JSON inválido não liberam.
+
+**Limitação da hospedagem:** o plano gratuito da Blitz pode não acordar por fetch/proxy.
+A verificação dupla corrige a detecção da API **já online**, não garante despertar
+automático de uma instância adormecida. Para demonstração sem interação humana,
+considerar backend sempre ativo ou outro provedor.

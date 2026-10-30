@@ -2,22 +2,28 @@ import { isPlatformBrowser } from '@angular/common';
 import { Injectable, OnDestroy, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { from, Observable, retry, throwError } from 'rxjs';
+import { MONAVERO_API_URL } from '../config/monavero-api';
 
 const RETRY_MS = 5_000;
 const TIMEOUT_MS = 12_000;
 const READINESS_PATH = '/api/monavero-readiness';
+const DIRECT_INFO_PATH = `${MONAVERO_API_URL}/api/v1/system/info`;
 
 /**
  * Aguarda a API Java despertar na Blitz antes de fazer login, cadastro ou /me.
- * Usa o mesmo proxy do Orquestria: /api/monavero-readiness (Netlify)
- * -> /actuator/health (Blitz). Mesmo durante 503, a requisição é same-origin.
- * Nunca aceita HTML de "waking up" como confirmação de disponibilidade.
+ * Verifica dois endpoints independentes: o proxy /actuator/health do Netlify
+ * e /api/v1/system/info diretamente na API Java (CORS liberado para o Netlify).
+ * Basta um responder com o JSON esperado para liberar o app. Isso evita que
+ * um erro de proxy deixe o loading travado mesmo com o Spring Boot online.
+ * Nenhuma resposta HTML da Blitz ou do SPA pode ser interpretada como sucesso.
  */
 @Injectable({ providedIn: 'root' })
 export class ApiReadinessService implements OnDestroy {
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly readyState = signal(false);
   readonly ready = this.readyState.asReadonly();
+  /** Mantém compatibilidade com a ação opcional de abrir a Blitz em outra aba. */
+  readonly wakeUrl = `${MONAVERO_API_URL}/actuator/health`;
   readonly elapsedSeconds = signal(0);
   readonly elapsedLabel = computed(() => {
     const seconds = this.elapsedSeconds();
@@ -81,6 +87,28 @@ export class ApiReadinessService implements OnDestroy {
     this.controller = undefined;
   }
 
+  /** Confirma um endpoint próprio do Monavero, sem depender de conteúdo HTML do proxy. */
+  private async probe(url: string, source: 'proxy' | 'api', signal: AbortSignal): Promise<void> {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+      credentials: 'omit',
+      signal
+    });
+    if (!response.ok) throw new Error('API ainda indisponível');
+
+    // Se a Blitz/Netlify devolver HTML, response.json() rejeita. Exigimos os
+    // campos esperados; um 200 da página inicial do Angular não é prontidão.
+    const body: unknown = await response.json();
+    if (body === null || typeof body !== 'object') throw new Error('Resposta inválida');
+    const expected = source === 'proxy'
+      ? 'status' in body && body.status === 'UP'
+      : 'application' in body && body.application === 'monavero-api' &&
+        'status' in body && body.status === 'available';
+    if (!expected) throw new Error('Endpoint ainda não confirmou prontidão');
+  }
+
   private async check(): Promise<void> {
     if (this.destroyed || this.readyState()) return;
     const controller = new AbortController();
@@ -89,24 +117,18 @@ export class ApiReadinessService implements OnDestroy {
     let available = false;
 
     try {
-      // Sem token e sem interceptor: um token expirado não bloqueia o despertar.
-      const response = await fetch(READINESS_PATH, {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-        cache: 'no-store',
-        credentials: 'omit',
-        signal: controller.signal
-      });
-      const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
-      if (response.ok && contentType.includes('json')) {
-        const body: unknown = await response.json();
-        available = body !== null && typeof body === 'object' &&
-          'status' in body && body.status === 'UP';
-      }
+      // Executa ambas as verificações: a primeira resposta válida libera o app,
+      // sem precisar esperar o proxy terminar caso a API direta esteja online.
+      await Promise.any([
+        this.probe(READINESS_PATH, 'proxy', controller.signal),
+        this.probe(DIRECT_INFO_PATH, 'api', controller.signal)
+      ]);
+      available = true;
     } catch {
-      // Timeout, indisponibilidade e cold start são esperados no plano gratuito.
+      // As duas falharam ou esgotaram o tempo: repetir após RETRY_MS.
     } finally {
       clearTimeout(timeoutId);
+      controller.abort(); // Interrompe apenas a tentativa paralela restante.
       if (this.controller === controller) this.controller = undefined;
     }
 
@@ -117,7 +139,6 @@ export class ApiReadinessService implements OnDestroy {
       this.complete();
       return;
     }
-    // Uma tentativa por vez; o contador não interrompe novas consultas.
     this.retryId = setTimeout(() => { void this.check(); }, RETRY_MS);
   }
 
