@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -30,7 +31,10 @@ public class ScheduledTransferService {
     public ScheduledTransferDtos.Item create(AuthenticatedUser user, ScheduledTransferDtos.Request request) {
         requireUser(user);
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
-        OffsetDateTime scheduledFor = request.scheduledFor().withOffsetSameInstant(ZoneOffset.UTC);
+        // PostgreSQL TIMESTAMPTZ armazena microssegundos; OffsetDateTime pode conter nanossegundos.
+        // Padronizar antes de inserir e comparar evita 409 ao repetir exatamente a mesma requisição.
+        OffsetDateTime scheduledFor = request.scheduledFor().withOffsetSameInstant(ZoneOffset.UTC)
+            .plusNanos(500).truncatedTo(ChronoUnit.MICROS);
         banking.ensureAccountForScheduling(user);
         jdbc.execute((org.springframework.jdbc.core.ConnectionCallback<Void>) connection -> {
             try (var statement = connection.prepareStatement("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))")) {
