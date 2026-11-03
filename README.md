@@ -15,10 +15,10 @@
 | --- | --- |
 | Autenticação | Cadastro e login na API Java, BCrypt, sessão opaca persistida, logout e proteção de rotas |
 | Contas | Contas e saldos por titular, com crédito de abertura fictício e único para contas pessoais, persistidos no PostgreSQL |
-| Dashboard | Visão consolidada de contas e movimentações; cartões e investimentos apresentados como dados ilustrativos |
+| Dashboard | Visão consolidada de contas e movimentações persistidas |
 | Extrato | Lançamentos persistentes, pesquisa e filtros |
 | Transferências | Operações imediatas e agendadas entre contas Monavero, inclusive titulares distintos; débito/crédito atômicos, cancelamento antes da execução e idempotência |
-| Pagamentos | Fluxo demonstrativo no frontend; persistência e processamento serão implementados em etapa posterior |
+| Pagamentos | Pagamentos demonstrativos imediatos e agendados com débito, extrato, cancelamento e persistência Flyway V8 (aguarda CI) |
 | Outros | Notificações, perfil, tema, responsividade e áreas visuais de gestão em evolução |
 
 Contas pessoais recebem R$ 1.000,00 de crédito fictício de abertura uma única vez, inclusive contas antigas sem movimentações. Não existe endpoint de recarga ou depósito. A aplicação usa contas de demonstração com agência e número próprios. Para explorar o produto, o login demonstrativo é `User / 1234`. O seletor de perfil modifica apenas a apresentação; não altera privilégios de acesso à API.
@@ -30,7 +30,7 @@ Agendamentos são processados pelo backend na data solicitada, sujeitos à dispo
 - **Frontend:** Angular 19, TypeScript, SCSS, Signals, RxJS, Reactive Forms, lazy loading e Jasmine/Karma.
 - **Publicação frontend:** Netlify, SPA estática com regras de redirecionamento para rotas internas e health check.
 - **Backend:** Java 25, Spring Boot 4.1.1, Spring Security, Spring Data JPA, Spring Modulith, Actuator e OpenAPI.
-- **Persistência:** PostgreSQL 18 no Neon, Hibernate e migrações Flyway V1–V7.
+- **Persistência:** PostgreSQL 18 no Neon, Hibernate e migrações Flyway V1–V8.
 - **Testes/CI:** GitHub Actions para Angular e Java; integração com PostgreSQL de teste via Testcontainers.
 - **Disponibilidade:** a API usa hospedagem sob demanda na Blitz; inicializações a frio podem causar espera antes do login.
 
@@ -84,12 +84,12 @@ npm test
 - [Deploy frontend](docs/DEPLOY_NETLIFY.md) e [deploy backend](docs/DEPLOY_BACKEND.md).
 - [Roadmap](docs/ROADMAP.md): entregas planejadas e estado de validação.
 
-**Status:** autenticação, contas, extrato e transferências internas implementados. O roadmap diferencia código entregue de funcionalidade validada por CI e em produção.
+**Status:** Etapas 0–7 validadas funcionalmente; Etapa 8 entregue para CI e validação. O roadmap diferencia código entregue de funcionalidade validada por CI e em produção.
 
 
 ### Interface e confiabilidade
 - Navegação Angular com uma tentativa controlada de atualização automática quando um deploy substitui os chunks lazy; sem loop de recarga.
 - Notificações somente originadas de ações desta sessão, sem alertas aleatórios ou fixtures precárias.
-- Pagamentos aguardam backend persistente; nenhum agendamento de pagamento fictício é apresentado como executável.
+- Pagamentos utilizam API e registros persistentes no backend; não há liquidação de boletos ou convênios reais.
 - Demonstração bancária conserva histórico ilustrativo de abertura, mas não inventa cartões e investimentos no frontend.
 - Contrapartes das transferências identificadas inclusive no modo demonstração; detalhes da conta de terceiro permanecem mascarados.

@@ -18,11 +18,13 @@ Netlify — Angular 19 SPA estática
                                            Spring Boot 4.1.1 / Java 25
                                            ├── autenticação e sessões
                                            ├── contas e extrato
-                                           └── transferências internas
+                                           ├── transferências internas
+                                           ├── agendamentos
+                                           └── pagamentos demonstrativos
                                                       │
                                                       ▼
                                            PostgreSQL 18 / Neon
-                                           └── Flyway V1 a V5
+                                           └── Flyway V1 a V8
 ```
 
 O Angular não possui credenciais do banco, não aplica autorização financeira definitiva e não decide saldos. O backend autentica o solicitante, verifica titularidade, calcula regras de negócio e persiste transações.
@@ -32,7 +34,7 @@ O Angular não possui credenciais do banco, não aplica autorização financeira
 - Componentes Angular standalone, Signals, RxJS e Reactive Forms.
 - Páginas sob demanda para dashboard, extrato, transferências e outras funcionalidades.
 - Autenticação pelo backend com sessão revogável; o perfil visual da demonstração não concede privilégios.
-- Contas, saldos e lançamentos consultados na API. Cartões, investimentos e parte dos pagamentos/notificações permanecem como dados locais de apresentação.
+- Contas, saldos e lançamentos consultados na API. Cartões e investimentos não implementados ficam indisponíveis; pagamentos usam API persistente. Notificações locais não constituem trilha auditável.
 - Publicação SPA estática no Netlify, sem Angular SSR. A rota de readiness usa um proxy; o fallback SPA atende apenas às demais rotas.
 - Logs de diagnóstico ficam no console do navegador e não exibem credenciais, tokens ou número completo de conta.
 
@@ -59,7 +61,7 @@ O serviço backend hospedado na Blitz pode passar por inicialização a frio. O 
 
 ## Limites explícitos
 
-PIX/TED externos, boletos reais e liquidação de valores não fazem parte desta implementação. Transferências agendadas estão implementadas na Etapa 7. Pagamentos demonstrativos persistidos, agendamento de pagamentos e evolução de auditoria/administração permanecem no [roadmap](ROADMAP.md).
+PIX/TED externos, boletos reais e liquidação de valores não fazem parte desta implementação. Transferências agendadas estão implementadas na Etapa 7. Pagamentos demonstrativos imediatos e agendados foram implementados na Etapa 8, sem liquidação externa. Auditoria/administração permanecem no [roadmap](ROADMAP.md).
 
 Veja também [funcionalidades](FUNCIONALIDADES.md), [segurança](SEGURANCA_AUTENTICACAO.md) e [testes](TESTES.md).
 
@@ -67,3 +69,7 @@ Veja também [funcionalidades](FUNCIONALIDADES.md), [segurança](SEGURANCA_AUTEN
 ## Execução de transferências agendadas (Etapa 7)
 
 O frontend envia os dados para a API autenticada; a tabela `scheduled_transfers` mantém a intenção de transferência até o vencimento. O serviço `ScheduledTransferWorker` consulta agendamentos vencidos; `ScheduledTransferExecutionService` trava cada agendamento com `FOR UPDATE SKIP LOCKED` e utiliza `TransferService` para as mesmas validações de titularidade, status, saldo, limite, idempotência e gravação atômica de dois lançamentos. Uma execução concluída é associada ao agendamento, e nenhuma tentativa de execução ocorre no navegador. Um scheduler executa somente enquanto o backend está online; agendamentos atrasados são recuperados na próxima ativação da aplicação.
+
+## Execução de pagamentos demonstrativos (Etapa 8)
+
+`PaymentController` recebe criação, consulta e cancelamento autenticados; `PaymentService` valida titularidade, saldo e limite, serializa chaves de idempotência e grava a intenção no banco. Pagamentos imediatos debitam saldo e gravam lançamento `PAGAMENTO` numa transação. `PaymentWorker` consulta vencidos e chama `PaymentService.executeDue`, que usa `FOR UPDATE SKIP LOCKED` para serializar o processamento. A única fonte do extrato permanece `account_transactions`. Nenhum processamento de boleto/convênio externo é integrado.

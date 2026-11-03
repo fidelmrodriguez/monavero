@@ -34,7 +34,7 @@ Quando o registro npm estiver acessível, execute `npm install` dentro de `front
 - Atualização direta de rotas internas sem erro 404; verificar fallback SPA no Netlify.
 - Dashboard, extrato, filtros, notificações, auditoria e perfil.
 - Formulários de transferências: validações de saldo, limite, origem e dados obrigatórios.
-- Pagamentos demonstrativos e estados vazios.
+- Pagamentos imediatos e agendados, cancelamento, histórico persistente e estados vazios.
 - Layout responsivo e tema claro/escuro.
 
 ## Backend Java
@@ -54,7 +54,7 @@ Em alterações das entidades JPA ou do `pom.xml`, verificar especialmente decla
 
 Após o CI verde, confirmar na Blitz o deploy do **novo commit** e então validar health check, Flyway e os fluxos de autenticação da Etapa 4.
 
-Os testes cobrem identificação da API, health check, geração de OpenAPI, CORS de origem local e rejeição de origem não autorizada. O teste de Spring Modulith verifica ciclos e limites das dependências entre módulos. Na Etapa 3, os testes de contexto e persistência passam a iniciar PostgreSQL 18 isolado com Testcontainers, verificando migração V1, repositórios de usuários e contas e vínculos de titularidade. O CI da Etapa 3 ainda precisa ser observado após o commit; a publicação da API na Blitz não substitui essa verificação.
+Os testes cobrem identificação da API, health check, geração de OpenAPI, CORS de origem local e rejeição de origem não autorizada. O teste de Spring Modulith verifica ciclos e limites das dependências entre módulos. Na Etapa 3, os testes de contexto e persistência passam a iniciar PostgreSQL 18 isolado com Testcontainers, verificando migração V1, repositórios de usuários e contas e vínculos de titularidade. O CI da persistência foi confirmado nas etapas anteriores. A publicação na Blitz não substitui a verificação de cada nova versão.
 
 ## Critério de conclusão da Etapa 1
 
@@ -223,7 +223,22 @@ agendamentos e pagamentos. O frontend publicado reside em `frontend/`.
 ## Estabilização pós-Etapa 7
 - Navegar entre todas as rotas, inclusive após deploy, com Chrome DevTools aberto; falhas de chunk devem provocar uma única recarga de recuperação. Se persistirem, a aplicação deve oferecer atualização manual sem loop.
 - Confirmar que menu e dashboard não exibem notificações criadas por temporizador, cartões ou investimentos fictícios. Notificações em sessão podem surgir somente de ações efetuadas.
-- A tela de pagamentos não deve criar agenda local; o módulo permanece indisponível até a implantação persistente da Etapa 8.
+- A tela de pagamentos não deve criar agenda local; o módulo da Etapa 8 usa apenas a API autenticada e a tabela `bank_payments`.
 - Conferir identificação de contrapartes também entre conta corrente e poupança da demonstração (CO_HOLDER).
 - Verificar extrato e dashboard em 1920px, 1440px, 1280px, tablet e mobile: palavras de status/tipo e valores monetários não devem ser partidos em sílabas.
 - Em indisponibilidade 502 da Blitz, exibir tentativa de recuperação da API, sem alegar operação financeira confirmada.
+
+## Validação da Etapa 8 — pagamentos demonstrativos
+
+**Pré-requisitos:** CI Java e Angular verdes, Flyway V8 aplicada na Blitz e API online. Usar duas contas pessoais distintas, com saldos fictícios.
+
+1. Entrar em **Pagamentos**; conferir contas e lista vindas da API. Console: `[Monavero][Teste E8] Contas disponíveis para pagamento` e `Lista de pagamentos recebida da API`.
+2. Executar pagamento **imediato** de R$ 12,35, tipo boleto, beneficiário `Prestador exemplo`, referência `FATURA2026A1`. Esperado `concluido`, saldo reduzido exatamente R$ 12,35 e lançamento de débito no extrato; F5 mantém o resultado.
+3. Agendar outro pagamento de R$ 10,00 para alguns minutos à frente. Esperado `agendado`, sem débito na criação. Cancelar e atualizar: `cancelado`, sem lançamento.
+4. Agendar novo pagamento de R$ 10,00 e deixar vencer. Atualizar: `concluido`, um único débito mesmo após F5 e múltiplas atualizações. Durante o modo sleeping da Blitz, execução ocorre no próximo despertar.
+5. Agendar R$ 5.000,00 numa conta com R$ 1.000,00; depois do vencimento, `recusado`, sem débito nem saldo negativo.
+6. Entrar com outro usuário: pagamentos do primeiro usuário não devem aparecer nem permitir cancelamento. Enviar pagamento com conta de origem de terceiro deve ser rejeitado pelo backend.
+7. Validar valores 0, negativo e acima de R$ 50.000,00, referências menores que seis caracteres, data passada e ausência de campos obrigatórios: nenhuma operação confirmada.
+8. Confirmar que o log não expõe senha, token, beneficiário ou referência; nunca alegar que um boleto ou convênio bancário foi liquidado.
+
+**Backend CI:** `PaymentIntegrationTest` verifica V8, autenticação, titularidade, débito único, reenvio idempotente, cancelamento, execução no vencimento, recusa sem saldo e isolamento. **Frontend CI:** testes do serviço HTTP, formulário, máscara monetária e estados de consulta. A entrega não deve ser considerada validada antes dos dois workflows verdes e teste no deploy.

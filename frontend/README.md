@@ -7,10 +7,10 @@ Interface de banco digital desenvolvida com **Angular 19**, TypeScript e SCSS, p
 ## Experiência do usuário
 
 - **Acesso:** login demonstrativo, cadastro pessoal, sessão autenticada, logout e navegação protegida.
-- **Painel:** saldos por conta, lançamentos recentes e indicadores financeiros. Cartões e investimentos ainda podem ser ilustrativos no acesso de demonstração.
+- **Painel:** saldos por conta, lançamentos recentes e indicadores financeiros. Cartões e investimentos sem implementação são mantidos indisponíveis, sem dados inventados no frontend.
 - **Extrato:** movimentações persistidas com filtros e pesquisa.
 - **Transferências:** formulário com origem, agência e número do destino, valor e descrição; confirmação apenas após resposta positiva da API, atualização de saldos e histórico.
-- **Pagamentos:** interface de agendamento demonstrativo; ainda sem execução/persistência bancária no servidor.
+- **Pagamentos:** fluxo imediato e agendado, histórico, cancelamento e lançamento no extrato via API autenticada.
 - **Perfil e navegação:** temas claro/escuro, layout responsivo, notificações e áreas visuais de administração em evolução.
 
 Os campos de transferência exibem os dados da conta de origem. Quando há outra conta do mesmo titular, o usuário pode selecioná-la como destino. A validação não desloca os campos horizontalmente e a interface não apresenta comandos ou instruções de QA.
@@ -23,7 +23,7 @@ Os campos de transferência exibem os dados da conta de origem. Quando há outra
 | Signals + RxJS | Estado reativo e integração HTTP |
 | Reactive Forms | Validações de login, pagamentos e transferências |
 | TypeScript + SCSS | Tipos, estilos e responsividade |
-| API Java | Autenticação, contas, extrato e transferências |
+| API Java | Autenticação, contas, extrato, transferências e pagamentos |
 | Jasmine + Karma | Testes unitários e de interface |
 
 A API é publicada na Blitz; o frontend solicita `/api/monavero-readiness` pela própria origem Netlify, encaminhada ao health check da API. As rotas internas usam fallback SPA em `_redirects`. O carregamento inicial depende de a API estar disponível.
@@ -71,7 +71,7 @@ O roteiro de validação está em [docs/TESTE_ETAPAS_5_6_CONSOLE.md](../docs/TES
 
 ## Limites
 
-O Monavero é um ambiente demonstrativo: não realiza PIX, TED, pagamento real ou investimento. Algumas experiências da interface ainda usam dados locais enquanto a persistência é ampliada nas próximas entregas. O roadmap registra o estado real de cada implementação.
+O Monavero é um ambiente demonstrativo: não realiza PIX, TED, pagamento real ou investimento. Os módulos ainda não disponibilizados por API são apresentados como indisponíveis, não como operações bancárias reais. O roadmap registra o estado real de cada implementação.
 
 
 ### Estados de carregamento e layout
@@ -98,4 +98,8 @@ valores já formatados.
 
 
 ### Dados apresentados ao usuário
-A interface não cria notificações por temporizador, cartões, investimentos nem agendamentos de pagamentos em memória. A área de pagamentos permanece indisponível até existir API persistente. Os agendamentos de **transferências** usam o serviço Java; a conta demonstrativa tem lançamentos ilustrativos históricos no backend. Um erro de carregamento de chunk após deploy gera uma tentativa limitada de atualização de página.
+A interface não cria notificações por temporizador, cartões, investimentos nem agendamentos de pagamentos em memória. A área de pagamentos utiliza endpoints persistentes da Etapa 8, incluindo agendamento e cancelamento; exige Flyway V8 aplicada no backend. Os agendamentos de **transferências** usam o serviço Java; a conta demonstrativa tem lançamentos ilustrativos históricos no backend. Um erro de carregamento de chunk após deploy gera uma tentativa limitada de atualização de página.
+
+### Pagamentos demonstrativos — Etapa 8
+
+A rota `/app/pagamentos` consulta contas autenticadas, registra pagamento imediato ou agendado, oferece cancelamento dos pendentes e lista o histórico persistido. Usa `BrlCurrencyDirective` e exibe loading real nas consultas. No console, os diagnósticos `[Monavero][Teste E8]` mostram status e valor, sem dados pessoais. **Não processa códigos bancários externos reais.**

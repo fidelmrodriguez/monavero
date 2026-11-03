@@ -4,7 +4,7 @@ Backend transacional de um banco digital **demonstrativo**. Não movimenta moeda
 
 ## Stack
 
-Java 25, Spring Boot 4.1.1, Spring Security e BCrypt, tokens opacos com sessão revogável, Spring Data JPA/Hibernate, PostgreSQL 18 (Neon), Flyway V1–V7, Spring Modulith, MockMvc e Testcontainers.
+Java 25, Spring Boot 4.1.1, Spring Security e BCrypt, tokens opacos com sessão revogável, Spring Data JPA/Hibernate, PostgreSQL 18 (Neon), Flyway V1–V8, Spring Modulith, MockMvc e Testcontainers.
 
 ## Funcionalidades
 
@@ -17,6 +17,10 @@ Java 25, Spring Boot 4.1.1, Spring Security e BCrypt, tokens opacos com sessão 
 - `GET /api/v1/banking/scheduled-transfers`: lista somente agendamentos do titular.
 - `DELETE /api/v1/banking/scheduled-transfers/{id}`: cancela enquanto pendente.
 - Processamento automático no vencimento por `@Scheduled`, com trava PostgreSQL, execução transacional e recuperação após reinício do processo.
+- `POST /api/v1/banking/payments`: efetua pagamento demonstrativo ou agenda execução futura; reenvio idempotente.
+- `GET /api/v1/banking/payments`: histórico isolado por usuário autenticado.
+- `DELETE /api/v1/banking/payments/{id}`: cancela somente agendamentos de pagamento pendentes.
+- `PaymentWorker`: execução de pagamentos vencidos e recuperação após despertar da API, com débito único e extrato.
 - `GET /actuator/health`: disponibilidade da API.
 
 ### Crédito de abertura no ambiente de demonstração
@@ -35,4 +39,4 @@ mvn -B clean verify
 mvn spring-boot:run
 ```
 
-Os testes integrados usam PostgreSQL 18 em Testcontainers; Docker e JDK 25 são necessários para executá-los. Hibernate `ddl-auto=validate`, Flyway `clean-disabled=true`. Migrações V1–V5 existentes não foram editadas; V6 acrescenta apenas o marcador de concessão única.
+Os testes integrados usam PostgreSQL 18 em Testcontainers; Docker e JDK 25 são necessários para executá-los. Hibernate `ddl-auto=validate`, Flyway `clean-disabled=true`. Migrações V1–V7 existentes não foram editadas; V8 cria `bank_payments` e vincula cada débito à movimentação persistente no extrato.

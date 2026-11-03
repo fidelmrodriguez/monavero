@@ -17,7 +17,7 @@ O **Monavero** é um projeto de portfólio que demonstra a experiência de um ba
 - Crédito fictício de abertura de R$ 1.000,00, uma única vez por conta pessoal, para viabilizar operações entre usuários cadastrados; não é dinheiro real nem recarregável pela API.
 - Contas antigas vazias e sem movimentações também podem receber o crédito uma única vez; contas com histórico permanecem inalteradas.
 - Painel com saldo consolidado, contas e movimentações recentes.
-- Cartões e investimentos exibidos no acesso demonstrativo são dados de apresentação locais, ainda não persistidos.
+- Cartões e investimentos não implementados não são apresentados como produtos contratados.
 
 ### Extrato
 
@@ -43,21 +43,28 @@ O **Monavero** é um projeto de portfólio que demonstra a experiência de um ba
 - Sem reserva antecipada de saldo: saldo insuficiente no processamento faz a transferência ser recusada, sem débito parcial.
 - Se o servidor dormir, os agendamentos vencidos são processados quando voltar a ficar online; não há garantia de pontualidade na hospedagem gratuita.
 
+### Pagamentos demonstrativos (Etapa 8)
+
+- Pagamento imediato por conta pessoal ou demonstrativa com autorização da API, valor em BRL e beneficiário de referência; gera um único lançamento de débito no extrato.
+- Agendamento para data futura, cancelamento enquanto pendente e execução pelo servidor. Não reserva saldo; falta de saldo no vencimento marca o agendamento como recusado.
+- Histórico por titular, confirmação somente após resposta da API, chave idempotente e bloqueio concorrente no PostgreSQL; migração Flyway V8.
+- **Não há liquidação de boleto, convênio ou pagamento a terceiros:** os valores são exclusivamente simulados dentro do Monavero.
+
 ### Experiência e recursos auxiliares
 
 - Layout responsivo, temas claro/escuro, formulários reativos e mensagens de validação acessíveis.
-- Pagamentos, notificações e auditoria possuem funcionalidades de interface, mas a persistência dos fluxos ainda não está integralmente implementada no backend.
+- Pagamentos usam persistência própria. Notificações e auditoria ainda dependem de módulos futuros da API.
 - Perfis visuais de gerente e administrador no modo demonstração **não** concedem permissões administrativas reais.
 
 ## Limites e funcionalidades futuras
 
-Não há PIX/TED real, integração com instituições financeiras, liquidação de boletos, emissão real de cartões nem investimento financeiro real. Processamento demonstrativo persistido de pagamentos, autorizações administrativas e evolução de auditoria/notificações permanecem no roadmap.
+Não há PIX/TED real, integração com instituições financeiras, liquidação de boletos, emissão real de cartões nem investimento financeiro real. Autorizações administrativas reais e evolução de auditoria/notificações permanecem no roadmap. Pagamentos demonstrativos são persistidos, mas não liquidados externamente.
 
 ## Arquitetura e validação
 
 - **Frontend:** Angular 19/TypeScript, publicado no Netlify como SPA estática.
 - **Backend:** Java 25 e Spring Boot 4.1.1, publicado na Blitz.
-- **Persistência:** PostgreSQL 18 (Neon), migrações Flyway até V7.
+- **Persistência:** PostgreSQL 18 (Neon), migrações Flyway até V8.
 - **Validação:** CI independente para frontend e backend; a implementação de cada funcionalidade não substitui a aprovação de seus testes e verificações em ambiente publicado.
 
 Consulte [a arquitetura](ARQUITETURA.md), [o roteiro de testes](TESTES.md) e [o roadmap](ROADMAP.md) para o estado detalhado de cada etapa.

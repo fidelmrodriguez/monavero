@@ -1,18 +1,24 @@
-.payments-unavailable {
-  display: grid;
-  justify-items: start;
-  gap: 8px;
-  max-width: 720px;
-}
-.payments-icon {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
-  background: var(--surface-soft);
-  color: var(--primary);
-  font-size: 2rem;
-}
-.payments-unavailable h2 { margin: 8px 0 0; }
-.payments-unavailable p { line-height: 1.6; margin-bottom: 0; }
+.payment-page { min-width: 0; }
+.payment-layout { align-items: start; }
+.payment-layout > .card { min-width: 0; }
+.payment-form { display: grid; gap: 14px; margin-top: 20px; }
+.payment-form .field { min-width: 0; }
+.payment-form .input, .payment-form .select { width: 100%; min-width: 0; box-sizing: border-box; }
+.field-feedback { min-height: 1.3rem; line-height: 1.3; }
+.payment-info { display: grid; align-content: start; gap: 14px; }
+.payment-info p { line-height: 1.55; margin: 0; color: var(--muted); }
+.payment-message { padding: 12px 14px; margin: 0; border-radius: 12px; background: var(--surface-soft); overflow-wrap: break-word; }
+.payment-submit { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+.mode-options { display: flex; flex-wrap: wrap; gap: 16px; margin: 0; padding: 14px; border: 1px solid var(--border); border-radius: 12px; }
+.mode-options legend { padding: 0 6px; font-weight: 700; }
+.mode-option { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.mode-option input { accent-color: var(--primary); }
+.payment-history { min-width: 0; }
+.payment-history-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.payment-entries { display: grid; gap: 12px; }
+.payment-entry { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface-soft); }
+.payment-entry-main { display: grid; min-width: 0; gap: 5px; overflow-wrap: break-word; }
+.payment-entry-main span, .payment-entry-main small { color: var(--muted); }
+.payment-entry-main strong { white-space: nowrap; }
+.payment-entry .btn { flex: none; }
+@media(max-width:720px) { .payment-entry { flex-direction: column; align-items: start; } }

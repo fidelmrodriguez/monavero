@@ -1,14 +1,117 @@
-<section class="page">
+<section class="page payment-page">
   <header class="page-header">
     <div>
       <p class="eyebrow">Pagamentos</p>
-      <h1>Pagamentos</h1>
-      <p class="muted">Acompanhe seus serviços financeiros em um só lugar.</p>
+      <h1>Pagar ou agendar</h1>
+      <p class="muted">Pague agora ou escolha uma data. Todas as operações deste ambiente são demonstrativas.</p>
     </div>
   </header>
-  <article class="card payments-unavailable" role="status">
-    <div class="payments-icon" aria-hidden="true">▤</div>
-    <h2>Pagamentos indisponíveis no momento</h2>
-    <p class="muted">Esta funcionalidade ainda não está disponível. Você pode continuar usando suas contas, transferências e agendamentos.</p>
+
+  <div class="grid grid-2 payment-layout">
+    <article class="card">
+      <h2>Novo pagamento</h2>
+      @if (accountsLoading()) {
+        <div class="data-loading" role="status"><span class="monavero-spinner" aria-hidden="true"></span> Carregando suas contas...</div>
+      } @else if (accounts().length === 0) {
+        <div role="alert">Não foi possível encontrar uma conta disponível.</div>
+        <button type="button" class="btn btn-secondary" (click)="reloadList()">Atualizar histórico</button>
+      } @else {
+        <form class="payment-form" [formGroup]="form" (ngSubmit)="submit()">
+          <div class="field">
+            <label for="payment-origin">Pagar com</label>
+            <select id="payment-origin" class="select" formControlName="originAccountId">
+              @for (account of accounts(); track account.id) {
+                <option [value]="account.id">{{ account.label }} · {{ account.number }} · {{ account.balance | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="payment-type">Tipo de pagamento</label>
+            <select id="payment-type" class="select" formControlName="paymentType">
+              <option value="BOLETO">Boleto demonstrativo</option>
+              <option value="CONVENIO">Convênio demonstrativo</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="payment-beneficiary">Beneficiário</label>
+            <input id="payment-beneficiary" class="input" maxlength="120" autocomplete="off" formControlName="beneficiary" placeholder="Nome do beneficiário" />
+            <div class="field-feedback">@if (form.controls.beneficiary.touched && form.controls.beneficiary.invalid) { <span class="error-text">Informe um nome de 2 a 120 caracteres.</span> }</div>
+          </div>
+          <div class="field">
+            <label for="payment-reference">Código de referência</label>
+            <input id="payment-reference" class="input" maxlength="48" autocomplete="off" formControlName="reference" placeholder="Ex.: FATURA2026A1" />
+            <div class="field-feedback">@if (form.controls.reference.touched && form.controls.reference.invalid) { <span class="error-text">Use de 6 a 48 letras, números ou hífens.</span> }</div>
+          </div>
+          <div class="field">
+            <label for="payment-amount">Valor do pagamento</label>
+            <input id="payment-amount" class="input" type="text" inputmode="decimal" appBrlCurrency autocomplete="off" formControlName="amount" placeholder="R$ 0,00" />
+            <div class="field-feedback">@if (form.controls.amount.touched && form.controls.amount.invalid) { <span class="error-text">Informe de R$ 0,01 a R$ 50.000,00.</span> }</div>
+          </div>
+          <fieldset class="mode-options">
+            <legend>Quando pagar?</legend>
+            <label class="mode-option"><input type="radio" name="payment-mode" [checked]="mode() === 'imediato'" (change)="setMode('imediato')" /> Agora</label>
+            <label class="mode-option"><input type="radio" name="payment-mode" [checked]="mode() === 'agendado'" (change)="setMode('agendado')" /> Agendar</label>
+          </fieldset>
+          @if (mode() === 'agendado') {
+            <div class="field">
+              <label for="payment-date">Data e horário</label>
+              <input id="payment-date" class="input" type="datetime-local" formControlName="scheduledAt" />
+              <div class="field-feedback">@if (form.controls.scheduledAt.touched && !form.controls.scheduledAt.value) { <span class="error-text">Escolha a data de pagamento.</span> }</div>
+            </div>
+          }
+          <div class="field">
+            <label for="payment-description">Descrição (opcional)</label>
+            <input id="payment-description" class="input" maxlength="160" formControlName="description" placeholder="Identificação pessoal do pagamento" />
+          </div>
+          @if (error()) { <p class="payment-message error-text" role="alert">{{ error() }}</p> }
+          @if (success()) { <p class="payment-message success-note" role="status">{{ success() }}</p> }
+          <button type="submit" class="btn btn-primary payment-submit" [disabled]="submitting() || form.invalid || (mode() === 'agendado' && !form.controls.scheduledAt.value)">
+            @if (submitting()) { <span class="monavero-spinner" aria-hidden="true"></span> Processando... }
+            @else { {{ mode() === 'imediato' ? 'Confirmar pagamento' : 'Agendar pagamento' }} }
+          </button>
+        </form>
+      }
+    </article>
+    <article class="card payment-info">
+      <h2>Como funciona</h2>
+      <p>Os pagamentos imediatos são debitados após a confirmação. Os agendados serão processados na data escolhida, se houver saldo disponível.</p>
+      <p>Você pode cancelar um agendamento enquanto estiver pendente. Valores e movimentações ficam registrados no extrato.</p>
+      <p>Este é um ambiente de demonstração: nenhum boleto ou convênio real é liquidado.</p>
+      <p>Se o servidor estiver temporariamente indisponível, agendamentos vencidos serão processados quando o serviço for restabelecido.</p>
+    </article>
+  </div>
+
+  <article class="card payment-history">
+    <div class="payment-history-title">
+      <h2>Histórico de pagamentos</h2>
+      <button type="button" class="btn btn-secondary" (click)="reloadList()" [disabled]="listingLoading()">Atualizar</button>
+    </div>
+    @if (listingLoading()) {
+      <div class="data-loading" role="status"><span class="monavero-spinner" aria-hidden="true"></span> Carregando pagamentos...</div>
+    } @else if (listError()) {
+      <p role="alert">Não foi possível carregar seus pagamentos. Tente atualizar.</p>
+    } @else if (items().length === 0) {
+      <p class="muted">Nenhum pagamento realizado ou agendado.</p>
+    } @else {
+      <div class="payment-entries">
+        @for (item of items(); track item.id) {
+          <div class="payment-entry">
+            <div class="payment-entry-main">
+              <strong>{{ item.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
+              <span>{{ item.beneficiary }} · {{ typeLabel(item.paymentType) }}</span>
+              <small>Referência {{ item.reference }}</small>
+              <small>{{ (item.scheduledFor || item.createdAt) | date:'dd/MM/yyyy HH:mm':'':'pt-BR' }} · {{ statusLabel(item.status) }}</small>
+              @if (item.description) { <small>{{ item.description }}</small> }
+              @if (item.failureReason) { <small class="error-text">{{ item.failureReason }}</small> }
+            </div>
+            @if (item.status === 'agendado') {
+              <button type="button" class="btn btn-secondary" [disabled]="cancelingId() !== null" (click)="cancel(item)">
+                {{ cancelingId() === item.id ? 'Cancelando...' : 'Cancelar' }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
   </article>
 </section>
