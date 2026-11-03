@@ -103,3 +103,14 @@ A interface não cria notificações por temporizador, cartões, investimentos n
 ### Pagamentos demonstrativos — Etapa 8
 
 A rota `/app/pagamentos` consulta contas autenticadas, registra pagamento imediato ou agendado, oferece cancelamento dos pendentes e lista o histórico persistido. Usa `BrlCurrencyDirective` e exibe loading real nas consultas. No console, os diagnósticos `[Monavero][Teste E8]` mostram status e valor, sem dados pessoais. **Não processa códigos bancários externos reais.**
+
+### Boletos demonstrativos
+
+Em **Pagamentos**, cole uma linha digitável do catálogo ou selecione um dos exemplos.
+A API retorna beneficiário, valor e vencimento para conferência. Selecione a conta,
+escolha pagar agora ou agendar e revise antes de confirmar. Pagamentos concluídos
+têm comprovante demonstrativo no histórico.
+
+Os exemplos de R$ 15,00, R$ 12,00 e R$ 5.000,00 permitem testar cancelamento,
+execução automática e saldo insuficiente. O exemplo vencido permite testar a
+recusa na consulta. Os códigos são fictícios e restritos ao catálogo do Monavero.

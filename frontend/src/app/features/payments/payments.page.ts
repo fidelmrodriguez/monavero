@@ -4,7 +4,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AccountSummary } from '../../core/models/banking.models';
 import { BankingService } from '../../core/services/banking.service';
-import { PaymentItem, PaymentRequest, PaymentService } from '../../core/services/payment.service';
+import { DemoBoleto, PaymentItem, PaymentRequest, PaymentService } from '../../core/services/payment.service';
 import { maskedAccount, testLog } from '../../core/utils/test-diagnostics';
 import { BrlCurrencyDirective } from '../../shared/directives/brl-currency.directive';
 
@@ -31,6 +31,17 @@ export class PaymentsPage {
   protected readonly mode = signal<'imediato' | 'agendado'>('imediato');
   protected readonly error = signal('');
   protected readonly success = signal('');
+  protected readonly boleto = signal<DemoBoleto | null>(null);
+  protected readonly lookupLoading = signal(false);
+  protected readonly reviewing = signal(false);
+  protected readonly receiptId = signal<string | null>(null);
+  protected readonly boletoCode = this.fb.control('');
+  protected readonly examples = [
+    { code: '00090000000000000000000000000000000000000000001', label: 'R$ 15,00' },
+    { code: '00090000000000000000000000000000000000000000002', label: 'R$ 12,00' },
+    { code: '00090000000000000000000000000000000000000000003', label: 'R$ 5.000,00' },
+    { code: '00090000000000000000000000000000000000000000004', label: 'Vencido' },
+  ];
   protected readonly form = this.fb.group({
     originAccountId: ['', Validators.required],
     paymentType: ['BOLETO', Validators.required],
@@ -57,8 +68,44 @@ export class PaymentsPage {
     return this.accounts().find(account => account.id === this.form.controls.originAccountId.value);
   }
 
+  protected lookup(code = this.boletoCode.value): void {
+    if (this.lookupLoading()) return;
+    this.boletoCode.setValue(code);
+    this.boleto.set(null);
+    this.form.patchValue({ beneficiary: '', reference: '', amount: '' });
+    this.error.set('');
+    this.success.set('');
+    const digits = code.replace(/[.\s-]/g, '');
+    if (!/^\d{47}$/.test(digits)) {
+      this.error.set('Informe uma linha digitável com 47 dígitos.');
+      return;
+    }
+    this.lookupLoading.set(true);
+    this.payments.lookup(digits).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: boleto => {
+        this.lookupLoading.set(false);
+        this.boleto.set(boleto);
+        this.form.patchValue({ beneficiary: boleto.beneficiary, reference: boleto.code, amount: String(boleto.amount) });
+      },
+      error: err => {
+        this.lookupLoading.set(false);
+        this.error.set(err.status === 404 ? 'Boleto demonstrativo não encontrado.' :
+          err.status === 409 ? 'Este boleto já foi pago ou agendado.' :
+          err.status === 422 ? 'Este boleto demonstrativo está vencido.' : 'Não foi possível consultar o boleto.');
+      }
+    });
+  }
+
+  protected changePaymentType(): void {
+    this.boleto.set(null);
+    this.boletoCode.reset();
+    this.form.patchValue({ beneficiary: '', reference: '', amount: '' });
+    this.error.set('');
+    this.success.set('');
+  }
+
   protected submit(): void {
-    if (this.accountsLoading() || this.submitting()) return;
+    if (this.accountsLoading() || this.submitting() || this.lookupLoading()) return;
     this.error.set('');
     this.success.set('');
     this.form.controls.beneficiary.setValue(this.form.controls.beneficiary.value.trim());
@@ -67,7 +114,8 @@ export class PaymentsPage {
     const scheduled = this.mode() === 'agendado' ? new Date(value.scheduledAt) : null;
     const validDate = scheduled === null || (Number.isFinite(scheduled.getTime()) &&
       scheduled.getTime() >= Date.now() + 60_000 && scheduled.getTime() <= Date.now() + 90 * 86_400_000);
-    if (this.form.invalid || !this.selectedAccount() || !validDate) {
+    if (this.form.invalid || !this.selectedAccount() || !validDate ||
+        (value.paymentType === 'BOLETO' && !this.boleto())) {
       this.form.markAllAsTouched();
       this.error.set(!validDate ? 'Escolha uma data entre um minuto e 90 dias a partir de agora.' :
         'Confira os campos do pagamento.');
@@ -87,6 +135,15 @@ export class PaymentsPage {
       description: value.description.trim(),
       scheduledFor: scheduled ? scheduled.toISOString() : null
     };
+    const boleto = this.boleto();
+    if (boleto && scheduled && value.scheduledAt.slice(0, 10) > boleto.dueDate) {
+      this.error.set('Escolha uma data até o vencimento do boleto.');
+      return;
+    }
+    if (boleto && !this.reviewing()) {
+      this.reviewing.set(true);
+      return;
+    }
     const old = this.pendingRequest;
     const request: PaymentRequest = old &&
       old.originAccountId === payload.originAccountId && old.paymentType === payload.paymentType &&
@@ -112,6 +169,9 @@ export class PaymentsPage {
           return;
         }
         this.pendingRequest = null;
+        this.reviewing.set(false);
+        this.boleto.set(null);
+        this.boletoCode.reset();
         this.success.set(request.scheduledFor ? 'Pagamento agendado. Acompanhe o andamento no histórico.' :
           'Pagamento concluído. Confira o lançamento no extrato.');
         this.form.patchValue({ amount: '', beneficiary: '', reference: '', description: '', scheduledAt: '' });
@@ -128,7 +188,7 @@ export class PaymentsPage {
         const status = Number(err?.status ?? 0);
         this.error.set(status === 422 ? 'Saldo insuficiente ou conta indisponível. Confira os dados.' :
           status === 401 ? 'Sua sessão expirou. Entre novamente para continuar.' :
-          status === 409 ? 'Este pagamento já foi utilizado com dados diferentes. Confira o histórico.' :
+          status === 409 ? 'Este boleto pode já estar pago ou agendado. Confira o histórico.' :
           'Não foi possível confirmar o pagamento. Confira o histórico antes de tentar novamente.');
         testLog('8', 'Falha ao pagar ou agendar', { httpStatus: status }, true);
       }

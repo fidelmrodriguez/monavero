@@ -17,6 +17,13 @@
         <button type="button" class="btn btn-secondary" (click)="reloadList()">Atualizar histórico</button>
       } @else {
         <form class="payment-form" [formGroup]="form" (ngSubmit)="submit()">
+          @if (reviewing()) {
+            <h3>Revise o pagamento</h3>
+            <p>{{ boleto()?.beneficiary }} · {{ boleto()?.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</p>
+            <p>Conta de origem: {{ selectedAccount()?.number }}</p>
+            <p>Pagamento: {{ mode() === 'imediato' ? 'Agora' : (form.controls.scheduledAt.value | date:'dd/MM/yyyy HH:mm') }}</p>
+            <button type="button" class="btn btn-secondary" [disabled]="submitting()" (click)="reviewing.set(false)">Voltar e editar</button>
+          } @else {
           <div class="field">
             <label for="payment-origin">Pagar com</label>
             <select id="payment-origin" class="select" formControlName="originAccountId">
@@ -27,11 +34,35 @@
           </div>
           <div class="field">
             <label for="payment-type">Tipo de pagamento</label>
-            <select id="payment-type" class="select" formControlName="paymentType">
+            <select id="payment-type" class="select" formControlName="paymentType" [attr.disabled]="lookupLoading() ? true : null" (change)="changePaymentType()">
               <option value="BOLETO">Boleto demonstrativo</option>
               <option value="CONVENIO">Convênio demonstrativo</option>
             </select>
           </div>
+          @if (form.controls.paymentType.value === 'BOLETO') {
+            <div class="field">
+              <label for="boleto-code">Linha digitável</label>
+              <input id="boleto-code" class="input" inputmode="numeric" autocomplete="off" maxlength="65"
+                [formControl]="boletoCode" [readOnly]="lookupLoading()"
+                (input)="boleto.set(null)" placeholder="Cole os 47 dígitos do boleto" />
+              <button type="button" class="btn btn-secondary" [disabled]="lookupLoading()" (click)="lookup()">
+                {{ lookupLoading() ? 'Consultando...' : 'Consultar boleto' }}
+              </button>
+            </div>
+            <p class="muted">Usar boleto de teste</p>
+            @for (example of examples; track example.code) {
+              <button type="button" class="btn btn-secondary" [disabled]="lookupLoading()" (click)="lookup(example.code)">{{ example.label }}</button>
+            }
+            @if (boleto(); as found) {
+              <div class="payment-entry">
+                <div class="payment-entry-main">
+                  <strong>{{ found.beneficiary }}</strong>
+                  <span>{{ found.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+                  <small>Vencimento {{ found.dueDate | date:'dd/MM/yyyy' }}</small>
+                </div>
+              </div>
+            }
+          } @else {
           <div class="field">
             <label for="payment-beneficiary">Beneficiário</label>
             <input id="payment-beneficiary" class="input" maxlength="120" autocomplete="off" formControlName="beneficiary" placeholder="Nome do beneficiário" />
@@ -47,6 +78,7 @@
             <input id="payment-amount" class="input" type="text" inputmode="decimal" appBrlCurrency autocomplete="off" formControlName="amount" placeholder="R$ 0,00" />
             <div class="field-feedback">@if (form.controls.amount.touched && form.controls.amount.invalid) { <span class="error-text">Informe de R$ 0,01 a R$ 50.000,00.</span> }</div>
           </div>
+          }
           <fieldset class="mode-options">
             <legend>Quando pagar?</legend>
             <label class="mode-option"><input type="radio" name="payment-mode" [checked]="mode() === 'imediato'" (change)="setMode('imediato')" /> Agora</label>
@@ -63,11 +95,12 @@
             <label for="payment-description">Descrição (opcional)</label>
             <input id="payment-description" class="input" maxlength="160" formControlName="description" placeholder="Identificação pessoal do pagamento" />
           </div>
+          }
           @if (error()) { <p class="payment-message error-text" role="alert">{{ error() }}</p> }
           @if (success()) { <p class="payment-message success-note" role="status">{{ success() }}</p> }
-          <button type="submit" class="btn btn-primary payment-submit" [disabled]="submitting() || form.invalid || (mode() === 'agendado' && !form.controls.scheduledAt.value)">
+          <button type="submit" class="btn btn-primary payment-submit" [disabled]="submitting() || lookupLoading() || (form.controls.paymentType.value === 'BOLETO' && !boleto()) || form.invalid || (mode() === 'agendado' && !form.controls.scheduledAt.value)">
             @if (submitting()) { <span class="monavero-spinner" aria-hidden="true"></span> Processando... }
-            @else { {{ mode() === 'imediato' ? 'Confirmar pagamento' : 'Agendar pagamento' }} }
+            @else { {{ boleto() && !reviewing() ? 'Revisar pagamento' : (mode() === 'imediato' ? 'Confirmar pagamento' : 'Agendar pagamento') }} }
           </button>
         </form>
       }
@@ -104,6 +137,18 @@
               @if (item.description) { <small>{{ item.description }}</small> }
               @if (item.failureReason) { <small class="error-text">{{ item.failureReason }}</small> }
             </div>
+            @if (item.status === 'concluido') {
+              <button type="button" class="btn btn-secondary" [attr.aria-expanded]="receiptId() === item.id"
+                (click)="receiptId.set(receiptId() === item.id ? null : item.id)">Comprovante</button>
+              @if (receiptId() === item.id) {
+                <div class="payment-entry-main">
+                  <strong>Comprovante demonstrativo</strong>
+                  <span>{{ item.beneficiary }} · {{ item.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+                  <small>Processado em {{ item.processedAt | date:'dd/MM/yyyy HH:mm' }}</small>
+                  <small>Identificador {{ item.id }}</small>
+                </div>
+              }
+            }
             @if (item.status === 'agendado') {
               <button type="button" class="btn btn-secondary" [disabled]="cancelingId() !== null" (click)="cancel(item)">
                 {{ cancelingId() === item.id ? 'Cancelando...' : 'Cancelar' }}

@@ -26,6 +26,8 @@ public final class PaymentDtos {
         @NotBlank @Pattern(regexp = "[0-9a-fA-F-]{36}") String idempotencyKey
     ) { }
 
+    public record Boleto(String code, String beneficiary, BigDecimal amount, java.time.LocalDate dueDate) { }
+
     public record Item(UUID id, UUID originAccountId, String paymentType,
                        String beneficiary, String reference, BigDecimal amount,
                        String description, OffsetDateTime scheduledFor,

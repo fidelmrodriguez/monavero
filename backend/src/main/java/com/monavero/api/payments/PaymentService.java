@@ -5,7 +5,9 @@ import com.monavero.api.auth.AuthenticatedUser;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -28,6 +30,36 @@ public class PaymentService {
         this.banking = banking;
     }
 
+    private static final ZoneId BRAZIL = ZoneId.of("America/Sao_Paulo");
+
+    public PaymentDtos.Boleto lookup(AuthenticatedUser user, String code) {
+        requireUser(user);
+        LocalDate today = LocalDate.now(BRAZIL);
+        PaymentDtos.Boleto boleto = switch (code) {
+            case "00090000000000000000000000000000000000000000001" ->
+                new PaymentDtos.Boleto(code, "Energia Monavero (teste)", new BigDecimal("15.00"), today.plusDays(30));
+            case "00090000000000000000000000000000000000000000002" ->
+                new PaymentDtos.Boleto(code, "Água Monavero (teste)", new BigDecimal("12.00"), today.plusDays(30));
+            case "00090000000000000000000000000000000000000000003" ->
+                new PaymentDtos.Boleto(code, "Serviços Monavero (teste)", new BigDecimal("5000.00"), today.plusDays(30));
+            case "00090000000000000000000000000000000000000000004" ->
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Boleto demonstrativo vencido.");
+            default -> throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Boleto demonstrativo não encontrado.");
+        };
+        if (hasActiveBoleto(user.id(), code)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Boleto já pago ou agendado.");
+        }
+        return boleto;
+    }
+
+    private boolean hasActiveBoleto(UUID userId, String code) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("""
+            SELECT EXISTS(SELECT 1 FROM bank_payments
+              WHERE requester_id = ? AND reference = ? AND payment_type = 'BOLETO'
+              AND status IN ('PENDING', 'EXECUTED'))
+            """, Boolean.class, userId, code));
+    }
+
     @Transactional
     public PaymentDtos.Item create(AuthenticatedUser user, PaymentDtos.Request request) {
         requireUser(user);
@@ -47,6 +79,10 @@ public class PaymentService {
         String key = request.idempotencyKey();
         jdbc.execute((org.springframework.jdbc.core.ConnectionCallback<Void>) connection -> {
             try (var statement = connection.prepareStatement("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))")) {
+                if (reference.matches("[0-9]{47}")) {
+                    statement.setString(1, "boleto:" + user.id() + ":" + reference);
+                    statement.execute();
+                }
                 statement.setString(1, "payment:" + user.id() + ":" + key);
                 statement.execute();
             }
@@ -72,6 +108,14 @@ public class PaymentService {
         if (scheduled != null && (scheduled.isBefore(now.plusSeconds(60)) || scheduled.isAfter(now.plusDays(90)))) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
                 "Escolha uma data entre um minuto e 90 dias a partir de agora.");
+        }
+        if (reference.matches("[0-9]{47}")) {
+            PaymentDtos.Boleto boleto = lookup(user, reference);
+            if (!"BOLETO".equals(request.paymentType()) || !boleto.beneficiary().equals(beneficiary)
+                    || boleto.amount().compareTo(amount) != 0
+                    || (scheduled != null && scheduled.atZoneSameInstant(BRAZIL).toLocalDate().isAfter(boleto.dueDate()))) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Confira os dados e o vencimento do boleto.");
+            }
         }
         if (!Boolean.TRUE.equals(jdbc.queryForObject("""
                 SELECT EXISTS(SELECT 1 FROM account_holders h JOIN bank_accounts a ON a.id = h.account_id

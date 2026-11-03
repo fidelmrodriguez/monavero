@@ -29,6 +29,12 @@ public class PaymentController {
         return payments.create(user, request);
     }
 
+    @GetMapping("/boletos/{code}")
+    public PaymentDtos.Boleto lookup(@AuthenticationPrincipal AuthenticatedUser user,
+                                     @PathVariable String code) {
+        return payments.lookup(user, code);
+    }
+
     @GetMapping
     public List<PaymentDtos.Item> list(@AuthenticationPrincipal AuthenticatedUser user) {
         return payments.list(user);

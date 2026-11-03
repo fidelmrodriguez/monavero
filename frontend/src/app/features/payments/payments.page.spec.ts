@@ -13,7 +13,7 @@ describe('PaymentsPage', () => {
     const banking = jasmine.createSpyObj('BankingService', ['getOverview']);
     banking.getOverview.and.returnValue(of({ accounts: [account], transactions: [],
       investments: [], cards: [], cashflow: [], expensesByCategory: [] }));
-    payments = jasmine.createSpyObj('PaymentService', ['create', 'list', 'cancel']);
+    payments = jasmine.createSpyObj('PaymentService', ['create', 'list', 'cancel', 'lookup']);
     payments.list.and.returnValue(of([]));
     await TestBed.configureTestingModule({ imports: [PaymentsPage], providers: [
       { provide: BankingService, useValue: banking }, { provide: PaymentService, useValue: payments }
@@ -26,7 +26,7 @@ describe('PaymentsPage', () => {
     const html = fixture.nativeElement as HTMLElement;
     expect(html.textContent).toContain('Novo pagamento');
     expect(html.textContent).toContain('Histórico de pagamentos');
-    expect(html.querySelector('#payment-amount')).not.toBeNull();
+    expect(html.querySelector('#boleto-code')).not.toBeNull();
     expect(html.textContent).not.toContain('Teste E8');
   });
 
@@ -41,10 +41,12 @@ describe('PaymentsPage', () => {
 
   it('envia pagamento imediato, mantém centavos e atualiza a lista após confirmar', () => {
     const component = fixture.componentInstance as any;
+    component.form.controls.paymentType.setValue('CONVENIO');
+    fixture.detectChanges();
     const input = fixture.nativeElement.querySelector('#payment-amount') as HTMLInputElement;
     input.value = 'R$ 25,35';
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    component.form.patchValue({ paymentType: 'BOLETO', beneficiary: 'Empresa X', reference: 'FATURA2026A1' });
+    component.form.patchValue({ paymentType: 'CONVENIO', beneficiary: 'Empresa X', reference: 'FATURA2026A1' });
     expect(component.form.controls.amount.value).toBe(25.35);
     payments.create.and.callFake(request => of({
       id: 'payment-id', ...request, createdAt: new Date().toISOString(), processedAt: new Date().toISOString(),
@@ -56,6 +58,27 @@ describe('PaymentsPage', () => {
     expect(payments.create.calls.mostRecent().args[0].amount).toBe(25.35);
     expect(fixture.nativeElement.textContent).toContain('Pagamento concluído');
     expect(fixture.nativeElement.textContent).not.toContain('Teste E8');
+  });
+
+  it('consulta o boleto e exige revisão antes de enviar', () => {
+    const component = fixture.componentInstance as any;
+    const { code } = component.examples[0];
+    payments.lookup.and.returnValue(of({
+      code, beneficiary: 'Energia Monavero (teste)', amount: 15, dueDate: '2099-01-01'
+    }));
+    payments.create.and.returnValue(throwError(() => ({ status: 503 })));
+
+    component.lookup(code);
+    component.submit();
+    expect(payments.lookup).toHaveBeenCalledWith(code);
+    expect(payments.create).not.toHaveBeenCalled();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Revise o pagamento');
+
+    component.submit();
+    expect(payments.create).toHaveBeenCalledWith(jasmine.objectContaining({
+      reference: code, amount: 15, beneficiary: 'Energia Monavero (teste)'
+    }));
   });
 
   it('mostra erro real de consulta sem criar pagamento local', () => {

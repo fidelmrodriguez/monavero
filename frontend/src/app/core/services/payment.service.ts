@@ -5,6 +5,13 @@ import { MONAVERO_API_URL } from '../config/monavero-api';
 import { ApiReadinessService } from './api-readiness.service';
 import { maskedAccount, testLog } from '../utils/test-diagnostics';
 
+export interface DemoBoleto {
+  code: string;
+  beneficiary: string;
+  amount: number;
+  dueDate: string;
+}
+
 export interface PaymentRequest {
   originAccountId: string;
   paymentType: 'BOLETO' | 'CONVENIO';
@@ -36,6 +43,10 @@ export class PaymentService {
   private readonly http = inject(HttpClient);
   private readonly readiness = inject(ApiReadinessService);
   private readonly url = `${MONAVERO_API_URL}/api/v1/banking/payments`;
+
+  lookup(code: string): Observable<DemoBoleto> {
+    return this.readiness.recover(this.http.get<DemoBoleto>(`${this.url}/boletos/${encodeURIComponent(code)}`));
+  }
 
   list(): Observable<PaymentItem[]> {
     return this.readiness.recover(this.http.get<PaymentItem[]>(this.url)).pipe(
