@@ -1,5 +1,6 @@
 package com.monavero.api.auth;
 
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -31,6 +32,9 @@ public class SecurityConfiguration {
                 .authenticationEntryPoint((request, response, ex) -> response.sendError(401))
                 .accessDeniedHandler((request, response, ex) -> response.sendError(403)))
             .authorizeHttpRequests(authorize -> authorize
+                // Despachos internos de erro não são uma nova chamada bancária.
+                // Não transformar respostas 422/409 do domínio em 401 no /error.
+                .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/system/info", "/actuator/health").permitAll()
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()

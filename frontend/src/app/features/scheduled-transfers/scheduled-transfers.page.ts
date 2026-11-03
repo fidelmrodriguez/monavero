@@ -58,6 +58,7 @@ export class ScheduledTransfersPage {
 
   protected onOriginChange(): void {
     this.error.set('');
+    this.form.controls.accountNumber.updateValueAndValidity();
     if (this.auth.isDemo()) this.fillOtherAccount();
   }
 
@@ -79,6 +80,16 @@ export class ScheduledTransfersPage {
       }, true);
       this.form.markAllAsTouched();
       if (!dateValid) this.error.set('Escolha uma data entre um minuto e 90 dias a partir de agora.');
+      return;
+    }
+    const origin = this.selectedAccount()!;
+    if (values.agency.trim() === origin.agency && accountNumber === origin.number.trim().toUpperCase()) {
+      this.form.controls.accountNumber.setErrors({ sameAsOrigin: true });
+      this.form.controls.accountNumber.markAsTouched();
+      this.error.set('Escolha uma conta de destino diferente da conta de origem.');
+      testLog('7', 'Agendamento bloqueado: conta de origem e destino iguais', {
+        contaOrigem: maskedAccount(origin.number)
+      }, true);
       return;
     }
     const payload = {
@@ -131,6 +142,8 @@ export class ScheduledTransfersPage {
         this.submitting.set(false);
         this.error.set(Number(err?.status) === 422 ?
           'Confira os dados das contas e a data escolhida.' :
+          Number(err?.status) === 401 ?
+          'Sua sessão precisa ser renovada. Entre novamente na sua conta.' :
           'Não foi possível confirmar o agendamento. Tente novamente.');
         testLog('7', 'Falha ao agendar', { httpStatus: Number(err?.status ?? 0) }, true);
       }

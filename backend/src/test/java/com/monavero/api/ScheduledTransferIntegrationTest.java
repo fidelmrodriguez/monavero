@@ -1,6 +1,8 @@
 package com.monavero.api;
 
 import com.jayway.jsonpath.JsonPath;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.RequestDispatcher;
 import com.monavero.api.scheduling.ScheduledTransferExecutionService;
 import com.monavero.api.scheduling.ScheduledTransferWorker;
 import java.math.BigDecimal;
@@ -168,6 +170,18 @@ class ScheduledTransferIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void erroDespachadoPeloServletPreservaStatusSemExigirNovoLogin() throws Exception {
+        mvc.perform(get("/error").with(request -> {
+                request.setDispatcherType(DispatcherType.ERROR);
+                request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, 422);
+                request.setAttribute(RequestDispatcher.ERROR_REQUEST_URI,
+                    "/api/v1/banking/scheduled-transfers");
+                return request;
+            }))
+            .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
     void impedeAgendamentoParaMesmaContaEPayloadInvalido() throws Exception {
         String a = register("Titular E");
         String oa = overview(a);
@@ -178,7 +192,11 @@ class ScheduledTransferIntegrationTest extends PostgresIntegrationTest {
         mvc.perform(post("/api/v1/banking/scheduled-transfers")
                 .header("Authorization", "Bearer " + a).contentType(MediaType.APPLICATION_JSON)
                 .content(payload(from, agency, number, "50.00", date, UUID.randomUUID().toString())))
-            .andExpect(status().isUnprocessableEntity());
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(jsonPath("$.detail").value("Conta de destino inválida."));
+        assertThat(jdbc.queryForObject(
+            "SELECT count(*) FROM scheduled_transfers WHERE origin_account_id = ?",
+            Integer.class, UUID.fromString(from))).isZero();
         mvc.perform(post("/api/v1/banking/scheduled-transfers")
                 .header("Authorization", "Bearer " + a).contentType(MediaType.APPLICATION_JSON)
                 .content(payload(from, agency, number, "50001.00", date, UUID.randomUUID().toString())))

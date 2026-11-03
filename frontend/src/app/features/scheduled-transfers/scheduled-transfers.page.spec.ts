@@ -34,6 +34,23 @@ describe('ScheduledTransfersPage', () => {
     expect((fixture.nativeElement.querySelector('#schedule-number') as HTMLInputElement).value).toBe('MV0987654321');
   });
 
+  it('bloqueia agendamento para a própria conta sem chamar a API', () => {
+    const component = fixture.componentInstance as any;
+    component.form.patchValue({
+      originAccount: '00000000-0000-4000-8000-000000000001',
+      agency: '0001',
+      accountNumber: 'MV1234567890',
+      amount: 11,
+      scheduledAt: new Date(Date.now() + 3_600_000).toISOString()
+    });
+    component.schedule();
+    fixture.detectChanges();
+    expect(scheduling.create).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent)
+      .toContain('Escolha uma conta de destino diferente da conta de origem.');
+    expect(component.form.controls.accountNumber.hasError('sameAsOrigin')).toBeTrue();
+  });
+
   it('recusa campo de data vazio sem solicitar à API', () => {
     const submit = fixture.nativeElement.querySelector('.submit-schedule') as HTMLButtonElement;
     expect(submit.disabled).toBeTrue();
