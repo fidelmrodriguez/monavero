@@ -41,7 +41,9 @@ describe('PaymentsPage', () => {
 
   it('envia pagamento imediato, mantém centavos e atualiza a lista após confirmar', () => {
     const component = fixture.componentInstance as any;
-    component.form.controls.paymentType.setValue('CONVENIO');
+    const paymentType = fixture.nativeElement.querySelector('#payment-type') as HTMLSelectElement;
+    paymentType.value = 'CONVENIO';
+    paymentType.dispatchEvent(new Event('change', { bubbles: true }));
     fixture.detectChanges();
     const input = fixture.nativeElement.querySelector('#payment-amount') as HTMLInputElement;
     input.value = 'R$ 25,35';
