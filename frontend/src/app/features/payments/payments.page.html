@@ -142,15 +142,23 @@
               @if (item.failureReason) { <small class="error-text">{{ item.failureReason }}</small> }
             </div>
             @if (item.status === 'concluido') {
-              <button type="button" class="btn btn-secondary" [attr.aria-expanded]="receiptId() === item.id"
-                (click)="receiptId.set(receiptId() === item.id ? null : item.id)">Comprovante</button>
+              <button type="button" class="btn btn-secondary receipt-toggle" [attr.aria-controls]="'receipt-' + item.id" [attr.aria-expanded]="receiptId() === item.id"
+                (click)="receiptId.set(receiptId() === item.id ? null : item.id)">{{ receiptId() === item.id ? 'Fechar comprovante' : 'Comprovante' }}</button>
               @if (receiptId() === item.id) {
-                <div class="payment-entry-main">
-                  <strong>Comprovante de pagamento</strong>
-                  <span>{{ displayBeneficiary(item.beneficiary) }} · {{ item.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
-                  <small>Processado em {{ item.processedAt | date:'dd/MM/yyyy HH:mm' }}</small>
-                  <small>Identificador {{ item.id }}</small>
-                </div>
+                <section class="payment-receipt" [id]="'receipt-' + item.id" [attr.aria-labelledby]="'receipt-title-' + item.id">
+                  <div class="receipt-heading">
+                    <h3 [id]="'receipt-title-' + item.id">Comprovante de pagamento</h3>
+                    <span class="receipt-status">Concluído</span>
+                  </div>
+                  <div class="receipt-amount">{{ item.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</div>
+                  <dl class="receipt-details">
+                    <div><dt>Beneficiário</dt><dd>{{ displayBeneficiary(item.beneficiary) }}</dd></div>
+                    <div><dt>Processado em</dt><dd>{{ item.processedAt | date:'dd/MM/yyyy HH:mm' }}</dd></div>
+                    <div><dt>Referência do pagamento</dt><dd>{{ item.reference }}</dd></div>
+                    <div><dt>Identificador da transação</dt><dd>{{ item.id }}</dd></div>
+                  </dl>
+                  <small class="muted">Ambiente demonstrativo</small>
+                </section>
               }
             }
             @if (item.status === 'agendado') {
