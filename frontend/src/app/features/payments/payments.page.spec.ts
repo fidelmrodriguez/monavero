@@ -55,6 +55,8 @@ describe('PaymentsPage', () => {
       status: 'concluido', failureReason: null
     } as PaymentItem));
     component.submit();
+    expect(payments.create).not.toHaveBeenCalled();
+    component.submit();
     fixture.detectChanges();
     expect(payments.create).toHaveBeenCalled();
     expect(payments.create.calls.mostRecent().args[0].amount).toBe(25.35);
@@ -75,7 +77,7 @@ describe('PaymentsPage', () => {
     expect(payments.lookup).toHaveBeenCalledWith(code);
     expect(payments.create).not.toHaveBeenCalled();
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Revise o pagamento');
+    expect(fixture.nativeElement.textContent).toContain('Confira antes de confirmar');
 
     component.submit();
     expect(payments.create).toHaveBeenCalledWith(jasmine.objectContaining({

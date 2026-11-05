@@ -2,67 +2,56 @@
   <header class="page-header">
     <div>
       <p class="eyebrow">Pagamentos</p>
-      <h1>Pagar ou agendar</h1>
-      <p class="muted">Pague agora ou escolha uma data. Todas as operações deste ambiente são demonstrativas.</p>
+      <h1>Pagamentos</h1>
+      <p class="muted">Pague suas contas e acompanhe seus pagamentos.</p>
     </div>
   </header>
 
-  <div class="grid grid-2 payment-layout">
+  <div class="payment-layout">
     <article class="card">
-      <h2>Novo pagamento</h2>
+      <div class="flow-heading"><h2>Novo pagamento</h2><span class="environment-label">Ambiente demonstrativo</span></div>
+      <ol class="payment-steps" aria-label="Etapas do pagamento">
+        <li [class.active]="!boleto() && !reviewing()"><span>1</span> Identificação</li>
+        <li [class.active]="boleto() && !reviewing()"><span>2</span> Pagamento</li>
+        <li [class.active]="reviewing()"><span>3</span> Confirmação</li>
+      </ol>
       @if (accountsLoading()) {
         <div class="data-loading" role="status"><span class="monavero-spinner" aria-hidden="true"></span> Carregando suas contas...</div>
       } @else if (accounts().length === 0) {
         <div role="alert">Não foi possível encontrar uma conta disponível.</div>
         <button type="button" class="btn btn-secondary" (click)="reloadList()">Atualizar histórico</button>
       } @else {
-        <form class="payment-form" [formGroup]="form" (ngSubmit)="submit()">
+        <form class="payment-form" [formGroup]="form" (ngSubmit)="form.controls.paymentType.value === 'BOLETO' && !boleto() ? lookup() : submit()">
           @if (reviewing()) {
-            <h3>Revise o pagamento</h3>
-            <p>{{ boleto()?.beneficiary }} · {{ boleto()?.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</p>
-            <p>Conta de origem: {{ selectedAccount()?.number }}</p>
-            <p>Pagamento: {{ mode() === 'imediato' ? 'Agora' : (form.controls.scheduledAt.value | date:'dd/MM/yyyy HH:mm') }}</p>
+            <h3>Confira antes de confirmar</h3>
+            <div class="review-value">{{ form.controls.amount.value | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</div>
+            <dl class="payment-summary">
+              <div><dt>Beneficiário</dt><dd>{{ displayBeneficiary(form.controls.beneficiary.value) }}</dd></div>
+              <div><dt>Conta de origem</dt><dd>{{ selectedAccount()?.number }}</dd></div>
+              <div><dt>Data do pagamento</dt><dd>{{ mode() === 'imediato' ? 'Hoje' : (form.controls.scheduledAt.value | date:'dd/MM/yyyy HH:mm') }}</dd></div>
+              @if (boleto(); as found) {
+                <div><dt>Vencimento</dt><dd>{{ found.dueDate | date:'dd/MM/yyyy' }}</dd></div>
+              }
+            </dl>
             <button type="button" class="btn btn-secondary" [disabled]="submitting()" (click)="reviewing.set(false)">Voltar e editar</button>
           } @else {
           <div class="field">
-            <label for="payment-origin">Pagar com</label>
-            <select id="payment-origin" class="select" formControlName="originAccountId">
-              @for (account of accounts(); track account.id) {
-                <option [value]="account.id">{{ account.label }} · {{ account.number }} · {{ account.balance | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</option>
-              }
-            </select>
-          </div>
-          <div class="field">
             <label for="payment-type">Tipo de pagamento</label>
             <select id="payment-type" class="select" formControlName="paymentType" [attr.disabled]="lookupLoading() ? true : null" (change)="changePaymentType()">
-              <option value="BOLETO">Boleto demonstrativo</option>
-              <option value="CONVENIO">Convênio demonstrativo</option>
+              <option value="BOLETO">Boleto</option>
+              <option value="CONVENIO">Convênio</option>
             </select>
           </div>
-          @if (form.controls.paymentType.value === 'BOLETO') {
+          @if (form.controls.paymentType.value === 'BOLETO' && !boleto()) {
             <div class="field">
               <label for="boleto-code">Linha digitável</label>
               <input id="boleto-code" class="input" inputmode="numeric" autocomplete="off" maxlength="65"
                 [formControl]="boletoCode" [readOnly]="lookupLoading()"
-                (input)="boleto.set(null)" placeholder="Cole os 47 dígitos do boleto" />
-              <button type="button" class="btn btn-secondary" [disabled]="lookupLoading()" (click)="lookup()">
-                {{ lookupLoading() ? 'Consultando...' : 'Consultar boleto' }}
-              </button>
+                (input)="boleto.set(null)" placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000" />
+              <small class="muted">Digite ou cole o código que aparece no boleto.</small>
             </div>
-            <p class="muted">Usar boleto de teste</p>
-            @for (example of examples; track example.code) {
-              <button type="button" class="btn btn-secondary" [disabled]="lookupLoading()" (click)="lookup(example.code)">{{ example.label }}</button>
-            }
-            @if (boleto(); as found) {
-              <div class="payment-entry">
-                <div class="payment-entry-main">
-                  <strong>{{ found.beneficiary }}</strong>
-                  <span>{{ found.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
-                  <small>Vencimento {{ found.dueDate | date:'dd/MM/yyyy' }}</small>
-                </div>
-              </div>
-            }
-          } @else {
+          } @else if (form.controls.paymentType.value === 'CONVENIO') {
+
           <div class="field">
             <label for="payment-beneficiary">Beneficiário</label>
             <input id="payment-beneficiary" class="input" maxlength="120" autocomplete="off" formControlName="beneficiary" placeholder="Nome do beneficiário" />
@@ -79,6 +68,24 @@
             <div class="field-feedback">@if (form.controls.amount.touched && form.controls.amount.invalid) { <span class="error-text">Informe de R$ 0,01 a R$ 50.000,00.</span> }</div>
           </div>
           }
+          @if (boleto() || form.controls.paymentType.value === 'CONVENIO') {
+            @if (boleto(); as found) {
+              <div class="bill-summary">
+                <span class="muted">Beneficiário</span>
+                <strong>{{ displayBeneficiary(found.beneficiary) }}</strong>
+                <div class="review-value">{{ found.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</div>
+                <small class="muted">Vencimento {{ found.dueDate | date:'dd/MM/yyyy' }}</small>
+                <button class="text-action" type="button" (click)="changePaymentType()">Alterar boleto</button>
+              </div>
+            }
+          <div class="field">
+            <label for="payment-origin">Pagar com</label>
+            <select id="payment-origin" class="select" formControlName="originAccountId">
+              @for (account of accounts(); track account.id) {
+                <option [value]="account.id">{{ account.label }} · {{ account.number }} · {{ account.balance | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</option>
+              }
+            </select>
+          </div>
           <fieldset class="mode-options">
             <legend>Quando pagar?</legend>
             <label class="mode-option"><input type="radio" name="payment-mode" [checked]="mode() === 'imediato'" (change)="setMode('imediato')" /> Agora</label>
@@ -96,22 +103,18 @@
             <input id="payment-description" class="input" maxlength="160" formControlName="description" placeholder="Identificação pessoal do pagamento" />
           </div>
           }
+          }
           @if (error()) { <p class="payment-message error-text" role="alert">{{ error() }}</p> }
           @if (success()) { <p class="payment-message success-note" role="status">{{ success() }}</p> }
-          <button type="submit" class="btn btn-primary payment-submit" [disabled]="submitting() || lookupLoading() || (form.controls.paymentType.value === 'BOLETO' && !boleto()) || form.invalid || (mode() === 'agendado' && !form.controls.scheduledAt.value)">
-            @if (submitting()) { <span class="monavero-spinner" aria-hidden="true"></span> Processando... }
-            @else { {{ boleto() && !reviewing() ? 'Revisar pagamento' : (mode() === 'imediato' ? 'Confirmar pagamento' : 'Agendar pagamento') }} }
+          <button type="submit" class="btn btn-primary payment-submit"
+            [disabled]="submitting() || lookupLoading() || (form.controls.paymentType.value === 'BOLETO' && !boleto() && !boletoCode.value.trim()) || ((boleto() || form.controls.paymentType.value === 'CONVENIO') && (form.invalid || (mode() === 'agendado' && !form.controls.scheduledAt.value)))">
+            @if (submitting() || lookupLoading()) { <span class="monavero-spinner" aria-hidden="true"></span> Aguarde... }
+            @else { {{ reviewing() ? (mode() === 'imediato' ? 'Confirmar pagamento' : 'Confirmar agendamento') : 'Continuar' }} }
           </button>
         </form>
       }
     </article>
-    <article class="card payment-info">
-      <h2>Como funciona</h2>
-      <p>Os pagamentos imediatos são debitados após a confirmação. Os agendados serão processados na data escolhida, se houver saldo disponível.</p>
-      <p>Você pode cancelar um agendamento enquanto estiver pendente. Valores e movimentações ficam registrados no extrato.</p>
-      <p>Este é um ambiente de demonstração: nenhum boleto ou convênio real é liquidado.</p>
-      <p>Se o servidor estiver temporariamente indisponível, agendamentos vencidos serão processados quando o serviço for restabelecido.</p>
-    </article>
+
   </div>
 
   <article class="card payment-history">
@@ -131,7 +134,7 @@
           <div class="payment-entry">
             <div class="payment-entry-main">
               <strong>{{ item.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
-              <span>{{ item.beneficiary }} · {{ typeLabel(item.paymentType) }}</span>
+              <span>{{ displayBeneficiary(item.beneficiary) }} · {{ typeLabel(item.paymentType) }}</span>
               <small>Referência {{ item.reference }}</small>
               <small>{{ (item.scheduledFor || item.createdAt) | date:'dd/MM/yyyy HH:mm':'':'pt-BR' }} · {{ statusLabel(item.status) }}</small>
               @if (item.description) { <small>{{ item.description }}</small> }
@@ -142,8 +145,8 @@
                 (click)="receiptId.set(receiptId() === item.id ? null : item.id)">Comprovante</button>
               @if (receiptId() === item.id) {
                 <div class="payment-entry-main">
-                  <strong>Comprovante demonstrativo</strong>
-                  <span>{{ item.beneficiary }} · {{ item.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+                  <strong>Comprovante de pagamento</strong>
+                  <span>{{ displayBeneficiary(item.beneficiary) }} · {{ item.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
                   <small>Processado em {{ item.processedAt | date:'dd/MM/yyyy HH:mm' }}</small>
                   <small>Identificador {{ item.id }}</small>
                 </div>

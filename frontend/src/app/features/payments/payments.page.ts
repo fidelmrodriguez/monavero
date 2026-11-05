@@ -68,6 +68,10 @@ export class PaymentsPage {
     return this.accounts().find(account => account.id === this.form.controls.originAccountId.value);
   }
 
+  protected displayBeneficiary(name: string): string {
+    return name.replace(/ \(teste\)$/, '');
+  }
+
   protected lookup(code = this.boletoCode.value): void {
     if (this.lookupLoading()) return;
     this.boletoCode.setValue(code);
@@ -140,7 +144,7 @@ export class PaymentsPage {
       this.error.set('Escolha uma data até o vencimento do boleto.');
       return;
     }
-    if (boleto && !this.reviewing()) {
+    if (!this.reviewing()) {
       this.reviewing.set(true);
       return;
     }
