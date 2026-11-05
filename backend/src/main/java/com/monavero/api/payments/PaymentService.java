@@ -44,7 +44,14 @@ public class PaymentService {
                 new PaymentDtos.Boleto(code, "Serviços Monavero (teste)", new BigDecimal("5000.00"), today.plusDays(30));
             case "00090000000000000000000000000000000000000000004" ->
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Boleto demonstrativo vencido.");
-            default -> throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Boleto demonstrativo não encontrado.");
+            default -> {
+                // Namespace exclusivo para novas instâncias de boletos demonstrativos.
+                if (!code.matches("00091[0-9]{42}")) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Boleto demonstrativo não encontrado.");
+                }
+                yield new PaymentDtos.Boleto(code, "Água Monavero (teste)",
+                    new BigDecimal("12.00"), today.plusDays(30));
+            }
         };
         if (hasActiveBoleto(user.id(), code)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Boleto já pago ou agendado.");

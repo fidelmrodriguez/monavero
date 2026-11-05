@@ -100,9 +100,14 @@ export class PaymentsPage {
     });
   }
 
+  private newTestBoletoCode(): string {
+    const bytes = crypto.getRandomValues(new Uint8Array(42));
+    return '00091' + Array.from(bytes, value => String(value % 10)).join('');
+  }
+
   protected changePaymentType(): void {
     this.boleto.set(null);
-    this.boletoCode.setValue(this.form.controls.paymentType.value === 'BOLETO_TESTE' ? this.examples[1].code : '');
+    this.boletoCode.setValue(this.form.controls.paymentType.value === 'BOLETO_TESTE' ? this.newTestBoletoCode() : '');
     this.form.patchValue({ beneficiary: '', reference: '', amount: '' });
     this.error.set('');
     this.success.set('');
