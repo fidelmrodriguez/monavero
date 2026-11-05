@@ -1,6 +1,6 @@
 {
   "/api/monavero-readiness": {
-    "target": "https://monavero-api.fidelmrodriguez.blitz.cloud",
+    "target": "https://monavero-api.fidelmrodriguez.prod.page",
     "secure": true,
     "changeOrigin": true,
     "pathRewrite": {

@@ -16,7 +16,7 @@ describe('AppComponent', () => {
         // Evita contato real com a Blitz durante o teste da raiz.
         { provide: ApiReadinessService, useValue: {
           ready: signal(true), elapsedSeconds: signal(0), elapsedLabel: signal('00:00'),
-          wakeUrl: 'https://monavero-api.fidelmrodriguez.blitz.cloud/actuator/health',
+          wakeUrl: 'https://monavero-api.fidelmrodriguez.prod.page/actuator/health',
           start: jasmine.createSpy('start')
         } }
       ]
@@ -40,7 +40,7 @@ describe('AppComponent', () => {
 
     const link: HTMLAnchorElement | null = fixture.nativeElement.querySelector('.api-wakeup-link');
     expect(link).not.toBeNull();
-    expect(link?.href).toBe('https://monavero-api.fidelmrodriguez.blitz.cloud/actuator/health');
+    expect(link?.href).toBe('https://monavero-api.fidelmrodriguez.prod.page/actuator/health');
     expect(fixture.nativeElement.textContent).not.toContain('Blitz Cloud');
     expect(fixture.nativeElement.textContent).not.toContain('API Java');
     expect(link?.target).toBe('_blank');
