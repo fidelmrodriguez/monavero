@@ -21,7 +21,7 @@
         <div role="alert">Não foi possível encontrar uma conta disponível.</div>
         <button type="button" class="btn btn-secondary" (click)="reloadList()">Atualizar histórico</button>
       } @else {
-        <form class="payment-form" [formGroup]="form" (ngSubmit)="form.controls.paymentType.value === 'BOLETO' && !boleto() ? lookup() : submit()">
+        <form class="payment-form" [formGroup]="form" (ngSubmit)="form.controls.paymentType.value !== 'CONVENIO' && !boleto() ? lookup() : submit()">
           @if (reviewing()) {
             <h3>Confira antes de confirmar</h3>
             <div class="review-value">{{ form.controls.amount.value | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</div>
@@ -39,16 +39,17 @@
             <label for="payment-type">Tipo de pagamento</label>
             <select id="payment-type" class="select" formControlName="paymentType" [attr.disabled]="lookupLoading() ? true : null" (change)="changePaymentType()">
               <option value="BOLETO">Boleto</option>
+              <option value="BOLETO_TESTE">Boleto de teste</option>
               <option value="CONVENIO">Convênio</option>
             </select>
           </div>
-          @if (form.controls.paymentType.value === 'BOLETO' && !boleto()) {
+          @if (form.controls.paymentType.value !== 'CONVENIO' && !boleto()) {
             <div class="field">
               <label for="boleto-code">Linha digitável</label>
               <input id="boleto-code" class="input" inputmode="numeric" autocomplete="off" maxlength="65"
-                [formControl]="boletoCode" [readOnly]="lookupLoading()"
+                [formControl]="boletoCode" [readOnly]="lookupLoading() || form.controls.paymentType.value === 'BOLETO_TESTE'"
                 (input)="boleto.set(null)" placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000" />
-              <small class="muted">Digite ou cole o código que aparece no boleto.</small>
+              <small class="muted">{{ form.controls.paymentType.value === 'BOLETO_TESTE' ? 'Código preenchido automaticamente. Continue para conferir os dados.' : 'Digite ou cole o código que aparece no boleto.' }}</small>
             </div>
           } @else if (form.controls.paymentType.value === 'CONVENIO') {
 
@@ -107,7 +108,7 @@
           @if (error()) { <p class="payment-message error-text" role="alert">{{ error() }}</p> }
           @if (success()) { <p class="payment-message success-note" role="status">{{ success() }}</p> }
           <button type="submit" class="btn btn-primary payment-submit"
-            [disabled]="submitting() || lookupLoading() || (form.controls.paymentType.value === 'BOLETO' && !boleto() && !boletoCode.value.trim()) || ((boleto() || form.controls.paymentType.value === 'CONVENIO') && (form.invalid || (mode() === 'agendado' && !form.controls.scheduledAt.value)))">
+            [disabled]="submitting() || lookupLoading() || (form.controls.paymentType.value !== 'CONVENIO' && !boleto() && !boletoCode.value.trim()) || ((boleto() || form.controls.paymentType.value === 'CONVENIO') && (form.invalid || (mode() === 'agendado' && !form.controls.scheduledAt.value)))">
             @if (submitting() || lookupLoading()) { <span class="monavero-spinner" aria-hidden="true"></span> Aguarde... }
             @else { {{ reviewing() ? (mode() === 'imediato' ? 'Confirmar pagamento' : 'Confirmar agendamento') : 'Continuar' }} }
           </button>

@@ -102,7 +102,7 @@ export class PaymentsPage {
 
   protected changePaymentType(): void {
     this.boleto.set(null);
-    this.boletoCode.reset();
+    this.boletoCode.setValue(this.form.controls.paymentType.value === 'BOLETO_TESTE' ? this.examples[1].code : '');
     this.form.patchValue({ beneficiary: '', reference: '', amount: '' });
     this.error.set('');
     this.success.set('');
@@ -119,7 +119,7 @@ export class PaymentsPage {
     const validDate = scheduled === null || (Number.isFinite(scheduled.getTime()) &&
       scheduled.getTime() >= Date.now() + 60_000 && scheduled.getTime() <= Date.now() + 90 * 86_400_000);
     if (this.form.invalid || !this.selectedAccount() || !validDate ||
-        (value.paymentType === 'BOLETO' && !this.boleto())) {
+        (value.paymentType !== 'CONVENIO' && !this.boleto())) {
       this.form.markAllAsTouched();
       this.error.set(!validDate ? 'Escolha uma data entre um minuto e 90 dias a partir de agora.' :
         'Confira os campos do pagamento.');
@@ -132,7 +132,7 @@ export class PaymentsPage {
     }
     const payload = {
       originAccountId: value.originAccountId,
-      paymentType: value.paymentType as PaymentRequest['paymentType'],
+      paymentType: (value.paymentType === 'BOLETO_TESTE' ? 'BOLETO' : value.paymentType) as PaymentRequest['paymentType'],
       beneficiary: value.beneficiary.trim(),
       reference: value.reference.trim().toUpperCase(),
       amount: Number(value.amount),
@@ -176,6 +176,7 @@ export class PaymentsPage {
         this.reviewing.set(false);
         this.boleto.set(null);
         this.boletoCode.reset();
+        this.form.controls.paymentType.setValue('BOLETO');
         this.success.set(request.scheduledFor ? 'Pagamento agendado. Acompanhe o andamento no histórico.' :
           'Pagamento concluído. Confira o lançamento no extrato.');
         this.form.patchValue({ amount: '', beneficiary: '', reference: '', description: '', scheduledAt: '' });
