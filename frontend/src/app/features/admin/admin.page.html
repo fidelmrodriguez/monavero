@@ -1,13 +1,83 @@
 <section class="page">
   <header class="page-header">
-    <div>
-      <p class="eyebrow">Administração</p>
-      <h1>Administração</h1>
-      <p class="muted">Gerencie sua conta com segurança.</p>
-    </div>
+    <div><p class="eyebrow">Administração</p><h1>Usuários e acessos</h1>
+      <p class="muted">Gerencie perfis e o acesso às contas.</p></div>
+    <button class="btn btn-secondary" (click)="load()" [disabled]="loading() || saving()">Atualizar</button>
   </header>
+  @if (error()) { <p class="error-text" role="alert">{{ error() }}</p> }
+  @if (success()) { <p role="status">{{ success() }}</p> }
+  @if (selected(); as user) {
+    <article class="card edit-panel">
+      <h2>Alterar acesso</h2><p>{{ user.name }} · {{ user.email }}</p>
+      <form (ngSubmit)="save()">
+        <fieldset [disabled]="saving()">
+          <div class="field"><label for="admin-role">Perfil</label>
+            <select id="admin-role" class="select" name="role" [(ngModel)]="role">
+              <option value="CLIENT">Cliente</option><option value="MANAGER">Gerente</option><option value="ADMIN">Administrador</option>
+            </select></div>
+          <div class="field"><label for="admin-status">Status</label>
+            <select id="admin-status" class="select" name="status" [(ngModel)]="status">
+              <option value="ACTIVE">Ativo</option><option value="BLOCKED">Bloqueado</option>
+            </select></div>
+          <div class="field"><label for="admin-reason">Motivo da alteração</label>
+            <textarea id="admin-reason" class="input" name="reason" [(ngModel)]="reason" required minlength="5" maxlength="300" rows="3"></textarea></div>
+        </fieldset>
+        <p class="muted">A alteração encerra as sessões atuais deste usuário. Contas bloqueadas ficam impedidas de entrar.</p>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="selected.set(null)">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving() || reason.trim().length < 5 || (role === user.role && status === user.status)">
+            {{ saving() ? 'Salvando...' : 'Confirmar alteração' }}
+          </button>
+        </div>
+      </form>
+    </article>
+  }
   <article class="card">
-    <h2>Gestão administrativa indisponível</h2>
-    <p class="muted">Os recursos de administração ainda não estão disponíveis nesta versão.</p>
+    @if (loading()) { <p role="status">Carregando usuários...</p> }
+    @else {
+      <div class="table-wrap"><table>
+        <thead><tr><th>Usuário</th><th>E-mail</th><th>Perfil</th><th>Status</th><th>Ação</th></tr></thead>
+        <tbody>
+          @for (user of users(); track user.id) {
+            <tr><td>{{ user.name }}</td><td>{{ user.email }}</td><td>{{ roleLabels[user.role] }}</td>
+              <td>{{ statusLabels[user.status] }}</td><td>
+                @if (editable(user)) { <button class="btn btn-secondary" [disabled]="saving()" (click)="edit(user)">Alterar acesso</button> }
+                @else { <span class="muted">{{ user.demo ? 'Conta demonstrativa' : 'Sua conta' }}</span> }
+              </td></tr>
+          }
+        </tbody>
+      </table></div>
+      @if (!users().length && !error()) { <p class="muted">Nenhum usuário encontrado.</p> }
+    }
+    <nav class="pagination" aria-label="Páginas de usuários">
+      <button class="btn btn-secondary" [disabled]="page() === 0 || loading() || saving()" (click)="load(page() - 1)">Anterior</button>
+      <span>Página {{ page() + 1 }}</span>
+      <button class="btn btn-secondary" [disabled]="!hasNext() || loading() || saving()" (click)="load(page() + 1)">Próxima</button>
+    </nav>
+  </article>
+  <article class="card accounts-panel">
+    <div class="actions"><h2>Contas cadastradas</h2>
+      <button class="btn btn-secondary" [disabled]="accountsLoading()" (click)="loadAccounts()">Atualizar contas</button>
+    </div>
+    @if (accountsLoading()) { <p role="status">Carregando contas...</p> }
+    @else if (accountsError()) { <p role="alert">Não foi possível carregar as contas.</p> }
+    @else {
+      <div class="table-wrap"><table>
+        <thead><tr><th>Titular</th><th>Agência</th><th>Conta</th><th>Status</th><th>Saldo</th></tr></thead>
+        <tbody>
+          @for (account of accounts(); track account.id) {
+            <tr><td>{{ account.owner }}</td><td>{{ account.branch }}</td><td>{{ account.number }}</td>
+              <td>{{ account.status === 'ACTIVE' ? 'Ativa' : account.status === 'BLOCKED' ? 'Bloqueada' : 'Encerrada' }}</td>
+              <td>{{ account.balance | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td></tr>
+          }
+        </tbody>
+      </table></div>
+      @if (!accounts().length) { <p class="muted">Nenhuma conta cadastrada.</p> }
+    }
+    <nav class="pagination" aria-label="Páginas de contas">
+      <button class="btn btn-secondary" [disabled]="accountsPage() === 0 || accountsLoading()" (click)="loadAccounts(accountsPage() - 1)">Anterior</button>
+      <span>Página {{ accountsPage() + 1 }}</span>
+      <button class="btn btn-secondary" [disabled]="!accountsNext() || accountsLoading()" (click)="loadAccounts(accountsPage() + 1)">Próxima</button>
+    </nav>
   </article>
 </section>

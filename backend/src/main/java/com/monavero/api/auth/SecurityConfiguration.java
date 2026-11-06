@@ -39,6 +39,8 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.GET, "/api/v1/system/info", "/actuator/health").permitAll()
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/demo").permitAll()
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/v1/audit/**").hasAnyRole("ADMIN", "MANAGER")
                 .requestMatchers("/api/v1/auth/**", "/api/v1/banking/**").authenticated()
                 .anyRequest().denyAll())
             .addFilterBefore(new BearerAuthenticationFilter(tokens), UsernamePasswordAuthenticationFilter.class)

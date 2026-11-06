@@ -93,3 +93,7 @@ npm test
 - Pagamentos utilizam API e registros persistentes no backend; não há liquidação de boletos ou convênios reais.
 - Demonstração bancária conserva histórico ilustrativo de abertura, mas não inventa cartões e investimentos no frontend.
 - Contrapartes das transferências identificadas inclusive no modo demonstração; detalhes da conta de terceiro permanecem mascarados.
+
+### Administração e auditoria
+
+A Etapa 9 adiciona gestão de perfis e status, revogação de sessões e histórico administrativo persistente. O acesso público User / 1234 recebe perfil administrativo e permite consultar usuários, contas e auditoria. Consulte [Administração](docs/ADMINISTRACAO.md) para ativação, permissões e validação. Implementação entregue para CI e testes funcionais.

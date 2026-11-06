@@ -62,3 +62,7 @@ Implementadas transferências agendadas com ciclo `agendado → concluido/recusa
 - Débito imediato atômico; agendados debitam somente no vencimento, com bloqueio `FOR UPDATE SKIP LOCKED` e tentativa de recuperação após o retorno da Blitz.
 - Operações sem saldo ficam recusadas sem saldo negativo. Diagnósticos `[Monavero][Teste E8]` exclusivamente no console.
 - **Pendente:** GitHub Actions Java/Angular, confirmação Flyway V8 na Blitz e teste funcional da tela publicada.
+
+## Atualização da Etapa 9
+
+Gestão administrativa, autorização por perfil real e auditoria persistente implementadas. CI e validação em produção pendentes. Consulte ADMINISTRACAO.md para escopo e testes.

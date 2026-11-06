@@ -96,10 +96,10 @@ class AuthIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    void acessoDemonstrativoTemSessaoRealSemAdmin() throws Exception {
+    void acessoDemonstrativoTemSessaoAdministrativaReal() throws Exception {
         String body = mvc.perform(post("/api/v1/auth/demo"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.user.role").value("CLIENT"))
+            .andExpect(jsonPath("$.user.role").value("ADMIN"))
             .andExpect(jsonPath("$.user.demo").value(true))
             .andReturn().getResponse().getContentAsString();
         mvc.perform(get("/api/v1/auth/me")

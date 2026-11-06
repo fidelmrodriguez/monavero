@@ -1,20 +1,39 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { AuditStore } from '../../core/state/audit.store';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AdminService, AuditEvent } from '../../core/services/admin.service';
 
 @Component({
   selector: 'app-audit-page',
-  imports: [FormsModule, DatePipe],
+  imports: [DatePipe],
   templateUrl: './audit.page.html',
   styleUrl: './audit.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AuditPage {
-  private readonly auditStore = inject(AuditStore);
-  protected readonly searchText = signal('');
-  protected readonly filteredEntries = computed(() => {
-    const search = this.searchText().toLowerCase().trim();
-    return this.auditStore.entries().filter((entry) => !search || `${entry.action} ${entry.area} ${entry.status} ${entry.role}`.toLowerCase().includes(search));
-  });
+  private readonly api = inject(AdminService);
+  private readonly destroyRef = inject(DestroyRef);
+  protected readonly entries = signal<AuditEvent[]>([]);
+  protected readonly page = signal(0);
+  protected readonly hasNext = signal(false);
+  protected readonly loading = signal(false);
+  protected readonly error = signal(false);
+  protected readonly roleLabels = { CLIENT: 'Cliente', MANAGER: 'Gerente', ADMIN: 'Administrador' };
+  protected readonly statusLabels = { ACTIVE: 'Ativo', BLOCKED: 'Bloqueado' };
+  constructor() { this.load(); }
+
+  protected load(page = this.page()): void {
+    if (this.loading()) return;
+    this.loading.set(true);
+    this.error.set(false);
+    this.api.events(page).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: entries => {
+        this.entries.set(entries.slice(0, 50));
+        this.hasNext.set(entries.length > 50);
+        this.page.set(page);
+        this.loading.set(false);
+      },
+      error: () => { this.entries.set([]); this.error.set(true); this.loading.set(false); }
+    });
+  }
 }

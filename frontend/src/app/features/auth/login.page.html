@@ -27,18 +27,7 @@
     </div>
 
     <div class="login-topbar">
-      @if (mode() === 'login') {
-        <div class="demo-role-top">
-          <label for="role">Visualizar como (demonstração)</label>
-          <div class="demo-role-select">
-            <select id="role" class="input" [formControl]="form.controls.role">
-              <option value="cliente">Cliente</option>
-              <option value="gerente">Gerente</option>
-              <option value="admin">Administrador</option>
-            </select>
-          </div>
-        </div>
-      }
+      <span class="muted">Demonstração com acesso administrativo</span>
       <button class="theme-button" type="button" (click)="themeStore.toggle()">
         {{ themeStore.mode() === 'dark' ? 'Tema claro' : 'Tema escuro' }}
       </button>
@@ -74,7 +63,7 @@
       </form>
       <div class="credentials">
         <strong>Acesso de demonstração</strong>
-        <span>Usuário: User · Senha: 1234</span>
+        <span>Usuário: User · Senha: 1234 · Administração e auditoria disponíveis</span>
       </div>
     } @else {
       <p class="eyebrow">Conta pessoal</p>

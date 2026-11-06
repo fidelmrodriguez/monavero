@@ -1,3 +1,2 @@
-.search-field {
-  min-width: min(340px, 100%);
-}
+.pagination { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+td { overflow-wrap: anywhere; vertical-align: top; }

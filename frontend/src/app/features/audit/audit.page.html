@@ -1,47 +1,36 @@
 <section class="page">
   <header class="page-header">
-    <div>
-      <p class="eyebrow">Auditoria</p>
-      <h1>Atividade da sessão</h1>
-      <p class="muted">Acompanhe as ações realizadas nesta sessão.</p>
-    </div>
-    <div class="field search-field">
-      <label for="auditSearch">Buscar evento</label>
-      <input id="auditSearch" class="input" type="search" [(ngModel)]="searchText" placeholder="Ação, área ou status" />
-    </div>
+    <div><p class="eyebrow">Auditoria</p><h1>Histórico administrativo</h1>
+      <p class="muted">Consulte quem alterou os acessos, quando e por qual motivo.</p></div>
+    <button class="btn btn-secondary" [disabled]="loading()" (click)="load()">Atualizar</button>
   </header>
-
   <article class="card">
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Usuário</th>
-            <th>Perfil</th>
-            <th>Área</th>
-            <th>Ação</th>
-            <th>IP</th>
-            <th>Status</th>
-          </tr>
-        </thead>
+    @if (loading()) { <p role="status">Carregando registros...</p> }
+    @else if (error()) { <p role="alert">Não foi possível carregar a auditoria. Confira sua sessão e tente atualizar.</p> }
+    @else {
+      <div class="table-wrap"><table>
+        <thead><tr><th>Data</th><th>Responsável</th><th>Usuário alterado</th><th>Alteração</th><th>Motivo</th></tr></thead>
         <tbody>
-          @for (entry of filteredEntries(); track entry.id) {
+          @for (entry of entries(); track entry.id) {
             <tr>
-              <td data-label="Data">{{ entry.date | date:'dd/MM/yyyy HH:mm:ss':'':'pt-BR' }}</td>
-              <td data-label="Usuário">{{ entry.actor }}</td>
-              <td data-label="Perfil">{{ entry.role }}</td>
-              <td data-label="Área">{{ entry.area }}</td>
-              <td data-label="Ação">{{ entry.action }}</td>
-              <td data-label="IP">{{ entry.ip }}</td>
-              <td data-label="Status" [class.status-ok]="entry.status === 'sucesso'" [class.status-warning]="entry.status === 'alerta'" [class.status-danger]="entry.status === 'erro'">{{ entry.status }}</td>
+              <td>{{ entry.occurredAt | date:'dd/MM/yyyy HH:mm:ss':'':'pt-BR' }}</td>
+              <td>{{ entry.actor }}</td><td>{{ entry.target }}</td>
+              <td>
+                @if (entry.action === 'INITIAL_ADMIN') { <strong>Administrador inicial</strong><br /> }
+                {{ roleLabels[entry.oldRole] }} → {{ roleLabels[entry.newRole] }}<br />
+                {{ statusLabels[entry.oldStatus] }} → {{ statusLabels[entry.newStatus] }}
+              </td>
+              <td>{{ entry.reason }}</td>
             </tr>
           }
         </tbody>
-      </table>
-      @if (filteredEntries().length === 0) {
-        <p class="muted">Nenhuma atividade registrada nesta sessão.</p>
-      }
-    </div>
+      </table></div>
+      @if (!entries().length) { <p class="muted">Nenhuma alteração administrativa registrada.</p> }
+    }
+    <nav class="pagination" aria-label="Páginas da auditoria">
+      <button class="btn btn-secondary" [disabled]="!page() || loading()" (click)="load(page() - 1)">Anterior</button>
+      <span>Página {{ page() + 1 }}</span>
+      <button class="btn btn-secondary" [disabled]="!hasNext() || loading()" (click)="load(page() + 1)">Próxima</button>
+    </nav>
   </article>
 </section>

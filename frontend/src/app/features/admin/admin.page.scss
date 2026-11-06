@@ -1,20 +1,10 @@
-.policy-card {
-  display: grid;
-  gap: 12px;
-}
+.edit-panel { margin-bottom: 24px; max-width: 760px; }
+fieldset { border: 0; padding: 0; margin: 20px 0; display: grid; gap: 16px; }
+.field { display: grid; gap: 8px; }
+.input, .select { width: 100%; box-sizing: border-box; }
+.actions, .pagination { display: flex; align-items: center; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
+.pagination { margin-top: 24px; }
+td { overflow-wrap: anywhere; }
 
-.policy-card p {
-  color: var(--muted);
-  line-height: 1.55;
-}
-
-.policy-icon {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  border-radius: 18px;
-  background: var(--primary-soft);
-  color: var(--primary-strong);
-  font-size: 1.5rem;
-}
+.accounts-panel { margin-top: 24px; }
+.accounts-panel h2 { margin-right: auto; }

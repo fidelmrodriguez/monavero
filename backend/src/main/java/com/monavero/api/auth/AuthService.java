@@ -71,6 +71,10 @@ public class AuthService {
             AppUser demo = new AppUser("Demonstração Monavero", DEMO_EMAIL);
             demo.markAsDemo();
             users.save(demo);
+        } else {
+            AppUser demo = users.findByEmailIgnoreCase(DEMO_EMAIL).orElseThrow();
+            demo.markAsDemo();
+            users.save(demo);
         }
     }
 

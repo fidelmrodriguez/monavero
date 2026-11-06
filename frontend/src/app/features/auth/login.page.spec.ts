@@ -30,11 +30,11 @@ describe('LoginPage', () => {
     expect(component.form.getRawValue().username).toBe('pessoal@exemplo.com');
   });
 
-  it('exibe os três perfis apenas na demonstração, sem permitir atribuir papel no cadastro', () => {
+  it('informa acesso administrativo público sem atribuir papel pelo cadastro', () => {
     expect(fixture.nativeElement.textContent).toContain('Monavero');
-    expect(fixture.nativeElement.querySelector('.login-topbar #role')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Demonstração com acesso administrativo');
     expect(fixture.nativeElement.querySelector('form #role')).toBeNull();
-    expect(fixture.nativeElement.querySelectorAll('#role option').length).toBe(3);
+    expect(fixture.nativeElement.querySelectorAll('#role option').length).toBe(0);
     component.changeMode('register');
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Criar conta');

@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AuditPage } from './audit.page';
 
@@ -7,7 +9,8 @@ describe('AuditPage', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AuditPage]
+      imports: [AuditPage],
+      providers: [provideHttpClient(), provideHttpClientTesting()]
     }).compileComponents();
 
     fixture = TestBed.createComponent(AuditPage);

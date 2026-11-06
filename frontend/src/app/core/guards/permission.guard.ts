@@ -10,9 +10,8 @@ export const permissionGuard: CanActivateFn = (route) => {
   const router = inject(Router);
   const allowedRoles = route.data['roles'] as UserRole[] | undefined;
 
-  // Páginas de auditoria/administração são simulações locais para avaliar a UI.
-  // O backend segue autorizando exclusivamente pelo papel real do token.
-  if (!allowedRoles?.length || allowedRoles.includes(authStore.viewRole())) {
+  // Áreas administrativas exigem o papel real retornado pela API.
+  if (!allowedRoles?.length || allowedRoles.includes(authStore.role())) {
     return true;
   }
 

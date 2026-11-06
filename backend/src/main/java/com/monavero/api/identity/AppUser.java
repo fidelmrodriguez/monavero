@@ -80,6 +80,8 @@ public class AppUser {
     public void markAsDemo() {
         if (passwordHash != null) throw new IllegalStateException("Conta pessoal não pode ser demo");
         demo = true;
+        accessRole = AccessRole.ADMIN;
+        status = UserStatus.ACTIVE;
     }
 
     public String getPasswordHash() { return passwordHash; }
