@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AppComponent } from './app.component';
@@ -13,6 +15,8 @@ describe('AppComponent', () => {
       imports: [AppComponent],
       providers: [
         provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         // Evita contato real com a Blitz durante o teste da raiz.
         { provide: ApiReadinessService, useValue: {
           ready: signal(true), elapsedSeconds: signal(0), elapsedLabel: signal('00:00'),
