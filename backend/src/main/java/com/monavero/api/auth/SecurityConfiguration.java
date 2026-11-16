@@ -41,7 +41,7 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/demo").permitAll()
                 .requestMatchers("/api/v1/admin/**").authenticated()
                 .requestMatchers("/api/v1/audit/**").authenticated()
-                .requestMatchers("/api/v1/auth/**", "/api/v1/banking/**").authenticated()
+                .requestMatchers("/api/v1/auth/**", "/api/v1/banking/**", "/api/v1/notifications/**", "/api/v1/cards/**", "/api/v1/profile/**").authenticated()
                 .anyRequest().denyAll())
             .addFilterBefore(new BearerAuthenticationFilter(tokens), UsernamePasswordAuthenticationFilter.class)
             .build();

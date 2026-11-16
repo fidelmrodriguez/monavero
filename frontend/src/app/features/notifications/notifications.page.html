@@ -11,7 +11,14 @@
   </header>
 
   <article class="card notification-list">
-    @if (notificationStore.notifications().length === 0) {
+    @if (notificationStore.loading()) {
+      <p class="muted" role="status">Carregando notificações...</p>
+    }
+    @if (notificationStore.error()) {
+      <p class="muted" role="alert">Não foi possível consultar os avisos.</p>
+      <button class="btn btn-secondary" type="button" (click)="notificationStore.refresh()">Tentar novamente</button>
+    }
+    @if (!notificationStore.loading() && !notificationStore.error() && notificationStore.notifications().length === 0) {
       <p class="muted">Nenhuma notificação no momento.</p>
     }
     @for (notification of notificationStore.notifications(); track notification.id) {

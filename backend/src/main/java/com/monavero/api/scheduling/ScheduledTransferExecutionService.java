@@ -4,6 +4,7 @@ import com.monavero.api.accounts.TransferDtos;
 import com.monavero.api.accounts.TransferService;
 import com.monavero.api.auth.AuthenticatedUser;
 import com.monavero.api.identity.AccessRole;
+import com.monavero.api.notifications.NotificationService;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -17,10 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class ScheduledTransferExecutionService {
     private final JdbcTemplate jdbc;
     private final TransferService transfers;
+    private final NotificationService notifications;
 
-    public ScheduledTransferExecutionService(JdbcTemplate jdbc, TransferService transfers) {
+    public ScheduledTransferExecutionService(JdbcTemplate jdbc, TransferService transfers, NotificationService notifications) {
         this.jdbc = jdbc;
         this.transfers = transfers;
+        this.notifications = notifications;
     }
 
     @Transactional
@@ -50,7 +53,12 @@ public class ScheduledTransferExecutionService {
     /** Chamada somente após rollback de uma execução recusada; nunca reverte débito confirmado. */
     @Transactional
     public void markFailedIfPending(UUID id, String reason) {
-        jdbc.update("UPDATE scheduled_transfers SET status = 'FAILED', failure_reason = ? " +
+        int affected = jdbc.update("UPDATE scheduled_transfers SET status = 'FAILED', failure_reason = ? " +
                 "WHERE id = ? AND status = 'PENDING'", reason, id);
+        if (affected > 0) {
+            UUID ownerId = jdbc.queryForObject("SELECT requester_id FROM scheduled_transfers WHERE id = ?", UUID.class, id);
+            notifications.publish(ownerId, "schedule-failed:" + id, "Transferência agendada recusada",
+                "A transferência agendada não foi realizada. Confira o histórico.", "warning");
+        }
     }
 }

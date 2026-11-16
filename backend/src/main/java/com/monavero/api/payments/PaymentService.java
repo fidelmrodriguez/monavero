@@ -2,6 +2,7 @@ package com.monavero.api.payments;
 
 import com.monavero.api.accounts.BankingService;
 import com.monavero.api.auth.AuthenticatedUser;
+import com.monavero.api.notifications.NotificationService;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,10 +25,12 @@ import org.springframework.web.server.ResponseStatusException;
 public class PaymentService {
     private final JdbcTemplate jdbc;
     private final BankingService banking;
+    private final NotificationService notifications;
 
-    public PaymentService(JdbcTemplate jdbc, BankingService banking) {
+    public PaymentService(JdbcTemplate jdbc, BankingService banking, NotificationService notifications) {
         this.jdbc = jdbc;
         this.banking = banking;
+        this.notifications = notifications;
     }
 
     private static final ZoneId BRAZIL = ZoneId.of("America/Sao_Paulo");
@@ -140,6 +143,9 @@ public class PaymentService {
         if (scheduled == null) {
             // Atomicidade: se o débito for recusado, o INSERT também sofre rollback.
             executeDebit(id, request.originAccountId(), amount, beneficiary);
+        } else {
+            notifications.publish(user.id(), "payment-scheduled:" + id, "Pagamento agendado",
+                "Pagamento demonstrativo de R$ " + amount.toPlainString() + " agendado.", "info");
         }
         return jdbc.queryForObject("SELECT * FROM bank_payments WHERE id = ?",
             (rs, row) -> stored(rs).item(), id);
@@ -165,6 +171,8 @@ public class PaymentService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Somente pagamentos agendados pendentes podem ser cancelados.");
         }
         jdbc.update("UPDATE bank_payments SET status = 'CANCELED' WHERE id = ?", id);
+        notifications.publish(user.id(), "payment-cancelled:" + id, "Pagamento cancelado",
+            "O agendamento demonstrativo foi cancelado.", "warning");
         return jdbc.queryForObject("SELECT * FROM bank_payments WHERE id = ?",
             (rs, row) -> stored(rs).item(), id);
     }
@@ -215,11 +223,17 @@ public class PaymentService {
             """, UUID.randomUUID(), origin, now, label, amount.negate(), id);
         jdbc.update("UPDATE bank_payments SET status = 'EXECUTED', processed_at = ?, failure_reason = NULL WHERE id = ?",
             now, id);
+        UUID ownerId = jdbc.queryForObject("SELECT requester_id FROM bank_payments WHERE id = ?", UUID.class, id);
+        notifications.publish(ownerId, "payment-executed:" + id, "Pagamento concluído",
+            "Pagamento fictício de R$ " + amount.toPlainString() + " confirmado.", "success");
         return true;
     }
 
     private void fail(UUID id, String reason) {
         jdbc.update("UPDATE bank_payments SET status = 'FAILED', failure_reason = ? WHERE id = ?", reason, id);
+        UUID ownerId = jdbc.queryForObject("SELECT requester_id FROM bank_payments WHERE id = ?", UUID.class, id);
+        notifications.publish(ownerId, "payment-failed:" + id, "Pagamento recusado",
+            "O pagamento demonstrativo não foi realizado. Confira o histórico.", "warning");
     }
 
     private static String normalized(String value) { return value == null ? "" : value.trim(); }

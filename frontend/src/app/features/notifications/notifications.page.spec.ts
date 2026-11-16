@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
 import { NotificationsPage } from './notifications.page';
 
 describe('NotificationsPage', () => {
@@ -7,7 +8,8 @@ describe('NotificationsPage', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NotificationsPage]
+      imports: [NotificationsPage],
+      providers: [provideHttpClient()]
     }).compileComponents();
 
     fixture = TestBed.createComponent(NotificationsPage);

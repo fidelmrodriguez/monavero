@@ -38,6 +38,8 @@ export class ShellComponent {
   protected readonly recentNotifications = computed(() => this.notificationStore.notifications().slice(0, 5));
 
   constructor() {
+    const userId = this.authStore.session()?.user.id;
+    if (userId) this.notificationStore.sync(userId);
     this.router.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(event => {
       if (event instanceof NavigationStart) {
         this.navigating.set(true);
@@ -81,6 +83,7 @@ export class ShellComponent {
     { label: 'Agendamentos', route: '/app/agendamentos', icon: '🕒' },
     { label: 'Pagamentos', route: '/app/pagamentos', icon: '📅' },
     { label: 'Notificações', route: '/app/notificacoes', icon: '🔔' },
+    { label: 'Cartões', route: '/app/cartoes', icon: '💳' },
     { label: 'Perfil', route: '/app/perfil', icon: '⚙️' }
   ];
 
@@ -100,6 +103,7 @@ export class ShellComponent {
   }
 
   protected toggleNotifications(): void {
+    if (!this.notificationsOpen()) this.notificationStore.refresh();
     this.menuOpen.set(false);
     this.userMenuOpen.set(false);
     this.notificationsOpen.update((open) => !open);

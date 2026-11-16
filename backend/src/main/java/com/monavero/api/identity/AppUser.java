@@ -77,6 +77,13 @@ public class AppUser {
         passwordHash = encodedPassword;
     }
 
+    public void rename(String name) {
+        if (name == null || name.trim().length() < 2 || name.trim().length() > 160) {
+            throw new IllegalArgumentException("Nome inválido");
+        }
+        fullName = name.trim();
+    }
+
     public void markAsDemo() {
         if (passwordHash != null) throw new IllegalStateException("Conta pessoal não pode ser demo");
         demo = true;

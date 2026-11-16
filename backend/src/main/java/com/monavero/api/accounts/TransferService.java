@@ -1,6 +1,7 @@
 package com.monavero.api.accounts;
 
 import com.monavero.api.auth.AuthenticatedUser;
+import com.monavero.api.notifications.NotificationService;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -21,11 +22,13 @@ public class TransferService {
     private final BankingService banking;
     private final JdbcTemplate jdbc;
     private final BankTransactionRepository transactions;
+    private final NotificationService notifications;
 
-    public TransferService(BankingService banking, JdbcTemplate jdbc, BankTransactionRepository transactions) {
+    public TransferService(BankingService banking, JdbcTemplate jdbc, BankTransactionRepository transactions, NotificationService notifications) {
         this.banking = banking;
         this.jdbc = jdbc;
         this.transactions = transactions;
+        this.notifications = notifications;
     }
 
     @Transactional
@@ -147,6 +150,15 @@ public class TransferService {
                 "TRANSFERENCIA", amount.negate(), transferId),
             new BankTransaction(destinationId, now, label, "Transferências",
                 "TRANSFERENCIA", amount, transferId)));
+        notifications.publish(user.id(), "transfer-out:" + transferId, "Transferência concluída",
+            "Transferência de R$ " + amount.toPlainString() + " confirmada.", "success");
+        List<UUID> recipients = jdbc.query("""
+            SELECT DISTINCT user_id FROM account_holders WHERE account_id = ? AND user_id <> ?
+            """, (rs, row) -> (UUID) rs.getObject(1), destinationId, user.id());
+        for (UUID recipient : recipients) {
+            notifications.publish(recipient, "transfer-in:" + transferId, "Transferência recebida",
+                "Recebimento fictício de R$ " + amount.toPlainString() + " confirmado.", "success");
+        }
         return new TransferDtos.Receipt(transferId, request.originAccountId(), destinationId,
             amount, now, "concluido");
     }

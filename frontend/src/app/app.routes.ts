@@ -38,6 +38,10 @@ export const appRoutes: Routes = [
         loadComponent: () => import('./features/payments/payments.page').then((m) => m.PaymentsPage)
       },
       {
+        path: 'cartoes',
+        loadComponent: () => import('./features/cards/cards.page').then((m) => m.CardsPage)
+      },
+      {
         path: 'notificacoes',
         loadComponent: () => import('./features/notifications/notifications.page').then((m) => m.NotificationsPage)
       },

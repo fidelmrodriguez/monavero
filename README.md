@@ -18,8 +18,9 @@
 | Dashboard | Visão consolidada de contas e movimentações persistidas |
 | Extrato | Lançamentos persistentes, pesquisa e filtros |
 | Transferências | Operações imediatas e agendadas entre contas Monavero, inclusive titulares distintos; débito/crédito atômicos, cancelamento antes da execução e idempotência |
-| Pagamentos | Pagamentos demonstrativos imediatos e agendados com débito, extrato, cancelamento e persistência Flyway V8 (aguarda CI) |
-| Outros | Notificações, perfil, tema, responsividade e áreas visuais de gestão em evolução |
+| Pagamentos | Pagamentos demonstrativos imediatos e agendados, com débito, extrato, cancelamento e persistência Flyway V8 |
+| Etapa 10 | Notificações persistidas, cartões virtuais fictícios, perfil pessoal e revogação de sessões (CI e validação publicados pendentes) |
+| Outros | Tema, responsividade e administração/auditoria do ambiente demo |
 
 Contas pessoais recebem R$ 1.000,00 de crédito fictício de abertura uma única vez, inclusive contas antigas sem movimentações. Não existe endpoint de recarga ou depósito. A aplicação usa contas de demonstração com agência e número próprios. Para explorar o produto, o login demonstrativo é `User / 1234`. O seletor de perfil modifica apenas a apresentação; não altera privilégios de acesso à API.
 
@@ -30,7 +31,7 @@ Agendamentos são processados pelo backend na data solicitada, sujeitos à dispo
 - **Frontend:** Angular 19, TypeScript, SCSS, Signals, RxJS, Reactive Forms, lazy loading e Jasmine/Karma.
 - **Publicação frontend:** Netlify, SPA estática com regras de redirecionamento para rotas internas e health check.
 - **Backend:** Java 25, Spring Boot 4.1.1, Spring Security, Spring Data JPA, Spring Modulith, Actuator e OpenAPI.
-- **Persistência:** PostgreSQL 18 no Neon, Hibernate e migrações Flyway V1–V8.
+- **Persistência:** PostgreSQL 18 no Neon, Hibernate e migrações Flyway V1–V10.
 - **Testes/CI:** GitHub Actions para Angular e Java; integração com PostgreSQL de teste via Testcontainers.
 - **Disponibilidade:** a API usa hospedagem sob demanda na Blitz; inicializações a frio podem causar espera antes do login.
 
@@ -84,16 +85,20 @@ npm test
 - [Deploy frontend](docs/DEPLOY_NETLIFY.md) e [deploy backend](docs/DEPLOY_BACKEND.md).
 - [Roadmap](docs/ROADMAP.md): entregas planejadas e estado de validação.
 
-**Status:** Etapas 0–7 validadas funcionalmente; Etapa 8 entregue para CI e validação. O roadmap diferencia código entregue de funcionalidade validada por CI e em produção.
+**Status:** Etapas 0–7 validadas; Etapa 8 com fluxos principais validados; Etapa 9 com CI aprovado e testes no site pendentes; Etapa 10 implementada no código, aguardando CI e validação publicada.
 
 
 ### Interface e confiabilidade
 - Navegação Angular com uma tentativa controlada de atualização automática quando um deploy substitui os chunks lazy; sem loop de recarga.
-- Notificações somente originadas de ações desta sessão, sem alertas aleatórios ou fixtures precárias.
+- Notificações geradas por operações confirmadas na API e persistidas por usuário, sem alertas aleatórios ou fixtures precárias.
 - Pagamentos utilizam API e registros persistentes no backend; não há liquidação de boletos ou convênios reais.
-- Demonstração bancária conserva histórico ilustrativo de abertura, mas não inventa cartões e investimentos no frontend.
+- Demonstração bancária conserva histórico ilustrativo de abertura e cartões virtuais explicitamente fictícios; não cria investimentos inexistentes.
 - Contrapartes das transferências identificadas inclusive no modo demonstração; detalhes da conta de terceiro permanecem mascarados.
 
 ### Administração e auditoria
 
 A Etapa 9 adiciona gestão de status de acesso, revogação de sessões e histórico administrativo persistente. Somente o guest User / 1234 acessa Administração e Auditoria pelo menu do topo, abaixo de Perfil. A tabela unifica usuários e contas vinculadas; contas pessoais não acessam essas ferramentas, independentemente do perfil. Consulte [Administração](docs/ADMINISTRACAO.md) para ativação, permissões e validação. Implementação entregue para CI e testes funcionais.
+
+### Notificações, cartões e perfil (Etapa 10)
+
+Notificações e estados de leitura são persistidos pela API. A tela Cartões permite criar e gerenciar até três cartões virtuais fictícios sem PAN/CVV/compra real. O perfil pessoal permite atualizar nome, alterar senha (revogando todas as sessões) e encerrar outros acessos. A identidade demonstrativa compartilhada não permite alterar perfil ou gerir sessões. A documentação funcional e o status de validação ficam em [Funcionalidades](docs/FUNCIONALIDADES.md) e [Roadmap](docs/ROADMAP.md).

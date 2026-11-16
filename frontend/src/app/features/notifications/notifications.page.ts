@@ -11,4 +11,6 @@ import { NotificationStore } from '../../core/state/notification.store';
 })
 export class NotificationsPage {
   protected readonly notificationStore = inject(NotificationStore);
+
+  constructor() { this.notificationStore.refresh(); }
 }

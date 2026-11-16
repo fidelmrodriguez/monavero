@@ -17,7 +17,7 @@ O **Monavero** é um projeto de portfólio que demonstra a experiência de um ba
 - Crédito fictício de abertura de R$ 1.000,00, uma única vez por conta pessoal, para viabilizar operações entre usuários cadastrados; não é dinheiro real nem recarregável pela API.
 - Contas antigas vazias e sem movimentações também podem receber o crédito uma única vez; contas com histórico permanecem inalteradas.
 - Painel com saldo consolidado, contas e movimentações recentes.
-- Cartões e investimentos não implementados não são apresentados como produtos contratados.
+- Investimentos não implementados não são apresentados como produtos contratados. Os cartões da Etapa 10 são somente simulação virtual, sem emissão nem pagamento real.
 
 ### Extrato
 
@@ -53,18 +53,18 @@ O **Monavero** é um projeto de portfólio que demonstra a experiência de um ba
 ### Experiência e recursos auxiliares
 
 - Layout responsivo, temas claro/escuro, formulários reativos e mensagens de validação acessíveis.
-- Pagamentos usam persistência própria. Notificações e auditoria ainda dependem de módulos futuros da API.
+- Pagamentos e notificações usam persistência própria. Auditoria administrativa é mantida pela API na Etapa 9.
 - Perfis visuais de gerente e administrador no modo demonstração **não** concedem permissões administrativas reais.
 
 ## Limites e funcionalidades futuras
 
-Não há PIX/TED real, integração com instituições financeiras, liquidação de boletos, emissão real de cartões nem investimento financeiro real. Autorizações administrativas reais e evolução de auditoria/notificações permanecem no roadmap. Pagamentos demonstrativos são persistidos, mas não liquidados externamente.
+Não há PIX/TED real, integração com instituições financeiras, liquidação de boletos, emissão real de cartões nem investimento financeiro real. Cartões virtuais da Etapa 10 são apenas ilustração. Pagamentos demonstrativos são persistidos, mas não liquidados externamente.
 
 ## Arquitetura e validação
 
 - **Frontend:** Angular 19/TypeScript, publicado no Netlify como SPA estática.
 - **Backend:** Java 25 e Spring Boot 4.1.1, publicado na Blitz.
-- **Persistência:** PostgreSQL 18 (Neon), migrações Flyway até V8.
+- **Persistência:** PostgreSQL 18 (Neon), migrações Flyway até V10.
 - **Validação:** CI independente para frontend e backend; a implementação de cada funcionalidade não substitui a aprovação de seus testes e verificações em ambiente publicado.
 
 Consulte [a arquitetura](ARQUITETURA.md), [o roteiro de testes](TESTES.md) e [o roadmap](ROADMAP.md) para o estado detalhado de cada etapa.
@@ -77,9 +77,17 @@ Consulte [a arquitetura](ARQUITETURA.md), [o roteiro de testes](TESTES.md) e [o 
 - A API expõe os dados de contraparte apenas na consulta autenticada de lançamentos pertencentes ao usuário; os nomes não são registrados nos logs de diagnóstico do navegador.
 
 
-### Consistência visual após Etapa 7
-- Removidos alertas aleatórios de notificações e agenda temporária de pagamentos que não tinha persistência.
-- Agendamentos de transferências da Etapa 7 permanecem reais na API/PostgreSQL, sujeitos ao despertar do servidor gratuito.
-- Ausentes produtos de cartões e investimentos fabricados pelo frontend; permanecem exemplos históricos de demonstração explicitamente ilustrativos no ambiente demo.
-- Área administrativa sem ações fictícias; permissões e auditoria reais serão implementadas na Etapa 9.
-- Histórico local de auditoria, quando disponível, refere-se apenas às ações da sessão atual, não a uma trilha persistente do backend.
+### Consistência visual e auditoria
+
+- Notificações aleatórias e a antiga agenda temporária de pagamentos foram substituídas por funcionalidades integradas à API e persistidas.
+- Agendamentos de transferências e pagamentos são persistidos e sujeitos ao despertar do servidor gratuito para execução.
+- Investimentos não implementados não aparecem como produtos contratados; os cartões da Etapa 10 são explicitamente fictícios.
+- A área administrativa e a trilha de auditoria persistente são implementadas no backend da Etapa 9, com autorização verificada pelo servidor.
+
+
+### Etapa 10 — notificações, cartões fictícios e perfil
+
+- Notificações geradas pela API nas operações confirmadas, persistidas por usuário com leitura individual; o sino e a central são sincronizados com o servidor ao acessar.
+- Cartões virtuais demonstrativos com apelido, quatro dígitos inventados e estados ativo, bloqueado e cancelado. Não há número bancário real, CVV, compra ou limite de crédito.
+- Perfil pessoal permite mudar nome de exibição, senha (com revogação de sessões) e encerrar outras sessões. O guest compartilhado não pode alterar dados pessoais nem controlar as sessões de outros visitantes.
+- Flyway V10, controles de acesso e testes de integração; o status de validação final depende dos pipelines e testes publicados.

@@ -2,7 +2,7 @@
 
 O Monavero evolui de um frontend Angular demonstrativo para um sistema full stack de simulação bancária. **Código entregue** não é o mesmo que **etapa validada**: a validação requer CI e, quando previsto, verificação no ambiente cloud.
 
-| Etapa | Entrega | Situação em 03/11/2026 |
+| Etapa | Entrega | Situação na entrega da Etapa 10 |
 | --- | --- | --- |
 | 0 | Frontend Angular inicial e publicação GitHub/Netlify | **Validada** — frontend publicado e navegação confirmada |
 | 1 | Estrutura limpa, documentação por camada, CI e testes Angular | **Validada** — Frontend Angular CI #3 aprovado no GitHub |
@@ -12,9 +12,9 @@ O Monavero evolui de um frontend Angular demonstrativo para um sistema full stac
 | 5 | Contas, saldos, dashboard e extrato persistidos | **Validada** — saldos e extratos persistidos, testados após F5 |
 | 6 | Transferências internas, lançamentos atômicos, idempotência e concorrência | **Validada** — transferências entre contas pessoais e demo com lançamentos persistidos |
 | 7 | Agendamento seguro de transferências e remoção da integração externa legada | **Validada** — CI 2/2 verde, execução, cancelamento, saldo insuficiente, persistência e isolamento confirmados |
-| 8 | Pagamentos demonstrativos imediatos e agendados, extrato e cancelamento | **Implementada — aguarda CI e validação no ambiente publicado** |
-| 9 | Administração, autorização e auditoria de operações | Planejada |
-| 10 | Notificações, perfil e módulos complementares | Planejada |
+| 8 | Pagamentos demonstrativos imediatos e agendados, extrato e cancelamento | **Fluxos principais validados** |
+| 9 | Administração, autorização e auditoria de operações | **Implementada; CI aprovado; validação no site pendente** |
+| 10 | Notificações, cartões demonstrativos e perfil | **Implementada no código; CI e validação publicados pendentes** |
 | 11 | Testes integrados, segurança e observabilidade | Planejada |
 | 12 | Revisão, documentação final, publicação e release 1.0 | Planejada |
 
@@ -55,14 +55,23 @@ Antes da Etapa 7, as transferências internas passam a ser testáveis entre dois
 
 Implementadas transferências agendadas com ciclo `agendado → concluido/recusado` ou `agendado → cancelado`, API autenticada, chave idempotente, persistência Flyway V7, bloqueio concorrente e execução no backend. Nenhuma cobrança ou débito ocorre na criação. O executor retoma agendamentos vencidos após o início da aplicação; na Blitz gratuita a execução não pode ser garantida durante o período em que a API permanece dormindo. Removidas todas as referências e chamadas remanescentes ao provedor externo de dados fictícios, inclusive na árvore Angular histórica da raiz; o frontend publicado utiliza somente a API própria. **CI e fluxos principais validados em 03/11/2026.**
 
-### Entrega — Etapa 8 (aguarda validação)
+### Etapa 8 — fluxos principais validados
 
 - Pagamentos demonstrativos imediatos e agendados por conta autenticada, com tipos boleto e convênio **sem liquidação externa**.
 - Registros em `bank_payments` (Flyway V8), histórico isolado, cancelamento de pendentes, idempotência e lançamento `PAGAMENTO` no extrato.
 - Débito imediato atômico; agendados debitam somente no vencimento, com bloqueio `FOR UPDATE SKIP LOCKED` e tentativa de recuperação após o retorno da Blitz.
 - Operações sem saldo ficam recusadas sem saldo negativo. Diagnósticos `[Monavero][Teste E8]` exclusivamente no console.
-- **Pendente:** GitHub Actions Java/Angular, confirmação Flyway V8 na Blitz e teste funcional da tela publicada.
+- **Situação:** fluxos principais de pagamento validados; demais evidências de testes devem ser acompanhadas no CI e no ambiente publicado.
 
 ## Atualização da Etapa 9
 
-Gestão administrativa, acesso administrativo exclusivo do guest e auditoria persistente implementadas. CI e validação em produção pendentes. Consulte ADMINISTRACAO.md para escopo e testes.
+Gestão administrativa, acesso administrativo exclusivo do guest e auditoria persistente implementadas. CI aprovado; validação no site publicado pendente. Consulte [Administração](ADMINISTRACAO.md) para escopo e testes.
+
+
+### Entrega — Etapa 10 (aguarda validação)
+
+- Central de notificações persistentes por titular, marcadores de leitura e avisos de operações confirmadas sem fixtures locais.
+- Cartões virtuais estritamente fictícios com criação, bloqueio, desbloqueio, cancelamento e limite de três não cancelados por conta.
+- Perfil pessoal com atualização de nome, alteração de senha com revogação de sessões e encerramento seletivo de outras sessões.
+- Perfil demo compartilhado impede alterações de dados ou gestão de sessões.
+- Flyway V10 e testes da API/UI adicionados; **não marcar como validada** antes de CI, Flyway em nuvem e testes de site.

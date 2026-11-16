@@ -130,11 +130,12 @@ export class TransfersPage {
       next: receipt => {
         this.pendingRequest = null;
         this.success.set('Transferência realizada com sucesso. Confira os detalhes no extrato.');
-        this.notifications.addNotification({
+        this.notifications.add({
           title: 'Transferência concluída',
-          description: `R$ ${receipt.amount.toFixed(2).replace('.', ',')} enviado entre contas Monavero.`,
+          message: 'O comprovante foi confirmado pela API.',
           type: 'success'
         });
+        this.notifications.refresh();
         this.audit.register('Transferência interna confirmada pela API', 'Transferências', 'sucesso', this.authStore.role());
         this.form.patchValue({ amount: '', description: '' });
         // Um novo formulário começa intocado. Caso contrário, o campo vazio

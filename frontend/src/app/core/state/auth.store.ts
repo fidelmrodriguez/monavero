@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { Observable, catchError, finalize, map, of, tap } from 'rxjs';
 import { AuthApiService } from '../services/auth-api.service';
 import { ApiReadinessService } from '../services/api-readiness.service';
-import { AuthResponse, AuthSession, UserRole, toRole } from '../models/auth.models';
+import { AuthProfile, AuthResponse, AuthSession, UserRole, toRole } from '../models/auth.models';
 import { NotificationStore } from './notification.store';
 import { AuditStore } from './audit.store';
 
@@ -97,6 +97,13 @@ export class AuthStore implements OnDestroy {
         return of(false);
       })
     );
+  }
+
+  /** Sincroniza o nome alterado pela API na sessão desta aba e nas demais. */
+  updateProfile(profile: AuthProfile): void {
+    const current = this.sessionState();
+    if (!current || current.user.id !== profile.id) return;
+    this.setSession({ ...current, user: profile, displayName: profile.name, role: toRole(profile.role) });
   }
 
   logout(): void {

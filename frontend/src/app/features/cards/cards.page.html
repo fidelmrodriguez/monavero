@@ -1,0 +1,69 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Cartões</p>
+      <h1>Cartões virtuais de demonstração</h1>
+      <p class="muted">Identificadores fictícios para testar os estados de cartão. Não permitem compras, saques ou pagamentos.</p>
+    </div>
+  </header>
+
+  <article class="card card-creation">
+    <div>
+      <h2>Novo cartão de teste</h2>
+      <p class="muted">Até três cartões ativos ou bloqueados por perfil. Cartões cancelados não podem ser reativados.</p>
+    </div>
+    <div class="card-creation-controls">
+      <div class="field">
+        <label for="card-label">Apelido</label>
+        <input id="card-label" class="input" type="text" maxlength="40" autocomplete="off"
+               [ngModel]="cardLabel()" (ngModelChange)="cardLabel.set($event)" />
+      </div>
+      <button type="button" class="btn btn-primary" [disabled]="busy() || loading() || cardLabel().trim().length < 2 || activeCount() >= 3" (click)="create()">
+        Criar cartão fictício
+      </button>
+    </div>
+  </article>
+
+  @if (error()) {
+    <p class="card-feedback" role="alert">{{ error() }}</p>
+    <button class="btn btn-secondary" type="button" (click)="reload()">Atualizar lista</button>
+  }
+  @if (loading()) {
+    <p class="muted" role="status">Carregando cartões...</p>
+  } @else if (!error() && cards().length === 0) {
+    <article class="card"><p class="muted">Você ainda não criou um cartão demonstrativo.</p></article>
+  }
+
+  <div class="grid grid-2" aria-label="Cartões demonstrativos">
+    @for (card of cards(); track card.id) {
+      <article class="card card-item">
+        <div class="virtual-card" [class.card-blocked]="card.status !== 'ACTIVE'">
+          <span class="card-brand">Monavero · DEMO</span>
+          <span class="card-digits">•••• &nbsp; •••• &nbsp; •••• &nbsp; {{ card.lastFour }}</span>
+          <span class="card-name">{{ card.label }}</span>
+          <span class="card-warning">SEM VALOR FINANCEIRO</span>
+        </div>
+        <div class="card-meta">
+          <h2>{{ card.label }}</h2>
+          <span class="badge">{{ statusLabel(card.status) }}</span>
+          <small class="muted">Criado em {{ card.createdAt | date:'dd/MM/yyyy':'':'pt-BR' }}</small>
+        </div>
+        @if (card.status !== 'CANCELED') {
+          <div class="card-actions">
+            @if (card.status === 'ACTIVE') {
+              <button class="btn btn-secondary" type="button" [disabled]="busy()" (click)="change(card, 'block')">Bloquear</button>
+            } @else {
+              <button class="btn btn-secondary" type="button" [disabled]="busy()" (click)="change(card, 'unblock')">Desbloquear</button>
+            }
+            @if (confirmCancelId() === card.id) {
+              <button class="btn btn-danger" type="button" [disabled]="busy()" (click)="change(card, 'cancel')">Confirmar cancelamento</button>
+              <button class="btn btn-secondary" type="button" [disabled]="busy()" (click)="confirmCancelId.set(null)">Voltar</button>
+            } @else {
+              <button class="btn btn-danger" type="button" [disabled]="busy()" (click)="change(card, 'cancel')">Cancelar cartão</button>
+            }
+          </div>
+        }
+      </article>
+    }
+  </div>
+</section>

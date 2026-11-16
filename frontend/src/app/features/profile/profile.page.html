@@ -3,10 +3,13 @@
     <div>
       <p class="eyebrow">Perfil</p>
       <h1>Preferências e segurança</h1>
-      <p class="muted">Preferências de visualização e sessão autenticada.</p>
+      <p class="muted">Gerencie seus dados de exibição e sessões autenticadas.</p>
     </div>
     <button class="btn btn-danger" type="button" (click)="authStore.logout()">Sair da conta</button>
   </header>
+
+  @if (feedback()) { <p class="profile-success" role="status">{{ feedback() }}</p> }
+  @if (error()) { <p class="profile-error" role="alert">{{ error() }}</p> }
 
   <div class="grid grid-2">
     <article class="card profile-card">
@@ -14,7 +17,10 @@
       <div>
         <p class="eyebrow">Usuário autenticado</p>
         <h2>{{ authStore.displayName() }}</h2>
-        <p class="muted">Suas informações de acesso estão protegidas.</p>
+        <p class="muted">{{ authStore.session()?.user?.email }}</p>
+        @if (authStore.isDemo()) {
+          <p class="muted">O perfil público demonstrativo não permite alteração de dados ou gestão de sessões.</p>
+        }
       </div>
     </article>
 
@@ -27,12 +33,62 @@
           <option value="dark">Escuro</option>
         </select>
       </div>
-
       <div class="security-list">
         <span class="badge">Sessão autenticada</span>
-        <span class="badge">Atividades recentes</span>
         <span class="badge">Acesso protegido</span>
       </div>
     </article>
   </div>
+
+  @if (!authStore.isDemo()) {
+    <div class="grid grid-2">
+      <article class="card settings-card">
+        <h2>Dados do perfil</h2>
+        <div class="field">
+          <label for="profile-name">Nome de exibição</label>
+          <input id="profile-name" class="input" autocomplete="name" maxlength="160"
+                 [ngModel]="name()" (ngModelChange)="name.set($event)" />
+        </div>
+        <button type="button" class="btn btn-primary" [disabled]="savingName() || name().trim().length < 2 || name().trim() === authStore.displayName()" (click)="saveName()">Salvar nome</button>
+      </article>
+
+      <article class="card settings-card">
+        <h2>Alterar senha</h2>
+        <p class="muted">Após a alteração, todas as sessões serão encerradas. Entre novamente com a nova senha.</p>
+        <div class="field">
+          <label for="current-password">Senha atual</label>
+          <input id="current-password" class="input" type="password" autocomplete="current-password"
+                 [ngModel]="currentPassword()" (ngModelChange)="currentPassword.set($event)" />
+        </div>
+        <div class="field">
+          <label for="new-password">Nova senha (12 a 72 caracteres)</label>
+          <input id="new-password" class="input" type="password" autocomplete="new-password" minlength="12" maxlength="72"
+                 [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)" />
+        </div>
+        <button type="button" class="btn btn-primary" [disabled]="savingPassword() || !currentPassword() || newPassword().length < 12 || newPassword().length > 72" (click)="savePassword()">Alterar senha e sair</button>
+      </article>
+    </div>
+
+    <article class="card settings-card">
+      <div class="sessions-title">
+        <div>
+          <h2>Minhas sessões</h2>
+          <p class="muted">Encerre acessos em outros navegadores sem afetar a sessão atual.</p>
+        </div>
+        <button class="btn btn-secondary" type="button" [disabled]="loadingSessions()" (click)="loadSessions()">Atualizar</button>
+      </div>
+      @if (loadingSessions()) { <p class="muted" role="status">Carregando sessões...</p> }
+      @for (session of sessions(); track session.id) {
+        <div class="session-item">
+          <div>
+            <strong>{{ session.current ? 'Esta sessão' : 'Outra sessão autenticada' }}</strong>
+            <small>Início: {{ session.createdAt | date:'dd/MM/yyyy HH:mm':'':'pt-BR' }} · Expira: {{ session.expiresAt | date:'dd/MM/yyyy HH:mm':'':'pt-BR' }}</small>
+          </div>
+          @if (!session.current) {
+            <button class="btn btn-secondary" type="button" [disabled]="busySession() !== null" (click)="revokeSession(session)">Encerrar</button>
+          }
+        </div>
+      }
+    </article>
+  }
 </section>

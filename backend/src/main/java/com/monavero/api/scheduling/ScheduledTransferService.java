@@ -2,6 +2,7 @@ package com.monavero.api.scheduling;
 
 import com.monavero.api.accounts.BankingService;
 import com.monavero.api.auth.AuthenticatedUser;
+import com.monavero.api.notifications.NotificationService;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,10 +22,12 @@ import org.springframework.web.server.ResponseStatusException;
 public class ScheduledTransferService {
     private final JdbcTemplate jdbc;
     private final BankingService banking;
+    private final NotificationService notifications;
 
-    public ScheduledTransferService(JdbcTemplate jdbc, BankingService banking) {
+    public ScheduledTransferService(JdbcTemplate jdbc, BankingService banking, NotificationService notifications) {
         this.jdbc = jdbc;
         this.banking = banking;
+        this.notifications = notifications;
     }
 
     @Transactional
@@ -97,6 +100,8 @@ public class ScheduledTransferService {
             id, user.id(), request.originAccountId(), destinationId, request.destinationAgency(),
             request.destinationAccountNumber(), request.idempotencyKey(), request.amount(),
             normalized(request.description()), scheduledFor, now);
+        notifications.publish(user.id(), "schedule-created:" + id, "Transferência agendada",
+            "Transferência demonstrativa de R$ " + request.amount().toPlainString() + " agendada.", "info");
         return new ScheduledTransferDtos.Item(id, request.originAccountId(), request.destinationAgency(),
             request.destinationAccountNumber(), request.amount(), normalized(request.description()),
             scheduledFor, now, "agendado", null, null, null);
@@ -121,6 +126,8 @@ public class ScheduledTransferService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Somente agendamentos pendentes podem ser cancelados.");
         }
         jdbc.update("UPDATE scheduled_transfers SET status = 'CANCELED' WHERE id = ?", id);
+        notifications.publish(user.id(), "schedule-cancelled:" + id, "Agendamento cancelado",
+            "A transferência agendada foi cancelada.", "warning");
         return new ScheduledTransferDtos.Item(current.id(), current.origin(), current.agency(),
             current.number(), current.amount(), current.description(), current.scheduledFor(),
             current.createdAt(), "cancelado", null, null, null);

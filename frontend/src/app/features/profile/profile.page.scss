@@ -1,34 +1,15 @@
-.profile-card {
-  display: flex;
-  gap: 18px;
-  align-items: center;
-}
-
+.profile-card { display: flex; gap: 18px; align-items: center; }
 .avatar {
-  width: 76px;
-  height: 76px;
-  display: grid;
-  place-items: center;
-  border-radius: 28px;
-  background: var(--primary);
-  color: white;
-  font-size: 2rem;
-  font-weight: 900;
+  width: 76px; height: 76px; flex: 0 0 76px; display: grid; place-items: center;
+  border-radius: 28px; background: var(--primary); color: white; font-size: 2rem; font-weight: 900;
 }
-
-.settings-card {
-  display: grid;
-  gap: 18px;
-}
-
-.security-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-@media (max-width: 767px) {
-  .profile-card {
-    display: grid;
-  }
-}
+.settings-card { display: grid; gap: 18px; }
+.settings-card h2 { margin: 0; }
+.security-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.settings-card .btn { justify-self: start; }
+.sessions-title { display: flex; align-items: start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.session-item { border-top: 1px solid var(--border); padding-top: 15px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.session-item small { display: block; margin-top: 6px; color: var(--muted); }
+.profile-success { color: var(--primary); font-weight: 750; }
+.profile-error { color: var(--danger, #b33); font-weight: 750; }
+@media (max-width: 767px) { .profile-card { display: grid; } }
