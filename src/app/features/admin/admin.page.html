@@ -1,57 +1,63 @@
 <section class="page">
   <header class="page-header">
-    <div>
-      <p class="eyebrow">Administração</p>
-      <h1>Gestão de acessos e alçadas</h1>
-      <p class="muted">Área de demonstração exibida para o perfil admin selecionado no login.</p>
-    </div>
+    <div><p class="eyebrow">Administração</p><h1>Usuários e contas</h1>
+      <p class="muted">Consulte contas, saldos e status de acesso em um só lugar.</p></div>
+    <button class="btn btn-secondary" (click)="load()" [disabled]="loading() || saving()">Atualizar</button>
   </header>
-
-  <div class="grid grid-3">
-    @for (item of policies; track item.title) {
-      <article class="card policy-card">
-        <span class="policy-icon">{{ item.icon }}</span>
-        <h2>{{ item.title }}</h2>
-        <p>{{ item.description }}</p>
-        <button class="btn btn-secondary" type="button" (click)="simulateAction(item.title)">Revisar</button>
-      </article>
-    }
-  </div>
-
+  @if (error()) { <p class="error-text" role="alert">{{ error() }}</p> }
+  @if (success()) { <p role="status">{{ success() }}</p> }
+  @if (selected(); as user) {
+    <article class="card edit-panel">
+      <h2>Alterar acesso</h2><p>{{ user.name }} · {{ user.email }}</p>
+      <form (ngSubmit)="save()">
+        <fieldset [disabled]="saving()">
+          <div class="field"><label for="admin-status">Status</label>
+            <select id="admin-status" class="select" name="status" [(ngModel)]="status">
+              <option value="ACTIVE">Ativo</option><option value="BLOCKED">Bloqueado</option>
+            </select></div>
+          <div class="field"><label for="admin-reason">Motivo da alteração</label>
+            <textarea id="admin-reason" class="input" name="reason" [(ngModel)]="reason" required minlength="5" maxlength="300" rows="3"></textarea></div>
+        </fieldset>
+        <p class="muted">A alteração encerra as sessões atuais deste usuário. Contas bloqueadas ficam impedidas de entrar.</p>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="selected.set(null)">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving() || reason.trim().length < 5 || status === user.status">
+            {{ saving() ? 'Salvando...' : 'Confirmar alteração' }}
+          </button>
+        </div>
+      </form>
+    </article>
+  }
   <article class="card">
-    <p class="eyebrow">Alçadas</p>
-    <h2>Regras operacionais</h2>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Operação</th>
-            <th>Cliente</th>
-            <th>Gerente</th>
-            <th>Admin</th>
-          </tr>
-        </thead>
+    @if (loading()) { <p role="status">Carregando usuários...</p> }
+    @else {
+      <div class="table-wrap"><table>
+        <thead><tr><th>Usuário</th><th>Acesso</th><th>Contas vinculadas</th><th>Ação</th></tr></thead>
         <tbody>
-          <tr>
-            <td data-label="Operação">Transferência até R$ 50 mil</td>
-            <td data-label="Cliente">Liberado</td>
-            <td data-label="Gerente">Liberado</td>
-            <td data-label="Admin">Liberado</td>
-          </tr>
-          <tr>
-            <td data-label="Operação">Auditoria</td>
-            <td data-label="Cliente">Bloqueado</td>
-            <td data-label="Gerente">Consulta</td>
-            <td data-label="Admin">Consulta e gestão</td>
-          </tr>
-          <tr>
-            <td data-label="Operação">Administração de perfis</td>
-            <td data-label="Cliente">Bloqueado</td>
-            <td data-label="Gerente">Bloqueado</td>
-            <td data-label="Admin">Liberado</td>
-          </tr>
+          @for (user of users(); track user.id) {
+            <tr><td><strong>{{ user.name }}</strong><span class="user-email muted">{{ user.email }}</span></td>
+              <td>{{ statusLabels[user.status] }}</td>
+              <td>
+                @for (account of user.accounts; track account.id) {
+                  <div class="linked-account">
+                    <strong>{{ account.number }}</strong>
+                    <span class="muted">Ag. {{ account.branch }} · {{ account.status === 'ACTIVE' ? 'Ativa' : account.status === 'BLOCKED' ? 'Bloqueada' : 'Encerrada' }}</span>
+                    <span class="account-balance">{{ account.balance | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+                  </div>
+                } @empty { <span class="muted">Sem conta vinculada</span> }
+              </td><td>
+                @if (editable(user)) { <button class="btn btn-secondary" [disabled]="saving()" (click)="edit(user)">Alterar acesso</button> }
+                @else { <span class="muted">{{ user.demo ? 'Conta demonstrativa' : 'Sua conta' }}</span> }
+              </td></tr>
+          }
         </tbody>
-      </table>
-    </div>
+      </table></div>
+      @if (!users().length && !error()) { <p class="muted">Nenhum usuário encontrado.</p> }
+    }
+    <nav class="pagination" aria-label="Páginas de usuários">
+      <button class="btn btn-secondary" [disabled]="page() === 0 || loading() || saving()" (click)="load(page() - 1)">Anterior</button>
+      <span>Página {{ page() + 1 }}</span>
+      <button class="btn btn-secondary" [disabled]="!hasNext() || loading() || saving()" (click)="load(page() + 1)">Próxima</button>
+    </nav>
   </article>
 </section>

@@ -27,7 +27,18 @@
     </div>
 
     <div class="login-topbar">
-      <span class="muted">Demonstração com acesso administrativo</span>
+      @if (mode() === 'login') {
+        <div class="demo-role-top">
+          <label for="role">Tipo de usuário (demonstração)</label>
+          <div class="demo-role-select">
+            <select id="role" class="input" [formControl]="form.controls.role">
+              <option value="cliente">Cliente</option>
+              <option value="gerente">Gerente</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+        </div>
+      }
       <button class="theme-button" type="button" (click)="themeStore.toggle()">
         {{ themeStore.mode() === 'dark' ? 'Tema claro' : 'Tema escuro' }}
       </button>

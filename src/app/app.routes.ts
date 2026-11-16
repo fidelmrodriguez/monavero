@@ -30,6 +30,10 @@ export const appRoutes: Routes = [
         loadComponent: () => import('./features/transfers/transfers.page').then((m) => m.TransfersPage)
       },
       {
+        path: 'agendamentos',
+        loadComponent: () => import('./features/scheduled-transfers/scheduled-transfers.page').then((m) => m.ScheduledTransfersPage)
+      },
+      {
         path: 'pagamentos',
         loadComponent: () => import('./features/payments/payments.page').then((m) => m.PaymentsPage)
       },
@@ -40,13 +44,13 @@ export const appRoutes: Routes = [
       {
         path: 'auditoria',
         canActivate: [permissionGuard],
-        data: { roles: ['gerente', 'admin'] },
+        data: { demoOnly: true },
         loadComponent: () => import('./features/audit/audit.page').then((m) => m.AuditPage)
       },
       {
         path: 'administracao',
         canActivate: [permissionGuard],
-        data: { roles: ['admin'] },
+        data: { demoOnly: true },
         loadComponent: () => import('./features/admin/admin.page').then((m) => m.AdminPage)
       },
       {

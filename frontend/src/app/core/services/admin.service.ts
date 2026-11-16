@@ -14,10 +14,10 @@ export interface AdminUser {
   role: AccessRole;
   status: UserStatus;
   demo: boolean;
+  accounts: AdminAccount[];
   version: number;
 }
 export interface AdminChange {
-  role: AccessRole;
   status: UserStatus;
   version: number;
   reason: string;

@@ -4,69 +4,108 @@
     <div>
       <p class="eyebrow">Internet Banking</p>
       <h1>Sua experiência financeira em um só lugar.</h1>
-      <p>Explore contas, cartões, investimentos e operações financeiras em uma plataforma demonstrativa.</p>
+      <p>Explore contas, cartões, investimentos e operações em um ambiente bancário demonstrativo.</p>
     </div>
     <div class="hero-grid">
-      <article>
-        <strong>Conta digital</strong>
-        <span>Saldo, cartões, limites e investimentos sempre à vista.</span>
-      </article>
-      <article>
-        <strong>Navegação por perfil</strong>
-        <span>Rotas, formulários e trilha de eventos simulados por perfil.</span>
-      </article>
-      <article>
-        <strong>Agenda inteligente</strong>
-        <span>Agendamentos, transferências e alertas para explorar a interface.</span>
-      </article>
+      <article><strong>Conta digital</strong><span>Acompanhe suas contas e movimentações em um só lugar.</span></article>
+      <article><strong>Acesso protegido</strong><span>Proteção da conta em cada acesso.</span></article>
+      <article><strong>Agenda inteligente</strong><span>Acompanhe seus compromissos e notificações.</span></article>
     </div>
   </section>
 
-  <section class="login-card card">
-    <button class="theme-button" type="button" (click)="themeStore.toggle()">
-      {{ themeStore.mode() === 'dark' ? 'Tema claro' : 'Tema escuro' }}
-    </button>
-
-    <p class="eyebrow">Acesso demonstrativo</p>
-    <h2>Entrar na conta</h2>
-    <p class="muted">Acesse o ambiente de demonstração com os dados preenchidos.</p>
-
-    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-      <div class="field">
-        <label for="username">Usuário</label>
-        <input id="username" class="input" type="text" formControlName="username" autocomplete="username" />
-        @if (form.controls.username.touched && form.controls.username.invalid) {
-          <span class="error-text">Informe o usuário.</span>
-        }
+  <section class="login-card card" [attr.aria-busy]="authStore.isLoading() || navigating()">
+    @if (authStore.isLoading() || navigating()) {
+      <div class="auth-progress" role="status" aria-live="polite">
+        <span class="monavero-spinner" aria-hidden="true"></span>
+        <strong>{{ mode() === 'login' ? 'Autenticando...' : 'Criando sua conta...' }}</strong>
+        <span>Estamos verificando seus dados com segurança.</span>
       </div>
-
-      <div class="field">
-        <label for="password">Senha</label>
-        <input id="password" class="input" type="password" formControlName="password" autocomplete="current-password" />
-        @if (form.controls.password.touched && form.controls.password.invalid) {
-          <span class="error-text">A senha precisa ter pelo menos 4 caracteres.</span>
-        }
-      </div>
-
-      <div class="field">
-        <label for="role">Perfil de demonstração</label>
-        <select id="role" class="select" formControlName="role">
-          <option value="cliente">Cliente</option>
-          <option value="gerente">Gerente</option>
-          <option value="admin">Admin</option>
-        </select>
-      </div>
-
-      <button class="btn btn-primary" type="submit" [disabled]="form.invalid || authStore.isLoading()">
-        {{ authStore.isLoading() ? 'Validando acesso...' : 'Entrar' }}
-      </button>
-    </form>
-
-    <div class="credentials">
-      <strong>Credenciais de demonstração</strong>
-      <span>Usuário: User</span>
-      <span>Senha: 1234</span>
-      <small>Os saldos e as operações são simulados. Não utilize dados bancários reais.</small>
+    }
+    <div class="auth-tabs" role="group" aria-label="Modalidade de acesso">
+      <button type="button" [disabled]="authStore.isLoading() || navigating()" [class.selected]="mode() === 'login'" (click)="changeMode('login')">Entrar</button>
+      <button type="button" [disabled]="authStore.isLoading() || navigating()" [class.selected]="mode() === 'register'" (click)="changeMode('register')">Criar conta</button>
     </div>
+
+    <div class="login-topbar">
+      @if (mode() === 'login') {
+        <div class="demo-role-top">
+          <label for="role">Tipo de usuário (demonstração)</label>
+          <div class="demo-role-select">
+            <select id="role" class="input" [formControl]="form.controls.role">
+              <option value="cliente">Cliente</option>
+              <option value="gerente">Gerente</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+        </div>
+      }
+      <button class="theme-button" type="button" (click)="themeStore.toggle()">
+        {{ themeStore.mode() === 'dark' ? 'Tema claro' : 'Tema escuro' }}
+      </button>
+    </div>
+
+    @if (mode() === 'login') {
+      <p class="eyebrow">Acesso ao Monavero</p>
+      <h2>Entrar na conta</h2>
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="field">
+          <label for="username">E-mail ou usuário da demonstração</label>
+          <input id="username" class="input" type="text" formControlName="username" autocomplete="username" (input)="onUsernameInput()" />
+          @if ((form.controls.username.touched || form.controls.username.dirty) && form.controls.username.hasError('required')) {
+            <span class="error-text">Informe o e-mail da conta ou User para a demonstração.</span>
+          }
+          @if ((form.controls.username.touched || form.controls.username.dirty) && form.controls.username.hasError('emailOrDemo')) {
+            <span class="error-text">Use o e-mail completo do cadastro. O nome não é usado para login.</span>
+          }
+        </div>
+        <div class="field">
+          <label for="password">Senha</label>
+          <input id="password" class="input" type="password" formControlName="password" autocomplete="current-password" (input)="loginError.set(null)" />
+          @if (form.controls.password.touched && form.controls.password.invalid) {
+            <span class="error-text">Informe uma senha válida.</span>
+          }
+        </div>
+        @if (loginError()) {
+          <p class="error-text login-error" role="alert">{{ loginError() }}</p>
+        }
+        <button class="btn btn-primary" type="submit" [disabled]="form.invalid || authStore.isLoading() || navigating()">
+          {{ authStore.isLoading() || navigating() ? 'Autenticando...' : 'Entrar' }}
+        </button>
+      </form>
+      <div class="credentials">
+        <strong>Acesso de demonstração</strong>
+        <span>Usuário: User · Senha: 1234 · Administração e auditoria disponíveis</span>
+      </div>
+    } @else {
+      <p class="eyebrow">Conta pessoal</p>
+      <h2>Criar conta</h2>
+      <p class="muted">Crie seu acesso para consultar sua conta digital e acompanhar suas movimentações.</p>
+      <form [formGroup]="registration" (ngSubmit)="submit()" novalidate>
+        <div class="field">
+          <label for="name">Nome completo</label>
+          <input id="name" class="input" formControlName="name" autocomplete="name" />
+          @if (registration.controls.name.touched && registration.controls.name.invalid) {
+            <span class="error-text">Informe seu nome (mínimo de 2 caracteres).</span>
+          }
+        </div>
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input id="email" class="input" type="email" formControlName="email" autocomplete="email" />
+          @if (registration.controls.email.touched && registration.controls.email.invalid) {
+            <span class="error-text">Informe um e-mail válido.</span>
+          }
+        </div>
+        <div class="field">
+          <label for="new-password">Senha (mínimo de 12 caracteres)</label>
+          <input id="new-password" class="input" type="password" formControlName="password" autocomplete="new-password" />
+          @if (registration.controls.password.touched && registration.controls.password.invalid) {
+            <span class="error-text">Use de 12 a 72 caracteres.</span>
+          }
+        </div>
+        <button class="btn btn-primary" type="submit" [disabled]="registration.invalid || authStore.isLoading() || navigating()">
+          {{ authStore.isLoading() || navigating() ? 'Criando...' : 'Criar conta e entrar' }}
+        </button>
+      </form>
+    }
   </section>
 </main>

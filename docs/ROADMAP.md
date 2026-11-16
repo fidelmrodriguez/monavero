@@ -65,4 +65,4 @@ Implementadas transferências agendadas com ciclo `agendado → concluido/recusa
 
 ## Atualização da Etapa 9
 
-Gestão administrativa, autorização por perfil real e auditoria persistente implementadas. CI e validação em produção pendentes. Consulte ADMINISTRACAO.md para escopo e testes.
+Gestão administrativa, acesso administrativo exclusivo do guest e auditoria persistente implementadas. CI e validação em produção pendentes. Consulte ADMINISTRACAO.md para escopo e testes.

@@ -96,4 +96,4 @@ npm test
 
 ### Administração e auditoria
 
-A Etapa 9 adiciona gestão de perfis e status, revogação de sessões e histórico administrativo persistente. O acesso público User / 1234 recebe perfil administrativo e permite consultar usuários, contas e auditoria. Consulte [Administração](docs/ADMINISTRACAO.md) para ativação, permissões e validação. Implementação entregue para CI e testes funcionais.
+A Etapa 9 adiciona gestão de status de acesso, revogação de sessões e histórico administrativo persistente. Somente o guest User / 1234 acessa Administração e Auditoria pelo menu do topo, abaixo de Perfil. A tabela unifica usuários e contas vinculadas; contas pessoais não acessam essas ferramentas, independentemente do perfil. Consulte [Administração](docs/ADMINISTRACAO.md) para ativação, permissões e validação. Implementação entregue para CI e testes funcionais.

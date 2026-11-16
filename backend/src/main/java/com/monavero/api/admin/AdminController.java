@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@org.springframework.security.access.prepost.PreAuthorize("authentication.principal.demo()")
 @RestController
 @RequestMapping("/api/v1")
 public class AdminController {

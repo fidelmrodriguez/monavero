@@ -15,7 +15,7 @@
     </nav>
 
     <div class="side-card">
-      <span class="badge">{{ authStore.role() }}</span>
+      <span class="badge">{{ authStore.viewRole() }}</span>
       <h3>{{ authStore.isDemo() ? 'Conta demonstração' : 'Conta pessoal' }}</h3>
       <p>Valores ilustrativos.</p>
     </div>
@@ -97,6 +97,10 @@
         @if (userMenuOpen()) {
           <div class="user-dropdown" aria-label="Menu do usuário">
             <a routerLink="/app/perfil" (click)="closeUserMenu()">Perfil</a>
+            @if (authStore.isDemo()) {
+              <a routerLink="/app/administracao" (click)="closeUserMenu()">Administração</a>
+              <a routerLink="/app/auditoria" (click)="closeUserMenu()">Auditoria</a>
+            }
             <button type="button" (click)="logout()">Sair</button>
           </div>
         }

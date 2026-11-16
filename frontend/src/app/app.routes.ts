@@ -44,13 +44,13 @@ export const appRoutes: Routes = [
       {
         path: 'auditoria',
         canActivate: [permissionGuard],
-        data: { roles: ['gerente', 'admin'] },
+        data: { demoOnly: true },
         loadComponent: () => import('./features/audit/audit.page').then((m) => m.AuditPage)
       },
       {
         path: 'administracao',
         canActivate: [permissionGuard],
-        data: { roles: ['admin'] },
+        data: { demoOnly: true },
         loadComponent: () => import('./features/admin/admin.page').then((m) => m.AdminPage)
       },
       {

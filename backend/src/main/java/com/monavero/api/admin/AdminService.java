@@ -24,8 +24,8 @@ public class AdminService {
     public AdminService(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
     public record User(UUID id, String name, String email, AccessRole role,
-                       UserStatus status, boolean demo, long version) { }
-    public record Change(@NotNull AccessRole role, @NotNull UserStatus status,
+                       UserStatus status, boolean demo, long version, List<Account> accounts) { }
+    public record Change(@NotNull UserStatus status,
                          @NotNull @PositiveOrZero Long version,
                          @NotBlank @Size(min = 5, max = 300) String reason) { }
     public record Event(UUID id, String actor, String target, String action,
@@ -51,8 +51,8 @@ public class AdminService {
     @Transactional(readOnly = true)
     public List<User> users(int page) {
         checkPage(page);
-        return jdbc.query("SELECT * FROM app_users ORDER BY created_at DESC, id DESC LIMIT 51 OFFSET ?",
-            (rs, row) -> user(rs), page * 50);
+        return withAccounts(jdbc.query("SELECT * FROM app_users ORDER BY created_at DESC, id DESC LIMIT 51 OFFSET ?",
+            (rs, row) -> user(rs), page * 50));
     }
 
     @Transactional(readOnly = true)
@@ -76,7 +76,7 @@ public class AdminService {
         lockAdministration();
         // Revalida a autorização depois do lock, inclusive se outro administrador revogou o acesso.
         User currentActor = find(actor.id());
-        if (currentActor.role() != AccessRole.ADMIN || currentActor.status() != UserStatus.ACTIVE) {
+        if (!currentActor.demo() || currentActor.status() != UserStatus.ACTIVE) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         User old = find(id);
@@ -88,24 +88,39 @@ public class AdminService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe o motivo da alteração.");
         }
         // Retry da mesma alteração não duplica evento nem revoga uma nova sessão.
-        if (old.role() == change.role() && old.status() == change.status()) return old;
+        if (old.status() == change.status()) return withAccounts(List.of(old)).get(0);
         if (old.version() != change.version()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Este usuário foi atualizado. Recarregue os dados.");
         }
-        if (old.role() == AccessRole.ADMIN && old.status() == UserStatus.ACTIVE
-                && (change.role() != AccessRole.ADMIN || change.status() != UserStatus.ACTIVE)
-                && jdbc.queryForObject("SELECT count(*) FROM app_users WHERE access_role = 'ADMIN' AND status = 'ACTIVE'",
-                    Long.class) <= 1) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Mantenha um administrador ativo.");
-        }
         jdbc.update("""
-            UPDATE app_users SET access_role = ?, status = ?, admin_version = admin_version + 1,
+            UPDATE app_users SET status = ?, admin_version = admin_version + 1,
                 updated_at = now() WHERE id = ?
-            """, change.role().name(), change.status().name(), id);
+            """, change.status().name(), id);
         jdbc.update("UPDATE auth_sessions SET revoked_at = now() WHERE user_id = ? AND revoked_at IS NULL", id);
-        record(actor.id(), old, change.role(), change.status(), "USER_UPDATED", change.reason().trim());
-        return find(id);
+        record(actor.id(), old, old.role(), change.status(), "USER_UPDATED", change.reason().trim());
+        return withAccounts(List.of(find(id))).get(0);
+    }
+
+    private List<User> withAccounts(List<User> users) {
+        if (users.isEmpty()) return users;
+        var grouped = new java.util.HashMap<UUID, List<Account>>();
+        String placeholders = String.join(",", java.util.Collections.nCopies(users.size(), "?"));
+        jdbc.query("""
+            SELECT a.*, h.user_id, u.full_name FROM account_holders h
+            JOIN bank_accounts a ON a.id = h.account_id
+            JOIN app_users u ON u.id = h.user_id
+            WHERE h.user_id IN (
+            """ + placeholders + ") ORDER BY a.created_at, a.id",
+            (org.springframework.jdbc.core.RowCallbackHandler) rs -> {
+                UUID userId = rs.getObject("user_id", UUID.class);
+                grouped.computeIfAbsent(userId, ignored -> new java.util.ArrayList<>()).add(
+                    new Account(rs.getObject("id", UUID.class), rs.getString("account_number"),
+                        rs.getString("branch_code"), rs.getString("full_name"),
+                        rs.getString("status"), rs.getBigDecimal("balance")));
+            }, users.stream().map(User::id).toArray());
+        return users.stream().map(u -> new User(u.id(), u.name(), u.email(), u.role(),
+            u.status(), u.demo(), u.version(), List.copyOf(grouped.getOrDefault(u.id(), List.of())))).toList();
     }
 
     private void lockAdministration() {
@@ -134,7 +149,7 @@ public class AdminService {
     private static User user(ResultSet rs) throws SQLException {
         return new User(rs.getObject("id", UUID.class), rs.getString("full_name"), rs.getString("email"),
             AccessRole.valueOf(rs.getString("access_role")), UserStatus.valueOf(rs.getString("status")),
-            rs.getBoolean("is_demo"), rs.getLong("admin_version"));
+            rs.getBoolean("is_demo"), rs.getLong("admin_version"), List.of());
     }
 
     private static void checkPage(int page) {

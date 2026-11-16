@@ -81,8 +81,6 @@ export class ShellComponent {
     { label: 'Agendamentos', route: '/app/agendamentos', icon: '🕒' },
     { label: 'Pagamentos', route: '/app/pagamentos', icon: '📅' },
     { label: 'Notificações', route: '/app/notificacoes', icon: '🔔' },
-    { label: 'Auditoria', route: '/app/auditoria', icon: '🧾', roles: ['gerente', 'admin'] },
-    { label: 'Administração', route: '/app/administracao', icon: '🛡️', roles: ['admin'] },
     { label: 'Perfil', route: '/app/perfil', icon: '⚙️' }
   ];
 

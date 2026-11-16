@@ -15,9 +15,9 @@
     </nav>
 
     <div class="side-card">
-      <span class="badge">{{ authStore.role() }}</span>
-      <h3>Ambiente demonstrativo</h3>
-      <p>Dados fictícios, perfis simulados e eventos de auditoria locais.</p>
+      <span class="badge">{{ authStore.viewRole() }}</span>
+      <h3>{{ authStore.isDemo() ? 'Conta demonstração' : 'Conta pessoal' }}</h3>
+      <p>Valores ilustrativos.</p>
     </div>
   </aside>
 
@@ -60,6 +60,9 @@
             </header>
 
             <div class="notification-dropdown-list">
+              @if (recentNotifications().length === 0) {
+                <p class="notification-empty">Nenhuma notificação no momento.</p>
+              }
               @for (notification of recentNotifications(); track notification.id) {
                 <button
                   class="notification-preview"
@@ -80,7 +83,7 @@
             </div>
 
             <footer class="notification-dropdown-footer">
-              Central completa disponível no menu lateral.
+              <a routerLink="/app/notificacoes" (click)="closeNotifications()">Ver notificações</a>
             </footer>
           </section>
         }
@@ -94,6 +97,10 @@
         @if (userMenuOpen()) {
           <div class="user-dropdown" aria-label="Menu do usuário">
             <a routerLink="/app/perfil" (click)="closeUserMenu()">Perfil</a>
+            @if (authStore.isDemo()) {
+              <a routerLink="/app/administracao" (click)="closeUserMenu()">Administração</a>
+              <a routerLink="/app/auditoria" (click)="closeUserMenu()">Auditoria</a>
+            }
             <button type="button" (click)="logout()">Sair</button>
           </div>
         }
@@ -113,7 +120,23 @@
     }
   </header>
 
-  <main class="content">
+  <main class="content" [attr.aria-busy]="navigating()">
     <router-outlet />
+    @if (navigating()) {
+      <div class="navigation-loading" role="status" aria-live="polite">
+        <div class="navigation-loading-card">
+          <span class="monavero-spinner" aria-hidden="true"></span>
+          <span>Carregando página...</span>
+        </div>
+      </div>
+    } @else if (navigationFailed()) {
+      <div class="navigation-loading" role="alert">
+        <div class="navigation-loading-card navigation-failed">
+          <strong>Não foi possível abrir esta página.</strong>
+          <p>Atualize para carregar a versão mais recente do Monavero.</p>
+          <button class="btn btn-primary" type="button" (click)="retryNavigation()">Atualizar</button>
+        </div>
+      </div>
+    }
   </main>
 </div>
