@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { NotificationStore } from '../../core/state/notification.store';
 import { ShellComponent } from './shell.component';
 
 describe('ShellComponent', () => {
@@ -16,6 +17,22 @@ describe('ShellComponent', () => {
     fixture = TestBed.createComponent(ShellComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  it('reconhece notificações somente ao abrir o dropdown, não ao fechá-lo', () => {
+    const store = TestBed.inject(NotificationStore);
+    const acknowledge = spyOn(store, 'acknowledgeOnOpen');
+    const bell = fixture.nativeElement.querySelector('.notification-btn') as HTMLButtonElement;
+
+    bell.click();
+    fixture.detectChanges();
+    expect(acknowledge).toHaveBeenCalledTimes(1);
+    expect(bell.getAttribute('aria-expanded')).toBe('true');
+
+    bell.click();
+    fixture.detectChanges();
+    expect(acknowledge).toHaveBeenCalledTimes(1);
+    expect(bell.getAttribute('aria-expanded')).toBe('false');
   });
 
   it('deve criar o layout autenticado', () => {

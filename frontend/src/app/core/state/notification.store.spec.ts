@@ -40,4 +40,60 @@ describe('NotificationStore Etapa 10', () => {
     first.flush([{ id: 'not-1', date: '', title: 'Não pode vazar', description: '', read: false, type: 'danger' }]);
     expect(store.notifications().map(item => item.id)).toEqual(['not-2']);
   });
+
+  it('ao abrir o sino, remove o contador imediatamente sem excluir o histórico', () => {
+    store.sync('usuario-1');
+    http.expectOne(req => req.url.endsWith('/api/v1/notifications')).flush([
+      { id: 'not-1', date: '', title: 'Transferência', description: '', read: false, type: 'success' },
+      { id: 'not-2', date: '', title: 'Pagamento', description: '', read: true, type: 'info' }
+    ]);
+    expect(store.unreadCount()).toBe(1);
+
+    store.acknowledgeOnOpen();
+    expect(store.unreadCount()).toBe(0);
+    expect(store.notifications().length).toBe(2);
+    expect(store.notifications().every(item => item.read)).toBeTrue();
+
+    const request = http.expectOne(req => req.url.endsWith('/api/v1/notifications/read-all'));
+    expect(request.request.method).toBe('PATCH');
+    request.flush(null);
+    http.expectOne(req => req.url.endsWith('/api/v1/notifications')).flush([
+      { id: 'not-1', date: '', title: 'Transferência', description: '', read: true, type: 'success' },
+      { id: 'not-2', date: '', title: 'Pagamento', description: '', read: true, type: 'info' }
+    ]);
+    expect(store.unreadCount()).toBe(0);
+    expect(store.notifications().length).toBe(2);
+  });
+
+  it('não deixa uma consulta anterior reacender a bolinha enquanto abre o sino', () => {
+    store.sync('usuario-1');
+    const oldRequest = http.expectOne(req => req.url.endsWith('/api/v1/notifications'));
+    store.acknowledgeOnOpen();
+    const update = http.expectOne(req => req.url.endsWith('/api/v1/notifications/read-all'));
+    oldRequest.flush([
+      { id: 'not-1', date: '', title: 'Antiga', description: '', read: false, type: 'warning' }
+    ]);
+    expect(store.unreadCount()).toBe(0);
+    update.flush(null);
+    http.expectOne(req => req.url.endsWith('/api/v1/notifications')).flush([
+      { id: 'not-1', date: '', title: 'Antiga', description: '', read: true, type: 'warning' }
+    ]);
+    expect(store.unreadCount()).toBe(0);
+  });
+
+  it('restaura a sinalização de não lidas caso a API recuse a leitura', () => {
+    store.sync('usuario-1');
+    http.expectOne(req => req.url.endsWith('/api/v1/notifications')).flush([
+      { id: 'not-1', date: '', title: 'Aviso', description: '', read: false, type: 'info' }
+    ]);
+    store.acknowledgeOnOpen();
+    expect(store.unreadCount()).toBe(0);
+    http.expectOne(req => req.url.endsWith('/api/v1/notifications/read-all'))
+      .flush({ message: 'Falha' }, { status: 503, statusText: 'Service Unavailable' });
+    http.expectOne(req => req.url.endsWith('/api/v1/notifications')).flush([
+      { id: 'not-1', date: '', title: 'Aviso', description: '', read: false, type: 'info' }
+    ]);
+    expect(store.unreadCount()).toBe(1);
+    expect(store.toasts().some(item => item.type === 'warning')).toBeTrue();
+  });
 });

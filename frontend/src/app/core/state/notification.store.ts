@@ -78,6 +78,28 @@ export class NotificationStore {
     });
   }
 
+  /** Abrir o dropdown reconhece os avisos: some o contador, mas o histórico permanece.
+   * A atualização otimista é confirmada no servidor; em caso de falha, recarrega o estado real.
+   * A revisão descarta respostas antigas de GET que poderiam reacender o contador.
+   */
+  acknowledgeOnOpen(): void {
+    if (!this.ownerId) return;
+    const owner = this.ownerId;
+    const revision = ++this.revision;
+
+    this.notificationsState.update(items => items.map(item => item.read ? item : { ...item, read: true }));
+    this.http.patch<void>(`${this.url}/read-all`, {}).subscribe({
+      next: () => {
+        if (this.ownerId === owner && this.revision === revision) this.refresh();
+      },
+      error: () => {
+        if (this.ownerId !== owner || this.revision !== revision) return;
+        this.add({ title: 'Não foi possível atualizar os avisos', message: 'Tente novamente.', type: 'warning' });
+        this.refresh();
+      }
+    });
+  }
+
   markAsRead(id: string): void {
     if (!this.ownerId || !this.notificationsState().some(item => item.id === id && !item.read)) return;
     const owner = this.ownerId;

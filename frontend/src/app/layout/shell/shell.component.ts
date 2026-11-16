@@ -103,10 +103,11 @@ export class ShellComponent {
   }
 
   protected toggleNotifications(): void {
-    if (!this.notificationsOpen()) this.notificationStore.refresh();
+    const opening = !this.notificationsOpen();
+    if (opening) this.notificationStore.acknowledgeOnOpen();
     this.menuOpen.set(false);
     this.userMenuOpen.set(false);
-    this.notificationsOpen.update((open) => !open);
+    this.notificationsOpen.set(opening);
   }
 
   protected closeNotifications(): void {
