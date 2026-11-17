@@ -32,9 +32,10 @@ describe('LoginPage', () => {
 
   it('oferece os três perfis no login e não permite escolher papel no cadastro', () => {
     expect(fixture.nativeElement.textContent).toContain('Monavero');
-    expect(fixture.nativeElement.textContent).toContain('Tipo de usuário (demonstração)');
+    expect(fixture.nativeElement.textContent).toContain('Acessar como (demonstração)');
     expect(fixture.nativeElement.querySelector('form #role')).toBeNull();
     expect(fixture.nativeElement.querySelectorAll('#role option').length).toBe(3);
+    expect(fixture.nativeElement.textContent).toContain('Permissões conforme o perfil selecionado');
     component.changeMode('register');
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Criar conta');

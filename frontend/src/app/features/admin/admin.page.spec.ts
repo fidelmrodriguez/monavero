@@ -1,6 +1,7 @@
 import { registerLocaleData } from '@angular/common';
 import pt from '@angular/common/locales/pt';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal, WritableSignal } from '@angular/core';
 import { of } from 'rxjs';
 import { AdminPage } from './admin.page';
 import { AdminService, AdminUser } from '../../core/services/admin.service';
@@ -10,6 +11,7 @@ registerLocaleData(pt);
 
 describe('AdminPage', () => {
   let fixture: ComponentFixture<AdminPage>;
+  let role: WritableSignal<'admin' | 'gerente'>;
   const users: AdminUser[] = [
     { id: 'one', name: 'Sem vínculo', email: 'one@example.test', role: 'CLIENT',
       status: 'ACTIVE', demo: false, version: 0, accounts: [] },
@@ -21,11 +23,12 @@ describe('AdminPage', () => {
   ];
 
   beforeEach(async () => {
+    role = signal<'admin' | 'gerente'>('admin');
     await TestBed.configureTestingModule({
       imports: [AdminPage],
       providers: [
         { provide: AdminService, useValue: { users: () => of(users), update: () => of({ ...users[0], status: 'BLOCKED', version: 1 }) } },
-        { provide: AuthStore, useValue: { session: () => ({ user: { id: 'guest' } }), role: () => 'admin' } }
+        { provide: AuthStore, useValue: { session: () => ({ user: { id: 'guest' } }), role } }
       ]
     }).compileComponents();
     fixture = TestBed.createComponent(AdminPage);
@@ -64,14 +67,14 @@ describe('AdminPage', () => {
   });
 
   it('gerente consulta usuários sem botão para alterar status', () => {
-    const store = TestBed.inject(AuthStore);
-    spyOn(store, 'role').and.returnValue('gerente');
-    fixture.changeDetectorRef.markForCheck();
+    // Um Signal real notifica componentes OnPush; substituir a função por spy não notificava o template.
+    role.set('gerente');
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
     expect(el.textContent).toContain('Acompanhamento de clientes');
     expect(el.textContent).toContain('Somente leitura');
     expect(el.querySelectorAll('tbody button').length).toBe(0);
+    expect(el.textContent).not.toContain('Alterar acesso');
   });
 
 });
