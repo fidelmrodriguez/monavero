@@ -15,9 +15,9 @@
     </nav>
 
     <div class="side-card">
-      <span class="badge">{{ authStore.viewRole() }}</span>
-      <h3>{{ authStore.isDemo() ? 'Conta demonstração' : 'Conta pessoal' }}</h3>
-      <p>Valores ilustrativos.</p>
+      <span class="badge">{{ roleLabel() }}</span>
+      <h3>{{ roleDescription() }}</h3>
+      <p>{{ authStore.isDemo() ? 'Ambiente demonstrativo · dados ilustrativos.' : 'Conta pessoal · acesso autenticado.' }}</p>
     </div>
   </aside>
 
@@ -27,7 +27,7 @@
     </button>
 
     <div class="topbar-title">
-      <strong>Internet Banking</strong>
+      <strong>{{ headerTitle() }}</strong>
       <span>{{ today | date:'EEEE, dd/MM/yyyy':'':'pt-BR' }}</span>
     </div>
 
@@ -97,8 +97,10 @@
         @if (userMenuOpen()) {
           <div class="user-dropdown" aria-label="Menu do usuário">
             <a routerLink="/app/perfil" (click)="closeUserMenu()">Perfil</a>
-            @if (authStore.isDemo()) {
-              <a routerLink="/app/administracao" (click)="closeUserMenu()">Administração</a>
+            @if (authStore.isDemo() && authStore.role() !== 'cliente') {
+              <a routerLink="/app/administracao" (click)="closeUserMenu()">Gestão de usuários</a>
+            }
+            @if (authStore.isDemo() && authStore.role() === 'admin') {
               <a routerLink="/app/auditoria" (click)="closeUserMenu()">Auditoria</a>
             }
             <button type="button" (click)="logout()">Sair</button>

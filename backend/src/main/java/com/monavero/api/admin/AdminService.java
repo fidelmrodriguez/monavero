@@ -32,8 +32,22 @@ public class AdminService {
                         String oldRole, String newRole, String oldStatus, String newStatus,
                         String reason, OffsetDateTime occurredAt) { }
 
+    public record Summary(long totalUsers, long activeUsers, long blockedUsers,
+                          long totalAccounts, long activeAccounts, long auditedChanges) { }
+
     public record Account(UUID id, String number, String branch, String owner,
                           String status, java.math.BigDecimal balance) { }
+
+    @Transactional(readOnly = true)
+    public Summary summary() {
+        return new Summary(
+            jdbc.queryForObject("SELECT count(*) FROM app_users WHERE is_demo = false", Long.class),
+            jdbc.queryForObject("SELECT count(*) FROM app_users WHERE is_demo = false AND status = 'ACTIVE'", Long.class),
+            jdbc.queryForObject("SELECT count(*) FROM app_users WHERE is_demo = false AND status = 'BLOCKED'", Long.class),
+            jdbc.queryForObject("SELECT count(*) FROM bank_accounts", Long.class),
+            jdbc.queryForObject("SELECT count(*) FROM bank_accounts WHERE status = 'ACTIVE'", Long.class),
+            jdbc.queryForObject("SELECT count(*) FROM admin_audit_events", Long.class));
+    }
 
     @Transactional(readOnly = true)
     public List<Account> accounts(int page) {
@@ -76,7 +90,7 @@ public class AdminService {
         lockAdministration();
         // Revalida a autorização depois do lock, inclusive se outro administrador revogou o acesso.
         User currentActor = find(actor.id());
-        if (!currentActor.demo() || currentActor.status() != UserStatus.ACTIVE) {
+        if (!currentActor.demo() || actor.role() != AccessRole.ADMIN || currentActor.status() != UserStatus.ACTIVE) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         User old = find(id);

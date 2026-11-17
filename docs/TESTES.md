@@ -30,7 +30,7 @@ Quando o registro npm estiver acessível, execute `npm install` dentro de `front
 
 ## Revisão funcional no Netlify
 
-- Login demonstrativo com `User` / `1234` editáveis, cadastro pessoal, login posterior, atualização de página e logout. Verificar que não é possível selecionar privilégios de administrador pelo navegador.
+- Login demonstrativo com `User` / `1234` editáveis, cadastro pessoal, login posterior, atualização de página e logout. O seletor de papel se aplica somente ao usuário demonstrativo; a API persiste e autoriza esse papel por sessão. Contas pessoais não recebem privilégios por essa opção.
 - Atualização direta de rotas internas sem erro 404; verificar fallback SPA no Netlify.
 - Dashboard, extrato, filtros, notificações, auditoria e perfil.
 - Formulários de transferências: validações de saldo, limite, origem e dados obrigatórios.
@@ -251,7 +251,7 @@ agendamentos e pagamentos. O frontend publicado reside em `frontend/`.
 3. Fazer cadastro e login de duas contas pessoais. Conferir que saldos, extratos, pagamentos, agendamentos, cartões e notificações de uma não são visíveis para a outra.
 4. Criar cartão fictício, bloquear/desbloquear, cancelar, recarregar a página. Fazer transferência/pagamento, abrir o sino e verificar que o indicador de não lidas desaparece, preservando o histórico ao atualizar.
 5. Atualizar nome, sair e entrar novamente; trocar senha, conferir que as sessões antigas foram revogadas e que a senha antiga falha. A conta demo não pode alterar o próprio perfil compartilhado.
-6. No login demo, verificar Administração e Auditoria; com conta pessoal, confirmar negação de acesso. Repetir os fluxos principais das etapas 5–9.
+6. No login demo, testar Cliente sem Gestão/Auditoria, Gerente com gestão somente leitura e Administrador com alterações/auditoria. Conferir negação por URL direta e API; com conta pessoal, confirmar negação de gestão. Repetir os fluxos das etapas 5–10.
 7. Conferir os headers `X-Request-Id` e `Cache-Control: no-store` em uma chamada `/api/v1/*` no DevTools; não expor informações privadas em respostas de erro nem no console. O site Netlify deve enviar `X-Frame-Options: DENY`.
 8. Em janela mobile/desktop, recarregar rotas internas, alternar tema e validar o proxy `/api/monavero-readiness` (JSON, não HTML). Confirmar ausência de erros no console após navegação.
 9. **Somente após essa revisão manual**, criar e enviar a tag `v1.0.0` apontando para o commit aprovado. O workflow `Monavero 1.0 Release` roda os dois testes e publica o GitHub Release se ambos passarem. Isso não substitui o deploy Netlify/Blitz.
@@ -264,3 +264,12 @@ git push origin v1.0.0
 ```
 
 Se o CI ou qualquer teste funcional falhar, corrigir antes de criar a tag; não declarar o release validado apenas pela presença do código.
+
+## Perfis demonstrativos e dashboard (Flyway V11)
+
+- Entrar com `User / 1234` como Cliente: dashboard com indicadores do extrato, contas, atalhos e gráficos; sem Gestão de usuários/Auditoria.
+- Entrar como Gerente: sidebar identifica "Gerente"; dashboard de relacionamento consulta `GET /api/v1/admin/summary`, lista de clientes e gestão somente leitura; `PATCH /api/v1/admin/users/*` e auditoria retornam HTTP 403.
+- Entrar como Administrador: sidebar "Administrador"; dashboard de governança, gestão editável e histórico administrativo; auditoria acessível.
+- Repetir os três acessos em telas pequenas e modo escuro; validar F5, outras abas, logout e URLs digitadas diretamente.
+- Criar/usar uma conta pessoal: mantém dashboard de cliente e não acessa gestão, independentemente do papel persistido na conta.
+- Confirmar que os indicadores vêm do banco (`GET /api/v1/admin/summary`) e não exibem números fixos inventados.

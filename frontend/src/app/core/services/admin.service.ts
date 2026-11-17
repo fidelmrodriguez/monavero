@@ -5,6 +5,7 @@ import { Injectable, inject } from '@angular/core';
 import { MONAVERO_API_URL } from '../config/monavero-api';
 import { ApiReadinessService } from './api-readiness.service';
 
+export interface AdminSummary { totalUsers: number; activeUsers: number; blockedUsers: number; totalAccounts: number; activeAccounts: number; auditedChanges: number; }
 export type AccessRole = 'CLIENT' | 'MANAGER' | 'ADMIN';
 export type UserStatus = 'ACTIVE' | 'BLOCKED';
 export interface AdminUser {
@@ -47,6 +48,10 @@ export class AdminService {
   private readonly http = inject(HttpClient);
   private readonly readiness = inject(ApiReadinessService);
   private readonly url = `${MONAVERO_API_URL}/api/v1`;
+
+  summary() {
+    return this.readiness.recover(this.http.get<AdminSummary>(`${this.url}/admin/summary`));
+  }
 
   accounts(page: number) {
     return this.readiness.recover(this.http.get<AdminAccount[]>(`${this.url}/admin/accounts`, { params: { page } }));

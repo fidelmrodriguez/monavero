@@ -73,7 +73,7 @@ export class LoginPage {
     const { username, password, role } = this.form.getRawValue();
     const identifier = username.trim();
     const guest = identifier.toLowerCase() === 'user' && password === '1234';
-    // A opção de perfil vale apenas para User/1234; contas reais usam o papel da API.
+    // Apenas User/1234 seleciona o papel da sessão; o backend confirma as permissões.
     const request = guest ? this.authStore.demo(role) : this.authStore.login(identifier, password);
     testLog('4', 'Login enviado à API', { tipo: guest ? 'demo' : 'pessoal', papelVisualDemo: guest ? role : 'nao_aplicavel' });
     request.subscribe(session => {

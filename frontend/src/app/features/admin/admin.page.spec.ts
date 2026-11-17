@@ -25,7 +25,7 @@ describe('AdminPage', () => {
       imports: [AdminPage],
       providers: [
         { provide: AdminService, useValue: { users: () => of(users), update: () => of({ ...users[0], status: 'BLOCKED', version: 1 }) } },
-        { provide: AuthStore, useValue: { session: () => ({ user: { id: 'guest' } }) } }
+        { provide: AuthStore, useValue: { session: () => ({ user: { id: 'guest' } }), role: () => 'admin' } }
       ]
     }).compileComponents();
     fixture = TestBed.createComponent(AdminPage);
@@ -61,6 +61,17 @@ describe('AdminPage', () => {
     expect(update).toHaveBeenCalledWith('one', {
       status: 'BLOCKED', reason: 'Teste de bloqueio', version: 0
     });
+  });
+
+  it('gerente consulta usuários sem botão para alterar status', () => {
+    const store = TestBed.inject(AuthStore);
+    spyOn(store, 'role').and.returnValue('gerente');
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.textContent).toContain('Acompanhamento de clientes');
+    expect(el.textContent).toContain('Somente leitura');
+    expect(el.querySelectorAll('tbody button').length).toBe(0);
   });
 
 });

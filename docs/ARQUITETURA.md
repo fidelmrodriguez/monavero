@@ -24,7 +24,7 @@ Netlify — Angular 19 SPA estática
                                                       │
                                                       ▼
                                            PostgreSQL 18 / Neon
-                                           └── Flyway V1 a V8
+                                           └── Flyway V1 a V11
 ```
 
 O Angular não possui credenciais do banco, não aplica autorização financeira definitiva e não decide saldos. O backend autentica o solicitante, verifica titularidade, calcula regras de negócio e persiste transações.
@@ -33,8 +33,8 @@ O Angular não possui credenciais do banco, não aplica autorização financeira
 
 - Componentes Angular standalone, Signals, RxJS e Reactive Forms.
 - Páginas sob demanda para dashboard, extrato, transferências e outras funcionalidades.
-- Autenticação pelo backend com sessão revogável; o perfil visual da demonstração não concede privilégios.
-- Contas, saldos e lançamentos consultados na API. Cartões e investimentos não implementados ficam indisponíveis; pagamentos usam API persistente. Notificações locais não constituem trilha auditável.
+- Autenticação pelo backend com sessão revogável; o perfil demonstrativo é autorizado no servidor por sessão (`auth_sessions.demo_role`), sem depender do seletor visual.
+- Contas, saldos e lançamentos consultados na API. Cartões virtuais são fictícios e persistidos; investimentos reais não existem. Notificações possuem persistência própria; a trilha de auditoria administrativa é separada.
 - Publicação SPA estática no Netlify, sem Angular SSR. A rota de readiness usa um proxy; o fallback SPA atende apenas às demais rotas.
 - Logs de diagnóstico ficam no console do navegador e não exibem credenciais, tokens ou número completo de conta.
 
@@ -61,7 +61,7 @@ O serviço backend hospedado na Blitz pode passar por inicialização a frio. O 
 
 ## Limites explícitos
 
-PIX/TED externos, boletos reais e liquidação de valores não fazem parte desta implementação. Transferências agendadas estão implementadas na Etapa 7. Pagamentos demonstrativos imediatos e agendados foram implementados na Etapa 8, sem liquidação externa. Auditoria/administração permanecem no [roadmap](ROADMAP.md).
+PIX/TED externos, boletos reais e liquidação de valores não fazem parte desta implementação. Transferências e pagamentos agendados são demonstrativos. Administração e auditoria possuem controle de acesso por perfil no backend; acompanhe as entregas no [roadmap](ROADMAP.md).
 
 Veja também [funcionalidades](FUNCIONALIDADES.md), [segurança](SEGURANCA_AUTENTICACAO.md) e [testes](TESTES.md).
 
@@ -73,3 +73,7 @@ O frontend envia os dados para a API autenticada; a tabela `scheduled_transfers`
 ## Execução de pagamentos demonstrativos (Etapa 8)
 
 `PaymentController` recebe criação, consulta e cancelamento autenticados; `PaymentService` valida titularidade, saldo e limite, serializa chaves de idempotência e grava a intenção no banco. Pagamentos imediatos debitam saldo e gravam lançamento `PAGAMENTO` numa transação. `PaymentWorker` consulta vencidos e chama `PaymentService.executeDue`, que usa `FOR UPDATE SKIP LOCKED` para serializar o processamento. A única fonte do extrato permanece `account_transactions`. Nenhum processamento de boleto/convênio externo é integrado.
+
+## Painéis por papel (Flyway V11)
+
+O login demo envia o papel escolhido para `/api/v1/auth/demo`, que o persiste na sessão revogável (`demo_role`). A identidade bancária fictícia é compartilhada, mas o token identifica o papel efetivo. `/api/v1/auth/me` devolve o papel autorizado; os guards do Angular só complementam a autorização do Spring. O Cliente vê seu dashboard financeiro; o Gerente recebe indicadores agregados de `GET /api/v1/admin/summary` e consulta de usuários/contas; o Administrador acrescenta alteração de status e auditoria. Os números do dashboard de gestão são calculados em SQL, não são dados fictícios montados no Angular.

@@ -65,7 +65,7 @@ Implementadas transferências agendadas com ciclo `agendado → concluido/recusa
 
 ## Atualização da Etapa 9
 
-Gestão administrativa, acesso administrativo exclusivo do guest e auditoria persistente implementadas. CI aprovado; validação no site publicado pendente. Consulte [Administração](ADMINISTRACAO.md) para escopo e testes.
+Gestão administrativa e auditoria persistente implementadas para o acesso demo, com permissões específicas por sessão na evolução posterior (cliente/gerente/admin). CI aprovado; validação no site publicado pendente. Consulte [Administração](ADMINISTRACAO.md) para escopo e testes.
 
 
 ### Entrega — Etapa 10 (aguarda validação funcional completa)
@@ -85,3 +85,10 @@ Gestão administrativa, acesso administrativo exclusivo do guest e auditoria per
 - **Pendente de validação:** CI completo do novo commit, backend publicado, Flyway V10 ativo e checklist real do site. Só então enviar a tag `v1.0.0` e concluir a Etapa 12.
 
 Não há nova migração após V10 nem dados bancários reais.
+
+## Ajuste de perfis e dashboards após release 1.0
+
+- Separação real por sessão dos perfis demonstrativos CLIENT, MANAGER e ADMIN, autorizada no servidor (Flyway V11).
+- Cliente com visão financeira; gerente com indicadores e consulta; administrador com governança, gestão e auditoria.
+- Navegação desktop/mobile e sidebar alinhadas ao papel; testes de acesso por URL, API e persistência da sessão.
+- Implementação entregue para CI e validação no ambiente publicado; não considerar concluída antes desses testes.

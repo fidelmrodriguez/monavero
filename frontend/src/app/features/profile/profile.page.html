@@ -18,6 +18,7 @@
         <p class="eyebrow">Usuário autenticado</p>
         <h2>{{ authStore.displayName() }}</h2>
         <p class="muted">{{ authStore.session()?.user?.email }}</p>
+        <span class="badge">Perfil: {{ authStore.viewRole() === 'admin' ? 'Administrador' : authStore.viewRole() === 'gerente' ? 'Gerente' : 'Cliente' }}</span>
         @if (authStore.isDemo()) {
           <p class="muted">O perfil público demonstrativo não permite alteração de dados ou gestão de sessões.</p>
         }

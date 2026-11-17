@@ -22,7 +22,7 @@
 | Notificações, cartões e perfil | Notificações persistidas, cartões virtuais fictícios, perfil pessoal e revogação de sessões |
 | Outros | Tema, responsividade e administração/auditoria do ambiente demo |
 
-Contas pessoais recebem R$ 1.000,00 de crédito fictício de abertura uma única vez, inclusive contas antigas sem movimentações. Não existe endpoint de recarga ou depósito. A aplicação usa contas de demonstração com agência e número próprios. Para explorar o produto, o login demonstrativo é `User / 1234`. O seletor de perfil modifica apenas a apresentação; não altera privilégios de acesso à API.
+Contas pessoais recebem R$ 1.000,00 de crédito fictício de abertura uma única vez, inclusive contas antigas sem movimentações. Não existe endpoint de recarga ou depósito. A aplicação usa contas de demonstração com agência e número próprios. Para explorar o produto, o login demonstrativo é `User / 1234`. O seletor de perfil da demonstração define o papel **por sessão** (CLIENT, MANAGER ou ADMIN), validado pela API e persistido com o token; não concede privilégios administrativos a contas pessoais.
 
 Agendamentos são processados pelo backend na data solicitada, sujeitos à disponibilidade do serviço; não há reserva antecipada do saldo. Quando a hospedagem gratuita está em repouso, agendamentos vencidos são processados na próxima ativação.
 
@@ -31,7 +31,7 @@ Agendamentos são processados pelo backend na data solicitada, sujeitos à dispo
 - **Frontend:** Angular 19, TypeScript, SCSS, Signals, RxJS, Reactive Forms, lazy loading e Jasmine/Karma.
 - **Publicação frontend:** Netlify, SPA estática com regras de redirecionamento para rotas internas e health check.
 - **Backend:** Java 25, Spring Boot 4.1.1, Spring Security, Spring Data JPA, Spring Modulith, Actuator e OpenAPI.
-- **Persistência:** PostgreSQL 18 no Neon, Hibernate e migrações Flyway V1–V10.
+- **Persistência:** PostgreSQL 18 no Neon, Hibernate e migrações Flyway V1–V11.
 - **Testes/CI:** GitHub Actions para Angular e Java; integração com PostgreSQL de teste via Testcontainers.
 - **Disponibilidade:** a API usa hospedagem sob demanda na Blitz; inicializações a frio podem causar espera antes do login.
 
@@ -97,7 +97,7 @@ npm test
 
 ### Administração e auditoria
 
-A Etapa 9 adiciona gestão de status de acesso, revogação de sessões e histórico administrativo persistente. Somente o guest User / 1234 acessa Administração e Auditoria pelo menu do topo, abaixo de Perfil. A tabela unifica usuários e contas vinculadas; contas pessoais não acessam essas ferramentas, independentemente do perfil. Consulte [Administração](docs/ADMINISTRACAO.md) para ativação, permissões e validação. Implementação entregue para CI e testes funcionais.
+A gestão de usuários e contas é visível no menu lateral do **gerente** e **administrador** da demonstração. O gerente consulta em modo somente leitura; o administrador pode alterar status e consultar a Auditoria. O cliente não vê nem acessa essas rotas. A API confirma o papel por sessão e impede chamadas diretas fora do perfil. Contas pessoais não recebem acesso à administração. Consulte [Administração](docs/ADMINISTRACAO.md) para as regras e testes.
 
 ### Notificações, cartões e perfil (Etapa 10)
 
@@ -106,3 +106,10 @@ Notificações e estados de leitura são persistidos pela API. A tela Cartões p
 ### Release 1.0.0
 
 A versão `1.0.0` está identificada no backend e no frontend. O workflow [Monavero 1.0 Release](.github/workflows/release.yml) executa novamente o build/testes Angular e a suíte Java com PostgreSQL antes de criar um GitHub Release **quando a tag `v1.0.0` for enviada**. O envio da tag é intencionalmente manual, após o CI da `main` e os testes do ambiente publicado. A criação do release no GitHub não implanta o serviço nem substitui a aprovação do site. Veja o checklist em [Testes](docs/TESTES.md).
+
+### Dashboards por papel
+
+- **Cliente:** saldo, entradas/saídas do extrato disponível, contas, ações rápidas, gráficos e movimentações.
+- **Gerente demonstrativo:** indicadores agregados de usuários e contas obtidos na API, lista recente e consulta de clientes sem alterações.
+- **Administrador demonstrativo:** indicadores de gestão, usuários e trilha de auditoria, com navegação para gerenciar acessos.
+- O perfil vem do servidor para cada sessão demo, não de um rótulo alterável no frontend. Migração Flyway V11 introduz `auth_sessions.demo_role`; sessões demo antigas mantêm o papel anterior até expirarem.

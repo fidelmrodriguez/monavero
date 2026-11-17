@@ -1,3 +1,5 @@
+import { signal } from '@angular/core';
+import { AuthStore } from '../../core/state/auth.store';
 import { provideHttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -47,4 +49,29 @@ describe('ShellComponent', () => {
     expect(text).not.toContain('Simulação de Pix');
     expect(text).not.toContain('Consulte saldos e movimente valores ilustrativos');
   });
+});
+
+describe('ShellComponent - navegação por perfil autenticado', () => {
+  for (const role of ['cliente', 'gerente', 'admin'] as const) {
+    it(`exibe os menus e o texto da sidebar corretos para ${role}`, () => {
+      TestBed.configureTestingModule({
+        imports: [ShellComponent],
+        providers: [provideRouter([]), provideHttpClient(), {
+          provide: AuthStore,
+          useValue: {
+            session: () => null, role: signal(role), viewRole: signal(role),
+            isDemo: signal(true), displayName: () => 'Teste', logout: () => {}
+          }
+        }]
+      });
+      const fixture = TestBed.createComponent(ShellComponent);
+      fixture.detectChanges();
+      const sidebar = fixture.nativeElement.querySelector('.sidebar') as HTMLElement;
+      const nav = sidebar.querySelector('nav')?.textContent ?? '';
+      expect(sidebar.textContent).toContain(role === 'admin' ? 'Administrador' : role === 'gerente' ? 'Gerente' : 'Cliente');
+      expect(nav.includes('Gestão de usuários')).toBe(role !== 'cliente');
+      expect(nav.includes('Auditoria')).toBe(role === 'admin');
+      fixture.destroy();
+    });
+  }
 });

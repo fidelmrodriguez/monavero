@@ -28,7 +28,9 @@ public class AuthController {
     }
 
     @PostMapping("/demo")
-    public AuthDtos.LoginResponse demo() { return auth.demo(); }
+    public AuthDtos.LoginResponse demo(@RequestBody(required = false) AuthDtos.DemoRequest request) {
+        return auth.demo(request == null ? null : request.role());
+    }
 
     @GetMapping("/me")
     public AuthDtos.Profile me(@AuthenticationPrincipal AuthenticatedUser user) {

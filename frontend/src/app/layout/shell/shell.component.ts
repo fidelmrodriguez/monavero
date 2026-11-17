@@ -35,6 +35,9 @@ export class ShellComponent {
   protected readonly menuOpen = signal(false);
   protected readonly notificationsOpen = signal(false);
   protected readonly userMenuOpen = signal(false);
+  protected readonly roleLabel = computed(() => ({cliente: 'Cliente', gerente: 'Gerente', admin: 'Administrador'}[this.authStore.viewRole()]));
+  protected readonly roleDescription = computed(() => ({cliente: 'Minha conta e operações', gerente: 'Acompanhamento de clientes', admin: 'Gestão e auditoria'}[this.authStore.viewRole()]));
+  protected readonly headerTitle = computed(() => ({cliente: 'Internet Banking', gerente: 'Painel do gerente', admin: 'Painel administrativo'}[this.authStore.viewRole()]));
   protected readonly recentNotifications = computed(() => this.notificationStore.notifications().slice(0, 5));
 
   constructor() {
@@ -84,12 +87,14 @@ export class ShellComponent {
     { label: 'Pagamentos', route: '/app/pagamentos', icon: '📅' },
     { label: 'Notificações', route: '/app/notificacoes', icon: '🔔' },
     { label: 'Cartões', route: '/app/cartoes', icon: '💳' },
-    { label: 'Perfil', route: '/app/perfil', icon: '⚙️' }
+    { label: 'Perfil', route: '/app/perfil', icon: '⚙️' },
+    { label: 'Gestão de usuários', route: '/app/administracao', icon: '👥', roles: ['gerente','admin'] },
+    { label: 'Auditoria', route: '/app/auditoria', icon: '🛡️', roles: ['admin'] }
   ];
 
   protected readonly visibleNavigation = computed(() => {
     const role = this.authStore.role();
-    return this.navigation.filter((item) => !item.roles || item.roles.includes(role));
+    return this.navigation.filter(item => (!item.roles || (this.authStore.isDemo() && item.roles.includes(role))));
   });
 
   protected toggleMenu(): void {

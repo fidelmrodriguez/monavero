@@ -54,7 +54,7 @@ O **Monavero** é um projeto de portfólio que demonstra a experiência de um ba
 
 - Layout responsivo, temas claro/escuro, formulários reativos e mensagens de validação acessíveis.
 - Pagamentos e notificações usam persistência própria. Auditoria administrativa é mantida pela API na Etapa 9.
-- A troca visual de perfil não altera permissões. O usuário demo compartilhado possui permissões específicas de administração/auditoria no backend; contas pessoais não recebem acesso a essas ferramentas pelo seletor.
+- O papel escolhido em `User / 1234` é gravado na sessão do backend e confirmado pelo token: CLIENT usa painel financeiro; MANAGER consulta indicadores, usuários e contas; ADMIN também pode alterar status e consultar auditoria. Contas pessoais não recebem funções administrativas pelo seletor.
 
 ## Limites e funcionalidades futuras
 
@@ -99,3 +99,10 @@ Consulte [a arquitetura](ARQUITETURA.md), [o roteiro de testes](TESTES.md) e [o 
 - Logs de requisições lentas ou com erro 5xx incluem método, status e duração, mas **não** registram tokens, payloads ou parâmetros de consulta.
 - O Netlify aplica headers de proteção contra framing, MIME sniffing e uso não necessário de recursos do navegador.
 - A versão 1.0.0 é de demonstração; os riscos e limitações permanecem descritos em [Segurança e autenticação](SEGURANCA_AUTENTICACAO.md).
+
+### Perfis e painéis (evolução do release 1.0)
+
+- Cliente: dashboard financeiro com indicadores calculados do extrato disponível, contas, atalhos e transações.
+- Gerente: dashboard de relacionamento com métricas agregadas reais e consulta de usuários/contas; sem alteração de status e sem auditoria.
+- Administrador: dashboard administrativo, gestão de acessos e acesso ao histórico de auditoria.
+- Os perfis demonstrativos compartilham a identidade bancária fictícia; os privilégios por sessão são validados pela API. A migração Flyway V11 mantém as sessões existentes sem `demo_role` com o perfil anterior até expirar.

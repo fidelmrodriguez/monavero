@@ -26,12 +26,13 @@ export class AdminPage {
   protected readonly selected = signal<AdminUser | null>(null);
   protected status: UserStatus = 'ACTIVE';
   protected reason = '';
+  protected readonly isAdmin = () => this.auth.role() === 'admin';
   protected readonly statusLabels = { ACTIVE: 'Ativo', BLOCKED: 'Bloqueado' };
 
   constructor() { this.load(); }
 
   protected editable(user: AdminUser): boolean {
-    return !user.demo && user.id !== this.auth.session()?.user.id;
+    return this.isAdmin() && !user.demo && user.id !== this.auth.session()?.user.id;
   }
 
   protected load(page = this.page()): void {
@@ -65,7 +66,7 @@ export class AdminPage {
 
   protected save(): void {
     const user = this.selected();
-    if (!user || this.saving() || this.reason.trim().length < 5 ||
+    if (!this.isAdmin() || !user || this.saving() || this.reason.trim().length < 5 ||
         user.status === this.status) return;
     this.saving.set(true);
     this.error.set('');

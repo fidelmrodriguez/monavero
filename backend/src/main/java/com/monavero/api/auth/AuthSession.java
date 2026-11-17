@@ -1,6 +1,7 @@
 package com.monavero.api.auth;
 
 import com.monavero.api.identity.AppUser;
+import com.monavero.api.identity.AccessRole;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -27,6 +28,10 @@ public class AuthSession {
     @Column(name = "expires_at", nullable = false)
     private OffsetDateTime expiresAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "demo_role", length = 16)
+    private AccessRole demoRole;
+
     @Column(name = "revoked_at")
     private OffsetDateTime revokedAt;
 
@@ -37,6 +42,15 @@ public class AuthSession {
         this.tokenHash = tokenHash;
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
+    }
+
+    public void setDemoRole(AccessRole role) {
+        if (!user.isDemo()) throw new IllegalStateException("Papel de demo em conta pessoal");
+        demoRole = role;
+    }
+
+    public AccessRole effectiveRole() {
+        return user.isDemo() && demoRole != null ? demoRole : user.getAccessRole();
     }
 
     public void revoke(OffsetDateTime at) { this.revokedAt = at; }

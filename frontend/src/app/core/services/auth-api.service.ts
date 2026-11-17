@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AuthProfile, AuthResponse } from '../models/auth.models';
+import { AuthProfile, AuthResponse, UserRole } from '../models/auth.models';
 import { MONAVERO_API_URL } from '../config/monavero-api';
 
 @Injectable({ providedIn: 'root' })
@@ -17,8 +17,9 @@ export class AuthApiService {
     return this.http.post<AuthResponse>(`${this.url}/register`, { name, email, password });
   }
 
-  demo(): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.url}/demo`, {});
+  demo(role: UserRole = 'cliente'): Observable<AuthResponse> {
+    const backendRole = { cliente: 'CLIENT', gerente: 'MANAGER', admin: 'ADMIN' }[role];
+    return this.http.post<AuthResponse>(`${this.url}/demo`, { role: backendRole });
   }
 
   me(): Observable<AuthProfile> {

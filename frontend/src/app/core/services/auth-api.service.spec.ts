@@ -26,4 +26,12 @@ describe('AuthApiService', () => {
     expect(req.request.headers.has('Authorization')).toBeFalse();
     req.flush({ accessToken: 'x', expiresAt: '2030-01-01T00:00:00Z', user: { id: 'x', name: 'x', email: 'x', role: 'CLIENT', demo: false } });
   });
+
+  it('envia o perfil demonstrativo para autorização do servidor', () => {
+    api.demo('gerente').subscribe();
+    const req = http.expectOne(`${MONAVERO_API_URL}/api/v1/auth/demo`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ role: 'MANAGER' });
+    req.flush({ accessToken: 'x', expiresAt: '2030-01-01T00:00:00Z', user: { id: 'demo', name: 'Demo', email: 'demo@monavero.invalid', role: 'MANAGER', demo: true } });
+  });
 });

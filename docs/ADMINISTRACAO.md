@@ -1,12 +1,18 @@
 # Administração e auditoria
 
-Ferramentas exclusivas da conta guest (User / 1234), identificada por is_demo
-na API. Nenhuma conta pessoal, mesmo com papel ADMIN ou MANAGER, pode acessar.
-O seletor Cliente / Gerente / Administrador no login escolhe a apresentação da
-demonstração; não promove contas pessoais nem exige alterar perfis depois de entrar.
+Ferramentas disponíveis exclusivamente no acesso demonstrativo `User / 1234`,
+com autorização por **papel da sessão** verificado pela API, sem promoção de contas pessoais.
+O cliente não acessa a gestão. O gerente consulta usuários, contas e indicadores em modo
+somente leitura. O administrador também pode alterar o status de acesso e consultar auditoria.
 
-Administração e Auditoria ficam no menu do usuário, abaixo de Perfil.
-Não aparecem na navegação lateral. As rotas e a API também verificam a restrição.
+**Menu:** Gestão de usuários aparece na sidebar e no menu superior para Gerente e
+Administrador; Auditoria aparece somente para Administrador. Os links são ocultados por
+perfil, mas a autorização é repetida no servidor; URLs diretas e requisições HTTP não
+contornam as permissões. O perfil vem da API na criação da sessão, e não de um rótulo
+visual editável. A migração V11 adiciona `auth_sessions.demo_role`.
+
+GET `/api/v1/admin/summary` fornece indicadores agregados de usuários pessoais,
+contas e auditoria (os totais não são simulados nem calculados apenas da página atual).
 
 ## Usuários e contas
 
@@ -26,19 +32,14 @@ Alterações exigem motivo, revogam sessões do usuário afetado e geram auditor
 A própria conta guest não pode ser alterada. Versões conflitantes retornam 409.
 Repetir uma alteração já aplicada não duplica eventos.
 GET /api/v1/audit/events?page=0 consulta os eventos. GET /api/v1/admin/accounts
-permanece disponível por compatibilidade, também exclusivo do guest.
+permanece disponível para gerente e administrador demo em modo consulta.
 Nenhuma variável MONAVERO_INITIAL_ADMIN_EMAIL é necessária.
 
 ## Testes após deploy
 
-1. Entrar com User / 1234 escolhendo cada tipo de usuário no login.
-2. Abrir o menu do topo: Perfil, Administração e Auditoria; conferir ausência dos dois últimos na lateral.
-3. Conferir a tabela única, usuários sem conta, contas com saldo zero e múltiplos vínculos do guest.
-4. Alterar uma conta de teste com motivo, conferir o evento na Auditoria e a persistência após F5.
-5. Entrar com conta pessoal: não deve ver os itens nem acessar /app/administracao ou /app/auditoria.
-   Repetir com conta pessoal marcada ADMIN ou MANAGER; chamadas diretas às APIs devem retornar 403.
-6. Bloquear/desbloquear uma conta de teste e conferir revogação de sessão e novo login.
-
-Os testes automatizados cobrem guest, negativas de contas pessoais, vínculos,
-ausência de conta, revogação, concorrência e retries. Backend requer Java 25,
-Maven e PostgreSQL de teste via Docker; frontend requer dependências npm e Chrome.
+1. Entrar com `User / 1234` como Cliente: sidebar e dashboard financeiros, sem Gestão de usuários e Auditoria; URLs e APIs de gestão retornam acesso negado.
+2. Entrar como Gerente: sidebar identifica "Gerente", dashboard de acompanhamento com indicadores reais, Gestão de usuários disponível somente para consulta; PATCH e Auditoria negados.
+3. Entrar como Administrador: sidebar identifica "Administrador", dashboard de governança, Gestão de usuários com edição e Auditoria disponível.
+4. Atualizar com F5 e confirmar que o papel não muda; sair e entrar com outro papel e confirmar mudança de permissões.
+5. Testar conta pessoal: sem gestão, mesmo que seu papel persistido seja MANAGER/ADMIN.
+6. Verificar CI e Flyway V11 na Blitz antes de considerar a alteração validada.

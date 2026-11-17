@@ -1,6 +1,7 @@
 package com.monavero.api.auth;
 
 import com.monavero.api.identity.AppUser;
+import com.monavero.api.identity.AccessRole;
 import com.monavero.api.identity.AppUserRepository;
 import com.monavero.api.identity.UserStatus;
 import java.nio.charset.StandardCharsets;
@@ -54,14 +55,15 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthDtos.LoginResponse demo() {
+    public AuthDtos.LoginResponse demo(AccessRole requestedRole) {
         if (!demoEnabled) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         AppUser demo = users.findByEmailIgnoreCase(DEMO_EMAIL)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE));
         if (!demo.isDemo() || demo.getStatus() != UserStatus.ACTIVE) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE);
         }
-        return tokens.issue(demo);
+        // Regras do servidor usam o perfil assinado na sessão, nunca o seletor visual do Angular.
+        return tokens.issue(demo, requestedRole == null ? AccessRole.ADMIN : requestedRole);
     }
 
     @Transactional

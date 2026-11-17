@@ -32,13 +32,10 @@ export class AuthStore implements OnDestroy {
   private readonly sessionState = signal<AuthSession | null>(this.restoreSession());
   readonly session = this.sessionState.asReadonly();
   readonly isAuthenticated = computed(() => Boolean(this.sessionState()?.accessToken));
-  /** Papel real retornado pelo backend. Nunca é modificado pela seleção do demo. */
+  /** Papel autorizado pelo backend para a sessão atual (inclusive demonstração). */
   readonly role = computed<UserRole>(() => this.sessionState()?.role ?? 'cliente');
-  /** Perfil visual do portfólio. Somente sessões marcadas como demo pela API podem simulá-lo. */
-  readonly viewRole = computed<UserRole>(() => {
-    const session = this.sessionState();
-    return session?.user.demo ? (this.safeDemoRole(session.demoViewRole) ?? this.role()) : this.role();
-  });
+  /** O rótulo visual usa a mesma permissão verificada no servidor. */
+  readonly viewRole = this.role;
   readonly displayName = computed(() => this.sessionState()?.displayName ?? 'User');
   readonly isDemo = computed(() => Boolean(this.sessionState()?.user.demo));
   readonly isLoading = signal(false);
@@ -68,11 +65,11 @@ export class AuthStore implements OnDestroy {
   }
 
   register(name: string, email: string, password: string): Observable<AuthSession | null> {
-    return this.handle(this.api.register(name, email, password), undefined, false);
+    return this.handle(this.api.register(name, email, password), false);
   }
 
   demo(viewRole: UserRole = 'cliente'): Observable<AuthSession | null> {
-    return this.handle(this.api.demo(), viewRole);
+    return this.handle(this.api.demo(viewRole));
   }
 
   /** Valida a sessão salva no servidor, incluindo expiração, revogação e papel atual. */
@@ -87,8 +84,7 @@ export class AuthStore implements OnDestroy {
         // Um logout em outra aba pode ocorrer enquanto /me ainda está em voo.
         if (this.sessionState()?.accessToken !== session.accessToken) return false;
         this.setSession({
-          ...session, user: profile, role: toRole(profile.role), displayName: profile.name,
-          demoViewRole: profile.demo && session.user.demo ? this.safeDemoRole(session.demoViewRole) : undefined
+          ...session, user: profile, role: toRole(profile.role), displayName: profile.name
         }, false);
         return true;
       }),
@@ -116,12 +112,11 @@ export class AuthStore implements OnDestroy {
     }
   }
 
-  private handle(request: Observable<AuthResponse>, demoViewRole?: UserRole, retryTransient = true): Observable<AuthSession | null> {
+  private handle(request: Observable<AuthResponse>, retryTransient = true): Observable<AuthSession | null> {
     this.isLoading.set(true);
     return (retryTransient ? this.readiness.recover(request) : request).pipe(
       map(response => ({
-        ...response, role: toRole(response.user.role), displayName: response.user.name,
-        demoViewRole: response.user.demo ? this.safeDemoRole(demoViewRole) : undefined
+        ...response, role: toRole(response.user.role), displayName: response.user.name
       })),
       tap(session => {
         this.setSession(session);
@@ -203,8 +198,7 @@ export class AuthStore implements OnDestroy {
     const session: AuthSession = {
       ...message.session,
       role: toRole(message.session.user.role),
-      displayName: message.session.user.name,
-      demoViewRole: message.session.user.demo ? this.safeDemoRole(message.session.demoViewRole) : undefined
+      displayName: message.session.user.name
     };
     this.setSession(session, false);
     // Login em outra aba atualiza também uma aba que estava na tela de login.
@@ -237,9 +231,6 @@ export class AuthStore implements OnDestroy {
       typeof session.expiresAt === 'string' && Date.parse(session.expiresAt) > Date.now();
   }
 
-  private safeDemoRole(role: unknown): UserRole | undefined {
-    return role === 'cliente' || role === 'gerente' || role === 'admin' ? role : undefined;
-  }
 
   private restoreSession(): AuthSession | null {
     if (!this.isBrowser) return null;
@@ -253,8 +244,7 @@ export class AuthStore implements OnDestroy {
         return {
           ...value,
           role: toRole(value.user.role),
-          displayName: value.user.name,
-          demoViewRole: value.user.demo ? this.safeDemoRole(value.demoViewRole) : undefined
+          displayName: value.user.name
         };
       }
     } catch { /* Sessão anterior inválida. */ }

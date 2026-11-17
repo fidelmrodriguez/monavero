@@ -1,7 +1,7 @@
 <section class="page">
   <header class="page-header">
-    <div><p class="eyebrow">Administração</p><h1>Usuários e contas</h1>
-      <p class="muted">Consulte contas, saldos e status de acesso em um só lugar.</p></div>
+    <div><p class="eyebrow">{{ isAdmin() ? 'Administração' : 'Gerência' }}</p><h1>{{ isAdmin() ? 'Gestão de usuários e contas' : 'Acompanhamento de clientes' }}</h1>
+      <p class="muted">{{ isAdmin() ? 'Consulte usuários, contas e altere acessos com auditoria.' : 'Consulte clientes, contas e status. Alterações de acesso são exclusivas do administrador.' }}</p></div>
     <button class="btn btn-secondary" (click)="load()" [disabled]="loading() || saving()">Atualizar</button>
   </header>
   @if (error()) { <p class="error-text" role="alert">{{ error() }}</p> }
@@ -32,7 +32,7 @@
     @if (loading()) { <p role="status">Carregando usuários...</p> }
     @else {
       <div class="table-wrap"><table>
-        <thead><tr><th>Usuário</th><th>Acesso</th><th>Contas vinculadas</th><th>Ação</th></tr></thead>
+        <thead><tr><th>Usuário</th><th>Acesso</th><th>Contas vinculadas</th><th>{{ isAdmin() ? 'Ação' : 'Permissão' }}</th></tr></thead>
         <tbody>
           @for (user of users(); track user.id) {
             <tr><td><strong>{{ user.name }}</strong><span class="user-email muted">{{ user.email }}</span></td>
@@ -47,7 +47,7 @@
                 } @empty { <span class="muted">Sem conta vinculada</span> }
               </td><td>
                 @if (editable(user)) { <button class="btn btn-secondary" [disabled]="saving()" (click)="edit(user)">Alterar acesso</button> }
-                @else { <span class="muted">{{ user.demo ? 'Conta demonstrativa' : 'Sua conta' }}</span> }
+                @else { <span class="muted">{{ !isAdmin() ? 'Somente leitura' : user.demo ? 'Conta demonstrativa' : 'Sua conta' }}</span> }
               </td></tr>
           }
         </tbody>

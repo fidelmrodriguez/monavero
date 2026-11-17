@@ -5,7 +5,7 @@ import { AuthStore } from './auth.store';
 import { AuthApiService } from '../services/auth-api.service';
 import { AuditStore } from './audit.store';
 import { NotificationStore } from './notification.store';
-import { AuthProfile, AuthResponse } from '../models/auth.models';
+import { AuthProfile, AuthResponse, UserRole } from '../models/auth.models';
 
 const STORAGE_KEY = 'monavero-auth-v2';
 const profile: AuthProfile = {
@@ -54,7 +54,9 @@ describe('AuthStore entre abas', () => {
       configurable: true, writable: true, value: FakeBroadcastChannel
     });
     api = jasmine.createSpyObj<AuthApiService>('AuthApiService', ['login', 'register', 'demo', 'me', 'logout']);
-    api.demo.and.returnValue(of(response));
+    api.demo.and.callFake((role: UserRole = 'cliente') => of({
+      ...response, user: { ...profile, role: role === 'admin' ? 'ADMIN' : role === 'gerente' ? 'MANAGER' : 'CLIENT' }
+    }));
     api.me.and.returnValue(of(profile));
     api.logout.and.returnValue(of(void 0));
     router = { url: '/login', navigateByUrl: jasmine.createSpy('navigateByUrl').and.resolveTo(true) };
@@ -109,24 +111,26 @@ describe('AuthStore entre abas', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/login');
   });
 
-  it('sincroniza e preserva o perfil visual admin entre abas e após validar /me', async () => {
+  it('sincroniza o papel autorizado de administrador entre abas e após /me', async () => {
     const first = newTab();
+    api.me.and.returnValue(of({ ...profile, role: 'ADMIN' }));
     first.demo('admin').subscribe();
+    expect(api.demo).toHaveBeenCalledWith('admin');
     expect(first.viewRole()).toBe('admin');
-    expect(first.role()).toBe('cliente'); // Papel real definido pela API.
-    expect(first.session()?.user.role).toBe('CLIENT');
+    expect(first.role()).toBe('admin');
+    expect(first.session()?.user.role).toBe('ADMIN');
 
     sessionStorage.removeItem(STORAGE_KEY);
     const second = newTab();
     await second.waitForTabSession();
     expect(second.viewRole()).toBe('admin');
-    expect(second.role()).toBe('cliente');
+    expect(second.role()).toBe('admin');
     second.validateSession().subscribe(accepted => expect(accepted).toBeTrue());
     expect(second.viewRole()).toBe('admin');
-    expect(second.role()).toBe('cliente');
+    expect(second.role()).toBe('admin');
   });
 
-  it('restaura a visualização de gerente depois de F5', () => {
+  it('restaura o papel do gerente confirmado pelo servidor depois de F5', () => {
     const first = newTab();
     first.demo('gerente').subscribe();
     expect(first.viewRole()).toBe('gerente');
@@ -134,18 +138,17 @@ describe('AuthStore entre abas', () => {
     // Um novo AuthStore simula o reload no mesmo sessionStorage.
     const reloaded = newTab();
     expect(reloaded.viewRole()).toBe('gerente');
-    expect(reloaded.role()).toBe('cliente');
-    expect(reloaded.session()?.user.role).toBe('CLIENT');
+    expect(reloaded.role()).toBe('gerente');
+    expect(reloaded.session()?.user.role).toBe('MANAGER');
   });
 
-  it('não permite usar o perfil visual em uma sessão pessoal da API', () => {
+  it('preserva o papel da API em uma sessão pessoal', () => {
     const first = newTab();
     const personal: AuthProfile = { ...profile, demo: false };
     api.login.and.returnValue(of({ ...response, user: personal }));
     first.login('pessoal@exemplo.com', 'senha-valida').subscribe();
     expect(first.role()).toBe('cliente');
     expect(first.viewRole()).toBe('cliente');
-    expect(first.session()?.demoViewRole).toBeUndefined();
   });
 
   it('não restaura a sessão depois de um logout durante validação pendente', () => {

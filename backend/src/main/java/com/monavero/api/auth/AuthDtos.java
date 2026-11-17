@@ -15,6 +15,8 @@ public final class AuthDtos {
         @NotBlank @Email @Size(max = 254) String email,
         @NotBlank @Size(min = 12, max = 72) String password) { }
 
+    public record DemoRequest(AccessRole role) { }
+
     public record LoginRequest(
         @NotBlank String email,
         @NotBlank String password) { }

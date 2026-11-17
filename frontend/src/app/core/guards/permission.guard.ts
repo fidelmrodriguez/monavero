@@ -10,8 +10,8 @@ export const permissionGuard: CanActivateFn = (route) => {
   const router = inject(Router);
   const allowedRoles = route.data['roles'] as UserRole[] | undefined;
 
-  // Administração e auditoria são exclusivas da sessão guest identificada pela API.
-  if (route.data['demoOnly'] ? authStore.isDemo() :
+  // A rota exige perfil do servidor e, nas ferramentas de gestão, sessão demo.
+  if ((!route.data['demoOnly'] || authStore.isDemo()) &&
       (!allowedRoles?.length || allowedRoles.includes(authStore.role()))) {
     return true;
   }

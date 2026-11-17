@@ -1,76 +1,147 @@
-<section class="page">
-  <header class="page-header">
-    <div>
-      <p class="eyebrow">Visão geral</p>
-      <h1>Olá, {{ authStore.displayName() }}.</h1>
-      <p class="muted">Consulte seus saldos e acompanhe suas movimentações em um só lugar.</p>
-    </div>
-    <a class="btn btn-primary" routerLink="/app/transferencias">Nova transferência</a>
-  </header>
-
-  <div class="grid grid-4">
-    @for (account of overview.accounts; track account.id) {
-      <article class="card compact metric-card">
-        <span class="metric-label">{{ account.label }}</span>
-        <strong>{{ account.balance | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
-        <small>Ag. {{ account.agency }} · Conta {{ account.number }}</small>
-      </article>
-    }
-  </div>
-
-  <div class="grid grid-2">
-    <article class="card">
-      <app-finance-chart eyebrow="Fluxo" title="Evolução financeira" [data]="overview.cashflow" variant="line" />
-    </article>
-    <article class="card">
-      <app-finance-chart eyebrow="Despesas" title="Gastos por categoria" [data]="overview.expensesByCategory" variant="bar" />
-    </article>
-  </div>
-
-  <article class="card">
-    <div class="section-title">
-      <div>
-        <p class="eyebrow">Últimas movimentações</p>
-        <h2>Extrato recente</h2>
+<section class="page role-dashboard" [class.manager-dashboard]="role() === 'gerente'" [class.admin-dashboard]="role() === 'admin'">
+  @if (!managerOrAdmin()) {
+    <header class="dashboard-hero client-hero">
+      <div class="hero-copy">
+        <p class="hero-overline">MINHA VISÃO FINANCEIRA</p>
+        <h1>Olá, {{ greetingName() }}!</h1>
+        <p>Seu dinheiro em perspectiva: contas, movimentações e próximos passos em um só lugar.</p>
+        <span class="hero-meta">🔒 Suas informações são exibidas apenas nesta sessão</span>
       </div>
-      <a class="btn btn-secondary" routerLink="/app/extrato">Ver extrato completo</a>
+      <a class="btn hero-button" routerLink="/app/transferencias">↗ Nova transferência</a>
+      <span class="hero-decoration" aria-hidden="true">✦</span>
+    </header>
+
+    <div class="overview-strip" aria-label="Resumo financeiro">
+      <article class="overview-tile">
+        <span class="tile-icon">◉</span><span class="tile-label">Saldo das contas</span>
+        <strong>{{ totalBalance | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
+        <small>{{ overview.accounts.length }} conta(s) vinculada(s)</small>
+      </article>
+      <article class="overview-tile">
+        <span class="tile-icon credit-icon">↙</span><span class="tile-label">Entradas no extrato</span>
+        <strong class="amount-positive">{{ credits | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
+        <small>Movimentações disponibilizadas pela API</small>
+      </article>
+      <article class="overview-tile">
+        <span class="tile-icon debit-icon">↗</span><span class="tile-label">Saídas no extrato</span>
+        <strong>{{ debits | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
+        <small>Movimentações disponibilizadas pela API</small>
+      </article>
+      <article class="overview-tile">
+        <span class="tile-icon pending-icon">◷</span><span class="tile-label">Operações pendentes</span>
+        <strong>{{ pending }}</strong>
+        <small>No extrato disponível</small>
+      </article>
     </div>
 
-    <div class="table-wrap">
-      <table class="dashboard-table">
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Descrição</th>
-            <th>Categoria</th>
-            <th>Status</th>
-            <th>Valor</th>
-          </tr>
-        </thead>
+    <div class="dashboard-section-heading"><div><p class="eyebrow">MINHAS CONTAS</p><h2>Contas vinculadas</h2></div><a routerLink="/app/extrato" class="soft-link">Consultar extrato →</a></div>
+    <div class="account-strip">
+      @for (account of overview.accounts; track account.id) {
+        <article class="account-tile">
+          <div class="account-top"><span class="account-glyph">▣</span><span class="account-type">{{ account.label }}</span></div>
+          <strong>{{ account.balance | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
+          <small>Ag. {{ account.agency }} · Conta {{ account.number }}</small>
+        </article>
+      } @empty {
+        <article class="card dashboard-empty">Nenhuma conta vinculada ao seu perfil.</article>
+      }
+    </div>
+
+    <div class="dashboard-section-heading"><div><p class="eyebrow">ACESSO RÁPIDO</p><h2>O que você deseja fazer?</h2></div></div>
+    <div class="shortcut-grid">
+      <a routerLink="/app/transferencias" class="shortcut-card"><span class="shortcut-icon">↔</span><strong>Transferir</strong><small>Enviar entre contas</small><span class="shortcut-arrow">↗</span></a>
+      <a routerLink="/app/pagamentos" class="shortcut-card"><span class="shortcut-icon">▤</span><strong>Pagar</strong><small>Boletos e convênios</small><span class="shortcut-arrow">↗</span></a>
+      <a routerLink="/app/agendamentos" class="shortcut-card"><span class="shortcut-icon">◷</span><strong>Agendar</strong><small>Planejar transferências</small><span class="shortcut-arrow">↗</span></a>
+      <a routerLink="/app/cartoes" class="shortcut-card"><span class="shortcut-icon">▣</span><strong>Cartões</strong><small>Gerenciar cartões virtuais</small><span class="shortcut-arrow">↗</span></a>
+    </div>
+
+    <div class="grid grid-2 dashboard-chart-grid">
+      <article class="card chart-panel"><app-finance-chart eyebrow="Fluxo" title="Evolução financeira" [data]="overview.cashflow" variant="line" /></article>
+      <article class="card chart-panel"><app-finance-chart eyebrow="Despesas" title="Gastos por categoria" [data]="overview.expensesByCategory" variant="bar" /></article>
+    </div>
+
+    <article class="card dashboard-records">
+      <div class="section-title"><div><p class="eyebrow">ÚLTIMAS MOVIMENTAÇÕES</p><h2>Extrato recente</h2></div><a class="btn btn-secondary" routerLink="/app/extrato">Ver extrato completo</a></div>
+      <div class="table-wrap"><table class="dashboard-table">
+        <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Status</th><th>Valor</th></tr></thead>
         <tbody>
           @for (transaction of overview.transactions.slice(0, 6); track transaction.id) {
             <tr>
               <td data-label="Data">{{ transaction.date | date:'dd/MM/yyyy HH:mm':'':'pt-BR' }}</td>
-              <td data-label="Descrição">
-                  <span>{{ transaction.description }}</span>
-                  @if (transaction.counterpartyName) {
-                    <small class="transaction-counterparty">
-                      {{ transaction.amount > 0 ? 'Recebido de' : 'Enviado para' }} {{ transaction.counterpartyName }}
-                      @if (transaction.counterpartyAccount) {
-                        · Ag. {{ transaction.counterpartyAgency }} · Conta {{ transaction.counterpartyAccount }}
-                      }
-                    </small>
-                  }
-                </td>
-              <td data-label="Categoria">{{ transaction.category }}</td>
-              <td data-label="Status">{{ transaction.status }}</td>
-              <td data-label="Valor" [class.amount-positive]="transaction.amount > 0" [class.amount-negative]="transaction.amount < 0">
-                {{ transaction.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+              <td data-label="Descrição"><strong>{{ transaction.description }}</strong>
+                @if (transaction.counterpartyName) {
+                  <small class="transaction-counterparty">{{ transaction.amount > 0 ? 'Recebido de' : 'Enviado para' }} {{ transaction.counterpartyName }}
+                    @if (transaction.counterpartyAccount) { · Ag. {{ transaction.counterpartyAgency }} · Conta {{ transaction.counterpartyAccount }} }
+                  </small>
+                }
               </td>
+              <td data-label="Categoria">{{ transaction.category }}</td><td data-label="Status"><span class="status-chip">{{ transaction.status }}</span></td>
+              <td data-label="Valor" [class.amount-positive]="transaction.amount > 0" [class.amount-negative]="transaction.amount < 0">{{ transaction.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td>
             </tr>
-          }
+          } @empty { <tr><td colspan="5" class="dashboard-empty">Nenhuma movimentação registrada.</td></tr> }
         </tbody>
-      </table>
+      </table></div>
+    </article>
+  } @else {
+    <header class="dashboard-hero" [class.admin-hero]="role() === 'admin'">
+      <div class="hero-copy">
+        <p class="hero-overline">{{ role() === 'admin' ? 'CENTRAL DE ADMINISTRAÇÃO' : 'CENTRAL DE RELACIONAMENTO' }}</p>
+        <h1>{{ role() === 'admin' ? 'Visão administrativa' : 'Visão do gerente' }}</h1>
+        <p>{{ role() === 'admin' ? 'Acompanhe usuários, acessos, contas e trilhas de auditoria do Monavero.' : 'Acompanhe os clientes e suas contas em uma visão consolidada, com acesso de consulta.' }}</p>
+        <span class="hero-meta">{{ role() === 'admin' ? '🛡 Ações administrativas são auditadas' : '◉ Acompanhamento sem permissão de alteração' }}</span>
+      </div>
+      <a class="btn hero-button" routerLink="/app/administracao">{{ role() === 'admin' ? 'Gerenciar usuários ↗' : 'Consultar clientes ↗' }}</a>
+      <span class="hero-decoration" aria-hidden="true">✦</span>
+    </header>
+
+    @if (managementLoading() && !summary()) {
+      <div class="card dashboard-empty" role="status">Carregando indicadores da gestão...</div>
+    } @else if (managementError()) {
+      <div class="card dashboard-empty" role="alert">Não foi possível consultar os indicadores. <button class="btn btn-secondary" type="button" (click)="loadManagement()">Tentar novamente</button></div>
+    }
+    @if (summary(); as metrics) {
+      <div class="overview-strip management-strip" aria-label="Indicadores de gestão">
+        <article class="overview-tile"><span class="tile-icon">♙</span><span class="tile-label">Usuários pessoais</span><strong>{{ metrics.totalUsers | number:'1.0-0':'pt-BR' }}</strong><small>Cadastros não demonstrativos</small></article>
+        <article class="overview-tile"><span class="tile-icon credit-icon">✓</span><span class="tile-label">Usuários ativos</span><strong>{{ metrics.activeUsers | number:'1.0-0':'pt-BR' }}</strong><small>Acessos habilitados</small></article>
+        <article class="overview-tile"><span class="tile-icon debit-icon">⊘</span><span class="tile-label">Acessos bloqueados</span><strong>{{ metrics.blockedUsers | number:'1.0-0':'pt-BR' }}</strong><small>Usuários pessoais bloqueados</small></article>
+        <article class="overview-tile"><span class="tile-icon pending-icon">▣</span><span class="tile-label">Contas ativas</span><strong>{{ metrics.activeAccounts | number:'1.0-0':'pt-BR' }}</strong><small>De {{ metrics.totalAccounts | number:'1.0-0':'pt-BR' }} contas cadastradas</small></article>
+      </div>
+    }
+    <div class="management-layout">
+      <article class="card management-list">
+        <div class="section-title"><div><p class="eyebrow">{{ role() === 'admin' ? 'CONTROLE DE ACESSO' : 'CARTEIRA DE CLIENTES' }}</p><h2>Usuários recentes</h2><p class="muted">Prévia dos cadastros consultados na API.</p></div><a class="btn btn-secondary" routerLink="/app/administracao">Ver todos</a></div>
+        <div class="table-wrap"><table class="dashboard-table"><thead><tr><th>Usuário</th><th>Perfil</th><th>Acesso</th><th>Contas</th></tr></thead><tbody>
+          @for (user of users(); track user.id) {
+            <tr><td><strong>{{ user.name }}</strong><small class="transaction-counterparty">{{ user.email }}</small></td>
+              <td>{{ user.role === 'ADMIN' ? 'Administrador' : user.role === 'MANAGER' ? 'Gerente' : 'Cliente' }}</td>
+              <td><span class="status-chip" [class.blocked]="user.status === 'BLOCKED'">{{ user.status === 'ACTIVE' ? 'Ativo' : 'Bloqueado' }}</span></td><td>{{ user.accounts.length }}</td></tr>
+          } @empty { <tr><td colspan="4" class="dashboard-empty">Sem usuários para mostrar nesta consulta.</td></tr> }
+        </tbody></table></div>
+      </article>
+      <aside class="management-aside">
+        @if (role() === 'admin') {
+          <article class="card focus-card"><span class="focus-icon">🛡</span><p class="eyebrow">GOVERNANÇA</p><h2>Auditoria e acessos</h2><p class="muted">Confira alterações registradas e controle os acessos dos usuários.</p>
+            <div class="focus-number">{{ summary()?.auditedChanges ?? '—' }} <small>alterações registradas</small></div>
+            <a routerLink="/app/auditoria" class="btn btn-primary">Abrir auditoria ↗</a>
+          </article>
+          <article class="card audit-preview"><p class="eyebrow">EVENTOS RECENTES</p>
+            @for (event of recentAudit(); track event.id) { <div class="audit-line"><span class="audit-dot"></span><div><strong>{{ event.action }}</strong><small>{{ event.occurredAt | date:'dd/MM/yyyy HH:mm':'':'pt-BR' }}</small></div></div> }
+            @empty { <p class="muted">Nenhuma alteração administrativa recente.</p> }
+          </article>
+        } @else {
+          <article class="card focus-card"><span class="focus-icon">👥</span><p class="eyebrow">RELACIONAMENTO</p><h2>Atendimento e acompanhamento</h2><p class="muted">Consulte os dados cadastrados e identifique contas que precisam de atenção. Modificações de acesso são exclusivas do administrador.</p>
+            <a routerLink="/app/administracao" class="btn btn-primary">Consultar clientes ↗</a>
+          </article>
+          <article class="card guidance-card"><p class="eyebrow">ÁREA DO GERENTE</p><h3>Seu acesso é de consulta</h3><p class="muted">Você pode consultar usuários, contas e status. Bloqueios, desbloqueios e auditoria são reservados ao administrador.</p></article>
+        }
+      </aside>
     </div>
-  </article>
+    <div class="dashboard-section-heading"><div><p class="eyebrow">NAVEGAÇÃO</p><h2>Atalhos do seu perfil</h2></div></div>
+    <div class="shortcut-grid management-shortcuts">
+      <a routerLink="/app/administracao" class="shortcut-card"><span class="shortcut-icon">👥</span><strong>Usuários e contas</strong><small>{{ role() === 'admin' ? 'Gerenciar acessos' : 'Consultar clientes' }}</small><span class="shortcut-arrow">↗</span></a>
+      @if (role() === 'admin') { <a routerLink="/app/auditoria" class="shortcut-card"><span class="shortcut-icon">▤</span><strong>Auditoria</strong><small>Histórico de alterações</small><span class="shortcut-arrow">↗</span></a> }
+      <a routerLink="/app/notificacoes" class="shortcut-card"><span class="shortcut-icon">♧</span><strong>Notificações</strong><small>Avisos da sua sessão</small><span class="shortcut-arrow">↗</span></a>
+      <a routerLink="/app/perfil" class="shortcut-card"><span class="shortcut-icon">⚙</span><strong>Meu perfil</strong><small>Informações da sessão</small><span class="shortcut-arrow">↗</span></a>
+    </div>
+  }
 </section>

@@ -15,11 +15,9 @@ export interface AuthResponse {
 }
 
 export interface AuthSession extends AuthResponse {
-  // Esta informação é apenas visual. O backend sempre verifica o token e o perfil.
+  // Espelha o papel verificado pelo backend para a sessão.
   role: UserRole;
   displayName: string;
-  /** Papel apenas para navegação de demonstração; não altera permissões na API. */
-  demoViewRole?: UserRole;
 }
 
 export function toRole(value: AuthProfile['role']): UserRole {

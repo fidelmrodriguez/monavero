@@ -41,12 +41,32 @@ describe('permissionGuard', () => {
     expect(result).toEqual(router.createUrlTree(['/app/dashboard']));
   });
 
-  it('permite a área administrativa ao guest sem trocar seu perfil visual', () => {
+  it('permite consulta gerencial somente ao guest com papel de gerente', () => {
+    const store = TestBed.inject(AuthStore) as unknown as AuthStoreMock;
+    spyOn(store, 'isDemo').and.returnValue(true);
+    spyOn(store, 'role').and.returnValue('gerente');
+    const route = new ActivatedRouteSnapshot();
+    route.data = { demoOnly: true, roles: ['gerente', 'admin'] };
+    const result = TestBed.runInInjectionContext(() => permissionGuard(route, {} as RouterStateSnapshot));
+    expect(result).toBeTrue();
+  });
+
+  it('impede cliente demo de acessar gestão mesmo por URL direta', () => {
     const store = TestBed.inject(AuthStore) as unknown as AuthStoreMock;
     spyOn(store, 'isDemo').and.returnValue(true);
     const route = new ActivatedRouteSnapshot();
-    route.data = { demoOnly: true };
+    route.data = { demoOnly: true, roles: ['gerente', 'admin'] };
     const result = TestBed.runInInjectionContext(() => permissionGuard(route, {} as RouterStateSnapshot));
-    expect(result).toBeTrue();
+    expect(result).toEqual(TestBed.inject(Router).createUrlTree(['/app/dashboard']));
+  });
+
+  it('impede gerente de acessar auditoria mesmo por URL direta', () => {
+    const store = TestBed.inject(AuthStore) as unknown as AuthStoreMock;
+    spyOn(store, 'isDemo').and.returnValue(true);
+    spyOn(store, 'role').and.returnValue('gerente');
+    const route = new ActivatedRouteSnapshot();
+    route.data = { demoOnly: true, roles: ['admin'] };
+    const result = TestBed.runInInjectionContext(() => permissionGuard(route, {} as RouterStateSnapshot));
+    expect(result).toEqual(TestBed.inject(Router).createUrlTree(['/app/dashboard']));
   });
 });
