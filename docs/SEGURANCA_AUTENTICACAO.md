@@ -1,36 +1,36 @@
 # Segurança e autenticação — Monavero
 
-## Modelo da Etapa 4
+## Modelo atual (candidato ao release 1.0.0)
 
-- Cadastro pessoal em `POST /api/v1/auth/register`: nome, e-mail e senha de 12–72 caracteres (máximo de 72 bytes UTF-8 por limite do BCrypt). O backend normaliza e-mail, verifica unicidade e atribui exclusivamente `CLIENT`.
-- Login em `/login`: verificação BCrypt e resposta genérica 401 para dados inexistentes ou senha incorreta.
-- Demo em `/demo`: conta especial criada no backend (sem senha reutilizável); acesso público para avaliação, com papel `CLIENT`, habilitado por padrão. Desabilitar em produção não demonstrativa com `MONAVERO_DEMO_ENABLED=false`.
-- Cada login recebe token Bearer opaco aleatório de 32 bytes e expiração em 12h. `auth_sessions` persiste apenas SHA-256, vencimento e revogação. A cada chamada autenticada o Spring Security valida sessão, usuário ativo e papel.
-- `GET /me` e `POST /logout` exigem token. O logout revoga a sessão no banco. Ao receber resposta de sessão inválida, o Angular remove a sessão local.
-- O login demonstrativo permite escolher Cliente, Gerente ou Administrador com o mesmo atalho `User` / `1234`, exclusivamente para **pré-visualizar as telas simuladas**. O papel real do demo na API permanece `CLIENT`, sem elevação de acesso. O seletor não participa do cadastro pessoal nem das credenciais enviadas ao backend. Guards do Angular protegem a experiência visual, mas não servem como autorização de API; endpoints REST devem verificar titularidade e papéis no Java.
+- Contas pessoais criadas em `POST /api/v1/auth/register` recebem exclusivamente a permissão `CLIENT`, nunca um papel fornecido pelo navegador. Senhas pessoais são protegidas com BCrypt.
+- O login usa sessões Bearer opacas de 32 bytes, com expiração em 12 horas. O PostgreSQL armazena o hash SHA-256 do token, não o segredo em claro. Logout e troca de senha revogam sessões no servidor.
+- API stateless com Spring Security, sem cookies de autenticação, com CORS restrito às origens configuradas em `MONAVERO_CORS_ALLOWED_ORIGINS`. A autenticação sozinha não autoriza acesso a registros de outro titular.
+- O acesso compartilhado `User / 1234` é uma **identidade pública demonstrativa**: seu papel real na API é `ADMIN` para exibir exclusivamente os recursos fictícios de administração e auditoria. Esses endpoints exigem ainda `principal.demo()`; uma conta pessoal com papel `ADMIN` não pode acessá-los. Não hospedar esse acesso aberto junto com informações reais.
+- O seletor visual do frontend não muda o papel devolvido pelo backend. A conta demo não altera nome/senha nem gerencia as sessões compartilhadas dos visitantes.
+- `sessionStorage` guarda o token apenas na aba; a sincronização com `BroadcastChannel` entre abas ativas não o persiste no `localStorage`. Scripts não confiáveis na origem ainda representam risco de XSS.
+- Os dados de contas, lançamentos, transferências, pagamentos, cartões e notificações são isolados pela identidade autenticada no backend, conforme os testes integrados.
 
-## Limitações assumidas e próximos controles
+## Controles adicionados no release 1.0.0
 
-- `sessionStorage` conserva o token apenas na aba atual. Para sincronizar abas abertas na mesma origem Angular, `BroadcastChannel` transmite a sessão apenas entre abas em execução; uma nova aba aguarda até 500 ms pela resposta e valida a sessão no backend antes de entrar em rotas protegidas. O logout é propagado apenas às abas que utilizam o mesmo token, sem prometer revogação global de dispositivos. **O token nunca é persistido em `localStorage` para essa sincronização.** Se não existir outra aba ativa ou suporte ao canal, a nova aba pede login. Scripts maliciosos na origem Angular ainda podem ler o token; CSP estrita, revisão de dependências e proteção contra XSS serão reforçadas na Etapa 11.
-- O endpoint demo é público: pode gerar sessões em massa. Limitação de taxa por origem/conta, limpeza de sessões expiradas, monitoramento de abuso e antifraude demonstrativo serão tratados antes de considerar o sistema preparado para tráfego não controlado.
-- Esta é uma aplicação **educacional/demonstrativa**, sem dinheiro real. Ainda não há recuperação de senha, MFA, verificação de e-mail, revogação global de sessões ou bloqueio progressivo de tentativas.
-- Os dados financeiros apresentados pelo Angular ainda são fictícios e não pertencem ao usuário cadastrado. Isolamento real por titularidade começa na Etapa 5.
-- Nunca versionar senhas reais, tokens ou credenciais. Manter Neon sob TLS, limitar logs de cabeçalhos Authorization e verificar o CORS da Blitz.
+- `RequestObservabilityFilter` gera um UUID novo em `X-Request-Id` por requisição e coloca o mesmo identificador no MDC para correlacionar logs; IDs enviados pelo cliente são ignorados.
+- Todos os endpoints `/api/**`, inclusive login e dados bancários, enviam `Cache-Control: no-store` e `Pragma: no-cache`.
+- Logs de requisições lentas (a partir de 5 s) ou respostas 5xx registram método, status e duração, sem incluir URL, query string, headers, corpo, token ou dados bancários.
+- O Actuator publica apenas `health` e `info`; `/actuator/health` não expõe detalhes do banco. O Netlify envia headers conservadores de segurança do navegador.
+- CI do backend executa testes de autorização, isolamento, fluxo integrado de sessão/cartão/notificação e filtros HTTP usando PostgreSQL em Testcontainers. CI do frontend executa TypeScript, build e testes Chrome Headless.
 
-## Validar na publicação
+## Limites de segurança conhecidos
 
-1. Confirmar migrations `V1` e `V2`, `Backend Java CI` e `Frontend Angular CI` aprovados.
-2. Cadastro → logout → login com mesma conta → F5 mantendo a sessão.
-3. Logout invalida a sessão no servidor; token antigo deve retornar 401 em `/me`.
-4. Senha incorreta retorna 401; cadastro com e-mail repetido retorna 409.
-5. Atalho `User`/`1234` deve exibir Cliente, Gerente e Administrador no seletor visual, sem elevar o papel `CLIENT` na API nem permitir cadastro público de administradores.
-6. Selecionar Administrador no demo → navegar em Administração/Auditoria → atualizar (F5) e abrir outra aba: a visualização persiste, mas `GET /me` deve continuar retornando `CLIENT`.
-7. Usar credenciais pessoais com o seletor em Administrador: o backend deve continuar determinando o papel real, sem qualquer elevação.
+**Monavero é um sistema de demonstração, não uma plataforma bancária adequada a dados ou dinheiro reais.** Não há MFA, recuperação de senha, verificação de e-mail, rate limit distribuído por IP/conta, WAF, prevenção de abuso do login demo, limpeza periódica de sessões expiradas nem CSP estrita específica para todos os scripts do Angular. A hospedagem gratuita também não garante continuidade dos workers de agendamento. Evitar afirmar proteção contra ataques para a qual não existe implementação.
 
-## Verificação de sincronização entre abas
+Nunca versionar segredos ou usar credenciais reais em capturas de tela, logs, tickets ou commits. Para desabilitar o acesso demo compartilhado, configurar `MONAVERO_DEMO_ENABLED=false` e revisar as funcionalidades que dependem dessa identidade pública.
 
-1. Entrar no demo na aba A, abrir a mesma origem do Monavero na aba B e confirmar que ambas entram sem repetir o login.
-2. Atualizar a aba B (F5) e confirmar que a sessão continua válida.
-3. Sair na aba A; a aba B deve retornar à tela de login sem aceitar o token revogado.
-4. Se o usuário entrar novamente, confirmar que as abas abertas recebem a nova sessão.
-5. O teste automatizado `AuthStore entre abas` cobre troca de sessão, logout e resposta tardia de `/me`.
+## Checklist mínimo no ambiente publicado
+
+- Cadastro pessoal, logout, login e F5; tentativa com token revogado retorna 401.
+- Dois usuários distintos não acessam dados financeiros, notificações ou cartões um do outro.
+- Perfil pessoal permite trocar nome e senha; sessão antiga deixa de funcionar após troca de senha.
+- Administração e auditoria acessíveis somente na identidade demo; negar acesso em uma conta pessoal.
+- Verificar `X-Request-Id` em chamadas HTTP e `Cache-Control: no-store` nos endpoints da API.
+- Confirmar os dois workflows verdes e a versão Flyway V10 em produção antes da tag `v1.0.0`.
+
+Os testes detalhados estão em [Testes](TESTES.md) e o estado real em [Roadmap](ROADMAP.md).

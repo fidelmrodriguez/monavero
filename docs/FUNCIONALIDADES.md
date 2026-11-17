@@ -54,7 +54,7 @@ O **Monavero** é um projeto de portfólio que demonstra a experiência de um ba
 
 - Layout responsivo, temas claro/escuro, formulários reativos e mensagens de validação acessíveis.
 - Pagamentos e notificações usam persistência própria. Auditoria administrativa é mantida pela API na Etapa 9.
-- Perfis visuais de gerente e administrador no modo demonstração **não** concedem permissões administrativas reais.
+- A troca visual de perfil não altera permissões. O usuário demo compartilhado possui permissões específicas de administração/auditoria no backend; contas pessoais não recebem acesso a essas ferramentas pelo seletor.
 
 ## Limites e funcionalidades futuras
 
@@ -91,3 +91,11 @@ Consulte [a arquitetura](ARQUITETURA.md), [o roteiro de testes](TESTES.md) e [o 
 - Cartões virtuais demonstrativos com apelido, quatro dígitos inventados e estados ativo, bloqueado e cancelado. Não há número bancário real, CVV, compra ou limite de crédito.
 - Perfil pessoal permite mudar nome de exibição, senha (com revogação de sessões) e encerrar outras sessões. O guest compartilhado não pode alterar dados pessoais nem controlar as sessões de outros visitantes.
 - Flyway V10, controles de acesso e testes de integração; o status de validação final depende dos pipelines e testes publicados.
+
+### Segurança e operação — release 1.0.0
+
+- A API atribui um `X-Request-Id` novo a cada requisição, útil para correlacionar erros nos logs do backend; o ID fornecido pelo cliente não é reutilizado.
+- Endpoints `/api/**` usam `Cache-Control: no-store`, incluindo respostas de autenticação e informações bancárias.
+- Logs de requisições lentas ou com erro 5xx incluem método, status e duração, mas **não** registram tokens, payloads ou parâmetros de consulta.
+- O Netlify aplica headers de proteção contra framing, MIME sniffing e uso não necessário de recursos do navegador.
+- A versão 1.0.0 é de demonstração; os riscos e limitações permanecem descritos em [Segurança e autenticação](SEGURANCA_AUTENTICACAO.md).

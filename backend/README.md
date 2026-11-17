@@ -4,7 +4,7 @@ Backend transacional de um banco digital **demonstrativo**. Não movimenta moeda
 
 ## Stack
 
-Java 25, Spring Boot 4.1.1, Spring Security e BCrypt, tokens opacos com sessão revogável, Spring Data JPA/Hibernate, PostgreSQL 18 (Neon), Flyway V1–V8, Spring Modulith, MockMvc e Testcontainers.
+Java 25, Spring Boot 4.1.1, Spring Security e BCrypt, tokens opacos com sessão revogável, Spring Data JPA/Hibernate, PostgreSQL 18 (Neon), Flyway V1–V10, Spring Modulith, MockMvc e Testcontainers.
 
 ## Funcionalidades
 
@@ -39,4 +39,12 @@ mvn -B clean verify
 mvn spring-boot:run
 ```
 
-Os testes integrados usam PostgreSQL 18 em Testcontainers; Docker e JDK 25 são necessários para executá-los. Hibernate `ddl-auto=validate`, Flyway `clean-disabled=true`. Migrações V1–V7 existentes não foram editadas; V8 cria `bank_payments` e vincula cada débito à movimentação persistente no extrato.
+Os testes integrados usam PostgreSQL 18 em Testcontainers; Docker e JDK 25 são necessários para executá-los. Hibernate `ddl-auto=validate`, Flyway `clean-disabled=true`. Migrações V1–V10 existentes não são editadas pelo release 1.0.0. A V8 registra pagamentos, a V9 administração/auditoria e a V10 notificações/cartões demonstrativos.
+
+## Operação do release 1.0.0
+
+- `GET /actuator/health` continua público com detalhes internos ocultos. Endpoints operacionais adicionais não são expostos na internet.
+- Respostas em `/api/**` enviam `Cache-Control: no-store` e cada requisição recebe `X-Request-Id`. Em erros 5xx ou requisições lentas, consulte o ID nos logs sem registrar corpos, senhas ou tokens.
+- `logging.pattern.level` inclui o identificador de correlação nos logs emitidos durante a requisição.
+- Executar `mvn -B -ntp clean verify` com JDK 25 e Docker antes de publicar. O workflow de tag `v1.0.0` também exige a aprovação do Angular.
+- O serviço continua estritamente demonstrativo; sem promessa de alta disponibilidade na hospedagem gratuita, sem tratamento de transações financeiras reais.

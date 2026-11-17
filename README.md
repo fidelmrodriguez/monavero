@@ -19,7 +19,7 @@
 | Extrato | Lançamentos persistentes, pesquisa e filtros |
 | Transferências | Operações imediatas e agendadas entre contas Monavero, inclusive titulares distintos; débito/crédito atômicos, cancelamento antes da execução e idempotência |
 | Pagamentos | Pagamentos demonstrativos imediatos e agendados, com débito, extrato, cancelamento e persistência Flyway V8 |
-| Etapa 10 | Notificações persistidas, cartões virtuais fictícios, perfil pessoal e revogação de sessões (CI e validação publicados pendentes) |
+| Notificações, cartões e perfil | Notificações persistidas, cartões virtuais fictícios, perfil pessoal e revogação de sessões |
 | Outros | Tema, responsividade e administração/auditoria do ambiente demo |
 
 Contas pessoais recebem R$ 1.000,00 de crédito fictício de abertura uma única vez, inclusive contas antigas sem movimentações. Não existe endpoint de recarga ou depósito. A aplicação usa contas de demonstração com agência e número próprios. Para explorar o produto, o login demonstrativo é `User / 1234`. O seletor de perfil modifica apenas a apresentação; não altera privilégios de acesso à API.
@@ -46,7 +46,7 @@ monavero/
 ├── frontend/             # Interface Angular, formulários, serviços e testes
 ├── backend/              # API REST, regras de negócio, migrações e testes
 ├── docs/                 # Arquitetura, decisões, escopo e procedimentos
-├── .github/workflows/    # Pipelines de frontend e backend
+├── .github/workflows/    # CI e publicação de release por tag
 └── netlify.toml          # Publicação estática no Netlify
 ```
 
@@ -85,7 +85,7 @@ npm test
 - [Deploy frontend](docs/DEPLOY_NETLIFY.md) e [deploy backend](docs/DEPLOY_BACKEND.md).
 - [Roadmap](docs/ROADMAP.md): entregas planejadas e estado de validação.
 
-**Status:** Etapas 0–7 validadas; Etapa 8 com fluxos principais validados; Etapa 9 com CI aprovado e testes no site pendentes; Etapa 10 implementada no código, aguardando CI e validação publicada.
+**Status do release 1.0.0:** código preparado para validação. Os pipelines, a publicação na Blitz/Netlify e o roteiro funcional de aceitação precisam estar aprovados no commit final antes da criação da tag `v1.0.0`. As etapas 9 e 10 ainda exigem confirmação dos testes publicados.
 
 
 ### Interface e confiabilidade
@@ -102,3 +102,7 @@ A Etapa 9 adiciona gestão de status de acesso, revogação de sessões e histó
 ### Notificações, cartões e perfil (Etapa 10)
 
 Notificações e estados de leitura são persistidos pela API. A tela Cartões permite criar e gerenciar até três cartões virtuais fictícios sem PAN/CVV/compra real. O perfil pessoal permite atualizar nome, alterar senha (revogando todas as sessões) e encerrar outros acessos. A identidade demonstrativa compartilhada não permite alterar perfil ou gerir sessões. A documentação funcional e o status de validação ficam em [Funcionalidades](docs/FUNCIONALIDADES.md) e [Roadmap](docs/ROADMAP.md).
+
+### Release 1.0.0
+
+A versão `1.0.0` está identificada no backend e no frontend. O workflow [Monavero 1.0 Release](.github/workflows/release.yml) executa novamente o build/testes Angular e a suíte Java com PostgreSQL antes de criar um GitHub Release **quando a tag `v1.0.0` for enviada**. O envio da tag é intencionalmente manual, após o CI da `main` e os testes do ambiente publicado. A criação do release no GitHub não implanta o serviço nem substitui a aprovação do site. Veja o checklist em [Testes](docs/TESTES.md).

@@ -2,7 +2,7 @@
 
 O Monavero evolui de um frontend Angular demonstrativo para um sistema full stack de simulação bancária. **Código entregue** não é o mesmo que **etapa validada**: a validação requer CI e, quando previsto, verificação no ambiente cloud.
 
-| Etapa | Entrega | Situação na entrega da Etapa 10 |
+| Etapa | Entrega | Situação do candidato ao release 1.0.0 |
 | --- | --- | --- |
 | 0 | Frontend Angular inicial e publicação GitHub/Netlify | **Validada** — frontend publicado e navegação confirmada |
 | 1 | Estrutura limpa, documentação por camada, CI e testes Angular | **Validada** — Frontend Angular CI #3 aprovado no GitHub |
@@ -14,9 +14,9 @@ O Monavero evolui de um frontend Angular demonstrativo para um sistema full stac
 | 7 | Agendamento seguro de transferências e remoção da integração externa legada | **Validada** — CI 2/2 verde, execução, cancelamento, saldo insuficiente, persistência e isolamento confirmados |
 | 8 | Pagamentos demonstrativos imediatos e agendados, extrato e cancelamento | **Fluxos principais validados** |
 | 9 | Administração, autorização e auditoria de operações | **Implementada; CI aprovado; validação no site pendente** |
-| 10 | Notificações, cartões demonstrativos e perfil | **Implementada no código; CI e validação publicados pendentes** |
-| 11 | Testes integrados, segurança e observabilidade | Planejada |
-| 12 | Revisão, documentação final, publicação e release 1.0 | Planejada |
+| 10 | Notificações, cartões demonstrativos e perfil | **Implementada; CI informado como aprovado; revisão funcional do site pendente** |
+| 11 | Testes integrados, segurança e observabilidade | **Implementada em código; revalidação do CI pendente** |
+| 12 | Revisão, documentação final, publicação e release 1.0 | **Candidato 1.0.0 preparado; publicação depende da aceitação e da tag** |
 
 ## Critérios de conclusão
 
@@ -68,10 +68,20 @@ Implementadas transferências agendadas com ciclo `agendado → concluido/recusa
 Gestão administrativa, acesso administrativo exclusivo do guest e auditoria persistente implementadas. CI aprovado; validação no site publicado pendente. Consulte [Administração](ADMINISTRACAO.md) para escopo e testes.
 
 
-### Entrega — Etapa 10 (aguarda validação)
+### Entrega — Etapa 10 (aguarda validação funcional completa)
 
 - Central de notificações persistentes por titular, marcadores de leitura e avisos de operações confirmadas sem fixtures locais.
 - Cartões virtuais estritamente fictícios com criação, bloqueio, desbloqueio, cancelamento e limite de três não cancelados por conta.
 - Perfil pessoal com atualização de nome, alteração de senha com revogação de sessões e encerramento seletivo de outras sessões.
 - Perfil demo compartilhado impede alterações de dados ou gestão de sessões.
-- Flyway V10 e testes da API/UI adicionados; **não marcar como validada** antes de CI, Flyway em nuvem e testes de site.
+- Flyway V10 e testes da API/UI adicionados. CI Angular aprovado segundo o retorno de validação; confirmar também o deploy do backend, a migração no ambiente remoto e os testes funcionais.
+
+### Etapas 11 e 12 — candidato ao release
+
+- Proteção de respostas da API contra cache, ID de correlação por requisição e logs reduzidos de erros/latência sem registrar credenciais ou corpo HTTP.
+- Headers básicos de proteção no Netlify, preservando o deploy estático Angular.
+- Testes unitários do filtro HTTP e teste integrado que valida persistência entre logins e isolamento dos dados de cartões/notificações.
+- Versão `1.0.0` nos dois módulos; workflow para publicar o release no GitHub **somente após** os testes automatizados dessa tag serem aprovados.
+- **Pendente de validação:** CI completo do novo commit, backend publicado, Flyway V10 ativo e checklist real do site. Só então enviar a tag `v1.0.0` e concluir a Etapa 12.
+
+Não há nova migração após V10 nem dados bancários reais.

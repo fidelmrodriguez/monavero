@@ -48,3 +48,7 @@ O endpoint de readiness é anônimo e não deve transmitir tokens ou senhas.
   investigue `ApiReadinessService` no navegador.
 - A existência do proxy não garante o despertar automático se a hospedagem
   bloquear acessos programáticos. Não tratar essa limitação como erro de login.
+
+## Proteções de headers no release 1.0.0
+
+O `netlify.toml` define `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` e restringe câmera, microfone e geolocalização com `Permissions-Policy`. O Angular continua uma SPA estática; essas alterações não interferem nas regras de fallback nem no proxy de readiness.

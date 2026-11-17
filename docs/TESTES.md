@@ -60,9 +60,9 @@ Os testes cobrem identificação da API, health check, geração de OpenAPI, COR
 
 A Etapa 1 foi **validada** após a publicação no Netlify e a aprovação do workflow `Frontend Angular CI #3`, conforme o resultado enviado em 27/10/2026.
 
-## Próximos testes
+## Testes contínuos
 
-As etapas posteriores acrescentarão testes de domínio, autorização, PostgreSQL com Testcontainers, concorrência, idempotência e consistência transacional, com bancos de teste isolados de ambientes de produção.
+Os testes automatizados cobrem autenticação, permissões, PostgreSQL com Testcontainers, operações transacionais, concorrência, idempotência, notificações, cartões e perfil; novos fluxos devem receber testes de regressão.
 
 ## Testes PostgreSQL da Etapa 3
 
@@ -242,3 +242,25 @@ agendamentos e pagamentos. O frontend publicado reside em `frontend/`.
 8. Confirmar que o log não expõe senha, token, beneficiário ou referência; nunca alegar que um boleto ou convênio bancário foi liquidado.
 
 **Backend CI:** `PaymentIntegrationTest` verifica V8, autenticação, titularidade, débito único, reenvio idempotente, cancelamento, execução no vencimento, recusa sem saldo e isolamento. **Frontend CI:** testes do serviço HTTP, formulário, máscara monetária e estados de consulta. A entrega não deve ser considerada validada antes dos dois workflows verdes e teste no deploy.
+
+
+## Aceitação das Etapas 11 e 12 — versão 1.0.0
+
+1. Após aplicar o commit, aguardar `Frontend Angular CI` e `Backend Java CI` **verdes no mesmo commit**. Os testes não foram executados no ambiente que gerou a entrega.
+2. Confirmar na Blitz o deploy do commit atual, `GET /actuator/health` com `UP`, e Flyway V10 aplicado no Neon. Não modificar migrações antigas.
+3. Fazer cadastro e login de duas contas pessoais. Conferir que saldos, extratos, pagamentos, agendamentos, cartões e notificações de uma não são visíveis para a outra.
+4. Criar cartão fictício, bloquear/desbloquear, cancelar, recarregar a página. Fazer transferência/pagamento, abrir o sino e verificar que o indicador de não lidas desaparece, preservando o histórico ao atualizar.
+5. Atualizar nome, sair e entrar novamente; trocar senha, conferir que as sessões antigas foram revogadas e que a senha antiga falha. A conta demo não pode alterar o próprio perfil compartilhado.
+6. No login demo, verificar Administração e Auditoria; com conta pessoal, confirmar negação de acesso. Repetir os fluxos principais das etapas 5–9.
+7. Conferir os headers `X-Request-Id` e `Cache-Control: no-store` em uma chamada `/api/v1/*` no DevTools; não expor informações privadas em respostas de erro nem no console. O site Netlify deve enviar `X-Frame-Options: DENY`.
+8. Em janela mobile/desktop, recarregar rotas internas, alternar tema e validar o proxy `/api/monavero-readiness` (JSON, não HTML). Confirmar ausência de erros no console após navegação.
+9. **Somente após essa revisão manual**, criar e enviar a tag `v1.0.0` apontando para o commit aprovado. O workflow `Monavero 1.0 Release` roda os dois testes e publica o GitHub Release se ambos passarem. Isso não substitui o deploy Netlify/Blitz.
+
+Comandos para publicação da tag, na raiz do repositório (apenas após a aceitação):
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Se o CI ou qualquer teste funcional falhar, corrigir antes de criar a tag; não declarar o release validado apenas pela presença do código.

@@ -29,6 +29,9 @@ server:
     include-message: never
     include-binding-errors: never
     include-stacktrace: never
+logging:
+  pattern:
+    level: "%5p [requestId:%X{requestId:-}]"
 management:
   endpoints:
     web:
