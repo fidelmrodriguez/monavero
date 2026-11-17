@@ -27,7 +27,7 @@ describe('PaymentsPage', () => {
     expect(html.textContent).toContain('Novo pagamento');
     expect(html.textContent).toContain('Histórico de pagamentos');
     expect(html.querySelector('#boleto-code')).not.toBeNull();
-    expect(html.textContent).not.toContain('Teste E8');
+    expect(html.textContent).not.toContain('[Monavero]');
   });
 
   it('não envia formulário inválido e exige data para agendar', () => {
@@ -61,7 +61,7 @@ describe('PaymentsPage', () => {
     expect(payments.create).toHaveBeenCalled();
     expect(payments.create.calls.mostRecent().args[0].amount).toBe(25.35);
     expect(fixture.nativeElement.textContent).toContain('Pagamento concluído');
-    expect(fixture.nativeElement.textContent).not.toContain('Teste E8');
+    expect(fixture.nativeElement.textContent).not.toContain('[Monavero]');
   });
 
   it('consulta o boleto e exige revisão antes de enviar', () => {

@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { MONAVERO_API_URL } from '../config/monavero-api';
 import { ApiReadinessService } from './api-readiness.service';
-import { maskedAccount, testLog } from '../utils/test-diagnostics';
+import { maskedAccount, diagnosticLog } from '../utils/diagnostics';
 
 export interface ScheduledTransferRequest {
   originAccountId: string;
@@ -39,7 +39,7 @@ export class ScheduledTransferService {
   list(): Observable<ScheduledTransfer[]> {
     return this.readiness.recover(this.http.get<ScheduledTransfer[]>(this.url)).pipe(
       tap(items => {
-        testLog('7', 'Lista de agendamentos recebida da API', {
+        diagnosticLog('scheduling', 'Lista de agendamentos recebida da API', {
           total: items.length,
           agendados: items.filter(item => item.status === 'agendado').length,
           concluidos: items.filter(item => item.status === 'concluido').length,
@@ -49,7 +49,7 @@ export class ScheduledTransferService {
         // A Blitz executa no servidor. Após o vencimento, "Atualizar" ou F5
         // consulta o estado persistido e registra aqui a confirmação.
         for (const item of items.slice(0, 10)) {
-          testLog('7', 'Estado do agendamento na API', {
+          diagnosticLog('scheduling', 'Estado do agendamento na API', {
             referencia: item.id.slice(0, 8),
             status: item.status,
             valor: item.amount,
@@ -65,7 +65,7 @@ export class ScheduledTransferService {
 
   create(request: ScheduledTransferRequest): Observable<ScheduledTransfer> {
     return this.readiness.recover(this.http.post<ScheduledTransfer>(this.url, request)).pipe(
-      tap(item => testLog('7', 'Agendamento confirmado pela API', {
+      tap(item => diagnosticLog('scheduling', 'Agendamento confirmado pela API', {
         referencia: item.id?.slice(0, 8) ?? 'ausente',
         status: item.status,
         valor: item.amount,
@@ -77,7 +77,7 @@ export class ScheduledTransferService {
 
   cancel(id: string): Observable<ScheduledTransfer> {
     return this.readiness.recover(this.http.delete<ScheduledTransfer>(`${this.url}/${encodeURIComponent(id)}`)).pipe(
-      tap(item => testLog('7', 'Cancelamento confirmado pela API', {
+      tap(item => diagnosticLog('scheduling', 'Cancelamento confirmado pela API', {
         referencia: item.id?.slice(0, 8) ?? 'ausente',
         status: item.status,
         cancelado: item.status === 'cancelado',

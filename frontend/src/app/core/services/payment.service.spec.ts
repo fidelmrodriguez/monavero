@@ -49,7 +49,7 @@ describe('PaymentService', () => {
       processedAt: '2026-11-03T12:00:00Z', status: 'concluido', failureReason: null
     }]);
     const events = JSON.stringify(log.calls.allArgs());
-    expect(events).toContain('[Monavero][Teste E8] Estado do pagamento na API');
+    expect(events).toContain('[Monavero][payments] Estado do pagamento na API');
     expect(events).not.toContain('BENEFICIARIO PRIVADO');
     expect(events).not.toContain('REFPRIVADA123');
     expect(events).not.toContain('DESCRICAO PRIVADA');

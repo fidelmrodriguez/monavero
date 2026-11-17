@@ -75,7 +75,7 @@ class TransferIntegrationTest extends PostgresIntegrationTest {
         BigDecimal beforeSource = balance(source);
         BigDecimal beforeDestination = balance(destination);
         String key = UUID.randomUUID().toString();
-        String payload = request(source, agency, number, "25.37", key, "Teste da etapa seis");
+        String payload = request(source, agency, number, "25.37", key, "Transferência de integração");
 
         String first = mvc.perform(post("/api/v1/banking/transfers")
                 .header("Authorization", "Bearer " + token)
@@ -97,7 +97,7 @@ class TransferIntegrationTest extends PostgresIntegrationTest {
         assertThat(balance(source)).isEqualByComparingTo(beforeSource.subtract(new BigDecimal("25.37")));
         mvc.perform(post("/api/v1/banking/transfers").header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(request(source, agency, number, "25.38", key, "Teste da etapa seis")))
+                .content(request(source, agency, number, "25.38", key, "Transferência de integração")))
             .andExpect(status().isConflict());
         String after = overview(token);
         assertThat((String) JsonPath.read(after, "$.transactions[0].type")).isEqualTo("transferencia");

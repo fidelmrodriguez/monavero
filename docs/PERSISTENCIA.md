@@ -14,6 +14,9 @@ O Monavero utiliza **PostgreSQL 18 no Neon**, gerenciado por migrações **Flywa
 | V6 | `bank_accounts.sandbox_credit_provisioned`: controle persistente da concessão única do crédito fictício de abertura |
 | V7 | `scheduled_transfers`: agendamentos por titular, estados, cancelamento, chave de idempotência e relação com a transferência efetivamente executada |
 | V8 | `bank_payments`: pagamentos demonstrativos, agendamentos, cancelamento, idempotência e `account_transactions.payment_id` para um único débito por pagamento |
+| V9 | Administração e auditoria de alterações de usuários |
+| V10 | Notificações persistentes, cartões virtuais demonstrativos e perfil |
+| V11 | Papel do acesso demonstrativo por sessão (`auth_sessions.demo_role`) |
 
 **Nunca editar migrações já aplicadas** em um ambiente compartilhado. O Flyway valida histórico e checksums antes de avançar a versão. O Hibernate usa `ddl-auto=validate` e não cria tabelas automaticamente.
 
@@ -59,7 +62,7 @@ ORDER BY table_name;
 
 A aplicação é avaliada com testes Java de integração que utilizam **PostgreSQL 18 efêmero em Testcontainers**, sem conexão ao banco Neon usado pela API publicada.
 
-## Pagamentos (Etapa 8)
+## Pagamentos
 
 O registro em `bank_payments` guarda origem, beneficiário de demonstração, referência, valor, data agendada e estados `PENDING`, `EXECUTED`, `CANCELED` ou `FAILED`. A operação imediata e a atualização do saldo ocorrem na **mesma transação**, com trava pessimista da conta. Uma linha de `account_transactions` com `payment_id` e índice parcial único impede débito duplicado; a chave `(requester_id, request_key)` torna o reenvio idempotente.
 

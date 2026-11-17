@@ -9,7 +9,7 @@ import { NotificationStore } from '../../core/state/notification.store';
 import { AuditStore } from '../../core/state/audit.store';
 import { AuthStore } from '../../core/state/auth.store';
 import { AccountSummary, DashboardOverview, TransferRequest, TransferReceipt } from '../../core/models/banking.models';
-import { maskedAccount, testLog } from '../../core/utils/test-diagnostics';
+import { maskedAccount, diagnosticLog } from '../../core/utils/diagnostics';
 
 @Component({
   selector: 'app-transfers-page',
@@ -66,7 +66,7 @@ export class TransfersPage {
     this.form.controls.accountNumber.markAsUntouched();
     this.error.set('');
     this.success.set('');
-    testLog('6', 'Destino preenchido a partir da API', { conta: maskedAccount(account.number), agenciaValida: /^\d{4}$/.test(account.agency) });
+    diagnosticLog('transfers', 'Destino preenchido a partir da API', { conta: maskedAccount(account.number), agenciaValida: /^\d{4}$/.test(account.agency) });
   }
 
   protected fillOtherAccount(): void {
@@ -93,7 +93,7 @@ export class TransfersPage {
     this.normalizeDestination();
     if (this.form.invalid || this.accountUnavailable() || this.insufficientBalance()) {
       this.form.markAllAsTouched();
-      testLog('6', 'Formulário bloqueado pela validação local', {
+      diagnosticLog('transfers', 'Formulário bloqueado pela validação local', {
         origemValida: !this.accountUnavailable(),
         agenciaValida: this.form.controls.agency.valid,
         destinoValido: this.form.controls.accountNumber.valid,
@@ -120,7 +120,7 @@ export class TransfersPage {
     const retryMesmaOperacao = request === this.pendingRequest;
     this.pendingRequest = request;
     this.submitting.set(true);
-    testLog('6', 'Enviando transferência à API', {
+    diagnosticLog('transfers', 'Enviando transferência à API', {
       origem: maskedAccount(this.selectedAccount()?.number ?? ''),
       destino: maskedAccount(current.destinationAccountNumber),
       valor: current.amount,
@@ -155,7 +155,7 @@ export class TransfersPage {
           : status === 403 ? 'Transferência não permitida para a conta informada.'
           : status === 409 ? 'Não foi possível processar esta solicitação. Revise os dados e tente novamente.'
           : 'Não foi possível confirmar a transferência. Tente novamente sem alterar os dados.');
-        testLog('6', 'Transferência NÃO confirmada', { httpStatus: status, reenvioSeguro: true }, true);
+        diagnosticLog('transfers', 'Transferência NÃO confirmada', { httpStatus: status, reenvioSeguro: true }, true);
       }
     });
   }
@@ -178,7 +178,7 @@ export class TransfersPage {
         if (receipt) {
           const originFound = data.accounts.some(a => a.id === receipt.originAccountId);
           const destinationFound = data.accounts.some(a => a.id === receipt.destinationAccountId);
-          testLog('6', 'Saldos consultados novamente após confirmação', {
+          diagnosticLog('transfers', 'Saldos consultados novamente após confirmação', {
             origemVisivel: originFound, destinoVisivel: destinationFound,
             valorTransferido: transferredAmount ?? receipt.amount,
             orientacao: 'Confira débito e crédito no extrato'
@@ -188,7 +188,7 @@ export class TransfersPage {
       error: err => {
         this.error.set('Não foi possível carregar suas contas. Atualize a página para tentar novamente.');
         this.loading.set(false);
-        testLog('6', 'Falha ao carregar contas', { httpStatus: Number(err?.status ?? 0) }, true);
+        diagnosticLog('transfers', 'Falha ao carregar contas', { httpStatus: Number(err?.status ?? 0) }, true);
       }
     });
   }

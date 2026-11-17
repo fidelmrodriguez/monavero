@@ -8,7 +8,7 @@ import { BankingService } from '../../core/services/banking.service';
 import { ScheduledTransfer, ScheduledTransferRequest, ScheduledTransferService } from '../../core/services/scheduled-transfer.service';
 import { AccountSummary } from '../../core/models/banking.models';
 import { AuthStore } from '../../core/state/auth.store';
-import { maskedAccount, testLog } from '../../core/utils/test-diagnostics';
+import { maskedAccount, diagnosticLog } from '../../core/utils/diagnostics';
 
 @Component({
   selector: 'app-scheduled-transfers',
@@ -73,7 +73,7 @@ export class ScheduledTransfersPage {
     const dateValid = Number.isFinite(date.getTime()) &&
       date.getTime() >= Date.now() + 60_000 && date.getTime() <= Date.now() + 90 * 86400_000;
     if (this.form.invalid || !this.selectedAccount() || !dateValid) {
-      testLog('7', 'Agendamento não enviado: campos inválidos', {
+      diagnosticLog('scheduling', 'Agendamento não enviado: campos inválidos', {
         camposInvalidos: this.form.invalid,
         contaOrigemSelecionada: Boolean(this.selectedAccount()),
         dataValida: dateValid
@@ -87,7 +87,7 @@ export class ScheduledTransfersPage {
       this.form.controls.accountNumber.setErrors({ sameAsOrigin: true });
       this.form.controls.accountNumber.markAsTouched();
       this.error.set('Escolha uma conta de destino diferente da conta de origem.');
-      testLog('7', 'Agendamento bloqueado: conta de origem e destino iguais', {
+      diagnosticLog('scheduling', 'Agendamento bloqueado: conta de origem e destino iguais', {
         contaOrigem: maskedAccount(origin.number)
       }, true);
       return;
@@ -111,7 +111,7 @@ export class ScheduledTransfersPage {
       ? old : { ...payload, idempotencyKey: crypto.randomUUID() };
     this.pendingRequest = request;
     this.submitting.set(true);
-    testLog('7', 'Enviando agendamento à API', {
+    diagnosticLog('scheduling', 'Enviando agendamento à API', {
       origem: maskedAccount(this.selectedAccount()!.number),
       destino: maskedAccount(request.destinationAccountNumber),
       valor: request.amount,
@@ -123,7 +123,7 @@ export class ScheduledTransfersPage {
         this.submitting.set(false);
         if (!item.id || item.status !== 'agendado') {
           this.error.set('Não foi possível confirmar o agendamento.');
-          testLog('7', 'Resposta de agendamento inesperada', {
+          diagnosticLog('scheduling', 'Resposta de agendamento inesperada', {
             temReferencia: Boolean(item.id), status: item.status
           }, true);
           return;
@@ -145,7 +145,7 @@ export class ScheduledTransfersPage {
           Number(err?.status) === 401 ?
           'Sua sessão precisa ser renovada. Entre novamente na sua conta.' :
           'Não foi possível confirmar o agendamento. Tente novamente.');
-        testLog('7', 'Falha ao agendar', { httpStatus: Number(err?.status ?? 0) }, true);
+        diagnosticLog('scheduling', 'Falha ao agendar', { httpStatus: Number(err?.status ?? 0) }, true);
       }
     });
   }
@@ -155,7 +155,7 @@ export class ScheduledTransfersPage {
     this.error.set('');
     this.success.set('');
     this.cancelingId.set(item.id);
-    testLog('7', 'Solicitando cancelamento', {
+    diagnosticLog('scheduling', 'Solicitando cancelamento', {
       referencia: item.id.slice(0, 8), statusAnterior: item.status
     });
     this.scheduling.cancel(item.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -164,7 +164,7 @@ export class ScheduledTransfersPage {
         this.items.update(items => items.map(current => current.id === item.id ? result : current));
         this.success.set('Agendamento cancelado.');
         if (result.status !== 'cancelado') {
-          testLog('7', 'Cancelamento retornou estado inesperado', {
+          diagnosticLog('scheduling', 'Cancelamento retornou estado inesperado', {
             referencia: item.id.slice(0, 8), status: result.status
           }, true);
         }
@@ -174,7 +174,7 @@ export class ScheduledTransfersPage {
         this.error.set(Number(err?.status) === 409 ?
           'Este agendamento já foi processado. Atualize a lista.' :
           'Não foi possível cancelar o agendamento.');
-        testLog('7', 'Falha ao cancelar agendamento', {
+        diagnosticLog('scheduling', 'Falha ao cancelar agendamento', {
           referencia: item.id.slice(0, 8), httpStatus: Number(err?.status ?? 0)
         }, true);
         this.reloadList();
@@ -197,7 +197,7 @@ export class ScheduledTransfersPage {
       error: err => {
         this.listError.set(true);
         this.listingLoading.set(false);
-        testLog('7', 'Falha ao consultar agendamentos', { httpStatus: Number(err?.status ?? 0) }, true);
+        diagnosticLog('scheduling', 'Falha ao consultar agendamentos', { httpStatus: Number(err?.status ?? 0) }, true);
       }
     });
   }
@@ -207,7 +207,7 @@ export class ScheduledTransfersPage {
     this.banking.getOverview().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: overview => {
         this.accounts.set(overview.accounts);
-        testLog('7', 'Contas disponíveis para agendamento', {
+        diagnosticLog('scheduling', 'Contas disponíveis para agendamento', {
           contas: overview.accounts.length,
           possuiContaDeOrigem: overview.accounts.length > 0
         });
@@ -218,7 +218,7 @@ export class ScheduledTransfersPage {
       error: err => {
         this.loading.set(false);
         this.error.set('Não foi possível consultar suas contas.');
-        testLog('7', 'Falha ao carregar contas para agendamento', {
+        diagnosticLog('scheduling', 'Falha ao carregar contas para agendamento', {
           httpStatus: Number(err?.status ?? 0)
         }, true);
       }

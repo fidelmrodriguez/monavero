@@ -17,7 +17,7 @@ O **Monavero** é um projeto de portfólio que demonstra a experiência de um ba
 - Crédito fictício de abertura de R$ 1.000,00, uma única vez por conta pessoal, para viabilizar operações entre usuários cadastrados; não é dinheiro real nem recarregável pela API.
 - Contas antigas vazias e sem movimentações também podem receber o crédito uma única vez; contas com histórico permanecem inalteradas.
 - Painel com saldo consolidado, contas e movimentações recentes.
-- Investimentos não implementados não são apresentados como produtos contratados. Os cartões da Etapa 10 são somente simulação virtual, sem emissão nem pagamento real.
+- Investimentos não implementados não são apresentados como produtos contratados. Os cartões virtuais são somente simulação, sem emissão nem pagamento real.
 
 ### Extrato
 
@@ -43,7 +43,7 @@ O **Monavero** é um projeto de portfólio que demonstra a experiência de um ba
 - Sem reserva antecipada de saldo: saldo insuficiente no processamento faz a transferência ser recusada, sem débito parcial.
 - Se o servidor dormir, os agendamentos vencidos são processados quando voltar a ficar online; não há garantia de pontualidade na hospedagem gratuita.
 
-### Pagamentos demonstrativos (Etapa 8)
+### Pagamentos demonstrativos
 
 - Pagamento imediato por conta pessoal ou demonstrativa com autorização da API, valor em BRL e beneficiário de referência; gera um único lançamento de débito no extrato.
 - Agendamento para data futura, cancelamento enquanto pendente e execução pelo servidor. Não reserva saldo; falta de saldo no vencimento marca o agendamento como recusado.
@@ -53,21 +53,21 @@ O **Monavero** é um projeto de portfólio que demonstra a experiência de um ba
 ### Experiência e recursos auxiliares
 
 - Layout responsivo, temas claro/escuro, formulários reativos e mensagens de validação acessíveis.
-- Pagamentos e notificações usam persistência própria. Auditoria administrativa é mantida pela API na Etapa 9.
+- Pagamentos e notificações usam persistência própria. Auditoria administrativa é mantida pela API.
 - O papel escolhido em `User / 1234` é gravado na sessão do backend e confirmado pelo token: CLIENT usa painel financeiro; MANAGER consulta indicadores, usuários e contas; ADMIN também pode alterar status e consultar auditoria. Contas pessoais não recebem funções administrativas pelo seletor.
 
 ## Limites e funcionalidades futuras
 
-Não há PIX/TED real, integração com instituições financeiras, liquidação de boletos, emissão real de cartões nem investimento financeiro real. Cartões virtuais da Etapa 10 são apenas ilustração. Pagamentos demonstrativos são persistidos, mas não liquidados externamente.
+Não há PIX/TED real, integração com instituições financeiras, liquidação de boletos, emissão real de cartões nem investimento financeiro real. Cartões virtuais são apenas ilustração. Pagamentos demonstrativos são persistidos, mas não liquidados externamente.
 
 ## Arquitetura e validação
 
 - **Frontend:** Angular 19/TypeScript, publicado no Netlify como SPA estática.
 - **Backend:** Java 25 e Spring Boot 4.1.1, publicado na Blitz.
-- **Persistência:** PostgreSQL 18 (Neon), migrações Flyway até V10.
+- **Persistência:** PostgreSQL 18 (Neon), migrações Flyway até V11.
 - **Validação:** CI independente para frontend e backend; a implementação de cada funcionalidade não substitui a aprovação de seus testes e verificações em ambiente publicado.
 
-Consulte [a arquitetura](ARQUITETURA.md), [o roteiro de testes](TESTES.md) e [o roadmap](ROADMAP.md) para o estado detalhado de cada etapa.
+Consulte [Arquitetura](ARQUITETURA.md) e [Testes](TESTES.md) para os fluxos, os controles e a validação do produto.
 
 ### Identificação de transferências entre titulares
 
@@ -79,20 +79,20 @@ Consulte [a arquitetura](ARQUITETURA.md), [o roteiro de testes](TESTES.md) e [o 
 
 ### Consistência visual e auditoria
 
-- Notificações aleatórias e a antiga agenda temporária de pagamentos foram substituídas por funcionalidades integradas à API e persistidas.
+- Notificações e agendamentos são integrados à API e persistidos; não dependem de dados aleatórios no navegador.
 - Agendamentos de transferências e pagamentos são persistidos e sujeitos ao despertar do servidor gratuito para execução.
-- Investimentos não implementados não aparecem como produtos contratados; os cartões da Etapa 10 são explicitamente fictícios.
-- A área administrativa e a trilha de auditoria persistente são implementadas no backend da Etapa 9, com autorização verificada pelo servidor.
+- Investimentos não implementados não aparecem como produtos contratados; os cartões virtuais são explicitamente fictícios.
+- A área administrativa e a trilha de auditoria persistente são implementadas no backend, com autorização verificada pelo servidor.
 
 
-### Etapa 10 — notificações, cartões fictícios e perfil
+### Notificações, cartões fictícios e perfil
 
 - Notificações geradas pela API nas operações confirmadas, persistidas por usuário com leitura individual; o sino e a central são sincronizados com o servidor ao acessar.
 - Cartões virtuais demonstrativos com apelido, quatro dígitos inventados e estados ativo, bloqueado e cancelado. Não há número bancário real, CVV, compra ou limite de crédito.
 - Perfil pessoal permite mudar nome de exibição, senha (com revogação de sessões) e encerrar outras sessões. O guest compartilhado não pode alterar dados pessoais nem controlar as sessões de outros visitantes.
-- Flyway V10, controles de acesso e testes de integração; o status de validação final depende dos pipelines e testes publicados.
+- Persistência via Flyway V10, controles de acesso e testes de integração.
 
-### Segurança e operação — release 1.0.0
+### Segurança e operação
 
 - A API atribui um `X-Request-Id` novo a cada requisição, útil para correlacionar erros nos logs do backend; o ID fornecido pelo cliente não é reutilizado.
 - Endpoints `/api/**` usam `Cache-Control: no-store`, incluindo respostas de autenticação e informações bancárias.
@@ -100,7 +100,7 @@ Consulte [a arquitetura](ARQUITETURA.md), [o roteiro de testes](TESTES.md) e [o 
 - O Netlify aplica headers de proteção contra framing, MIME sniffing e uso não necessário de recursos do navegador.
 - A versão 1.0.0 é de demonstração; os riscos e limitações permanecem descritos em [Segurança e autenticação](SEGURANCA_AUTENTICACAO.md).
 
-### Perfis e painéis (evolução do release 1.0)
+### Perfis e painéis
 
 - Cliente: dashboard financeiro com indicadores calculados do extrato disponível, contas, atalhos e transações.
 - Gerente: dashboard de relacionamento com métricas agregadas reais e consulta de usuários/contas; sem alteração de status e sem auditoria.

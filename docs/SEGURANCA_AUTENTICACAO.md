@@ -1,6 +1,6 @@
 # Segurança e autenticação — Monavero
 
-## Modelo atual (candidato ao release 1.0.0)
+## Modelo de autenticação e autorização
 
 - Contas pessoais criadas em `POST /api/v1/auth/register` recebem exclusivamente a permissão `CLIENT`, nunca um papel fornecido pelo navegador. Senhas pessoais são protegidas com BCrypt.
 - O login usa sessões Bearer opacas de 32 bytes, com expiração em 12 horas. O PostgreSQL armazena o hash SHA-256 do token, não o segredo em claro. Logout e troca de senha revogam sessões no servidor.
@@ -10,7 +10,7 @@
 - `sessionStorage` guarda o token apenas na aba; a sincronização com `BroadcastChannel` entre abas ativas não o persiste no `localStorage`. Scripts não confiáveis na origem ainda representam risco de XSS.
 - Os dados de contas, lançamentos, transferências, pagamentos, cartões e notificações são isolados pela identidade autenticada no backend, conforme os testes integrados.
 
-## Controles adicionados no release 1.0.0
+## Controles de segurança e observabilidade
 
 - `RequestObservabilityFilter` gera um UUID novo em `X-Request-Id` por requisição e coloca o mesmo identificador no MDC para correlacionar logs; IDs enviados pelo cliente são ignorados.
 - Todos os endpoints `/api/**`, inclusive login e dados bancários, enviam `Cache-Control: no-store` e `Pragma: no-cache`.
@@ -31,6 +31,6 @@ Nunca versionar segredos ou usar credenciais reais em capturas de tela, logs, ti
 - Perfil pessoal permite trocar nome e senha; sessão antiga deixa de funcionar após troca de senha.
 - Administração e auditoria acessíveis somente na identidade demo; negar acesso em uma conta pessoal.
 - Verificar `X-Request-Id` em chamadas HTTP e `Cache-Control: no-store` nos endpoints da API.
-- Confirmar os dois workflows verdes e a versão Flyway V10 em produção antes da tag `v1.0.0`.
+- Confirmar os dois workflows verdes e todas as migrações esperadas no ambiente publicado antes de publicar uma tag.
 
-Os testes detalhados estão em [Testes](TESTES.md) e o estado real em [Roadmap](ROADMAP.md).
+Os cenários de validação estão em [Testes](TESTES.md).

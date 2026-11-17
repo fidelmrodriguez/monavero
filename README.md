@@ -2,7 +2,7 @@
 
 **Monavero** é uma aplicação de banco digital demonstrativo, construída como projeto de engenharia full stack. A interface oferece uma experiência de produto para clientes; os fluxos financeiros são executados sobre dados de demonstração, sem movimentação de dinheiro real.
 
-[**Aplicação**](https://monavero.netlify.app) · [Frontend Angular](frontend/README.md) · [Backend Java](backend/README.md) · [Arquitetura](docs/ARQUITETURA.md) · [Funcionalidades](docs/FUNCIONALIDADES.md) · [Roadmap](docs/ROADMAP.md)
+[**Aplicação**](https://monavero.netlify.app) · [Frontend Angular](frontend/README.md) · [Backend Java](backend/README.md) · [Arquitetura](docs/ARQUITETURA.md) · [Funcionalidades](docs/FUNCIONALIDADES.md)
 
 [![Frontend Angular CI](https://img.shields.io/github/actions/workflow/status/fidelmrodriguez/monavero/frontend-ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=Frontend%20CI)](https://github.com/fidelmrodriguez/monavero/actions/workflows/frontend-ci.yml)
 [![Backend Java CI](https://img.shields.io/github/actions/workflow/status/fidelmrodriguez/monavero/backend-ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=Backend%20CI)](https://github.com/fidelmrodriguez/monavero/actions/workflows/backend-ci.yml)
@@ -83,9 +83,8 @@ npm test
 - [Persistência](docs/PERSISTENCIA.md): esquema e migrações.
 - [Testes](docs/TESTES.md): testes automatizados e critérios de aprovação.
 - [Deploy frontend](docs/DEPLOY_NETLIFY.md) e [deploy backend](docs/DEPLOY_BACKEND.md).
-- [Roadmap](docs/ROADMAP.md): entregas planejadas e estado de validação.
 
-**Status do release 1.0.0:** código preparado para validação. Os pipelines, a publicação na Blitz/Netlify e o roteiro funcional de aceitação precisam estar aprovados no commit final antes da criação da tag `v1.0.0`. As etapas 9 e 10 ainda exigem confirmação dos testes publicados.
+**Publicação e qualidade:** os workflows de frontend e backend verificam builds e testes; antes de publicar uma tag, confirme também login, transferências, pagamentos, permissões e persistência na aplicação hospedada. O GitHub Release não substitui o deploy dos serviços.
 
 
 ### Interface e confiabilidade
@@ -99,9 +98,9 @@ npm test
 
 A gestão de usuários e contas é visível no menu lateral do **gerente** e **administrador** da demonstração. O gerente consulta em modo somente leitura; o administrador pode alterar status e consultar a Auditoria. O cliente não vê nem acessa essas rotas. A API confirma o papel por sessão e impede chamadas diretas fora do perfil. Contas pessoais não recebem acesso à administração. Consulte [Administração](docs/ADMINISTRACAO.md) para as regras e testes.
 
-### Notificações, cartões e perfil (Etapa 10)
+### Notificações, cartões e perfil
 
-Notificações e estados de leitura são persistidos pela API. A tela Cartões permite criar e gerenciar até três cartões virtuais fictícios sem PAN/CVV/compra real. O perfil pessoal permite atualizar nome, alterar senha (revogando todas as sessões) e encerrar outros acessos. A identidade demonstrativa compartilhada não permite alterar perfil ou gerir sessões. A documentação funcional e o status de validação ficam em [Funcionalidades](docs/FUNCIONALIDADES.md) e [Roadmap](docs/ROADMAP.md).
+Notificações e estados de leitura são persistidos pela API. A tela Cartões permite criar e gerenciar até três cartões virtuais fictícios sem PAN/CVV/compra real. O perfil pessoal permite atualizar nome, alterar senha (revogando todas as sessões) e encerrar outros acessos. A identidade demonstrativa compartilhada não permite alterar perfil ou gerir sessões. Consulte [Funcionalidades](docs/FUNCIONALIDADES.md) e [Testes](docs/TESTES.md).
 
 ### Release 1.0.0
 

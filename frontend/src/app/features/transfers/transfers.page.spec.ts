@@ -125,10 +125,10 @@ describe('TransfersPage', () => {
     expect(fixture.nativeElement.textContent).toContain('Transferência recusada');
     expect(fixture.nativeElement.textContent).not.toContain('realizada com sucesso');
   });
-  it('não exibe textos de etapa, testes ou tecnologia interna ao cliente', () => {
+  it('não exibe diagnósticos internos ou tecnologia de infraestrutura ao cliente', () => {
     const visible = fixture.nativeElement.textContent as string;
-    expect(visible).not.toContain('Teste da Etapa');
-    expect(visible).not.toContain('Etapa 7');
+    expect(visible).not.toContain('[Monavero]');
+    expect(visible).not.toContain('HTTP 422');
     expect(visible).not.toContain('Neon');
     expect(visible).not.toContain('PostgreSQL');
     expect(visible).not.toContain('destino demonstrativo');

@@ -1,100 +1,57 @@
-# Deploy do backend Java na Blitz Cloud · Monavero
+# Deploy do backend — Blitz Cloud
 
-O backend Java 25 / Spring Boot 4.1.1 está hospedado na **Blitz Cloud** no serviço independente `Monavero API`. Usa PostgreSQL 18 no Neon e migrações Flyway versionadas. Angular e API são publicados independentemente no Netlify e na Blitz.
+A API Java 25 / Spring Boot 4.1.1 é publicada como serviço independente na Blitz Cloud, com PostgreSQL gerenciado no Neon. O Angular é publicado separadamente no Netlify.
 
-## Situação da infraestrutura
+## Infraestrutura
 
-| Camada | Serviço | Observação |
+| Camada | Serviço | Configuração |
 | --- | --- | --- |
-| Interface | Netlify | Angular 19, integrado à API Monavero, sem dependência externa de dados fictícios |
-| API | Blitz Cloud | `https://monavero-api.fidelmrodriguez.blitz.cloud` |
-| Banco | Neon | Projeto `monavero`, branch `production`, database `neondb`, PostgreSQL 18 (Ohio) |
+| Frontend | Netlify | Angular SPA; domínio público `https://monavero.netlify.app` |
+| Backend | Blitz Cloud | `https://monavero-api.fidelmrodriguez.blitz.cloud` |
+| Banco | Neon | PostgreSQL 18; conexão TLS direta, credenciais privadas |
 
-A publicação anterior da API foi validada por Swagger, `/api/v1/system/info` e `/actuator/health`. A cada versão, o CI e a aplicação publicada devem confirmar a execução das migrações novas.
+## Configuração do backend
 
-## Configuração inicial do banco — histórico
+Na Blitz, mantenha o repositório `fidelmrodriguez/monavero`, branch `main`, pasta de build `backend`, Dockerfile `backend/Dockerfile`, porta `8080` (ou `PORT` fornecida pelo ambiente) e sem banco nativo da Blitz.
 
-**Configure as variáveis de banco na Blitz ANTES de enviar o commit que adiciona JPA/Flyway.** Sem elas, o novo backend não conseguirá iniciar; essa falha é intencional para evitar conexão com banco fictício ou errado.
+Variáveis de ambiente:
 
-1. No Neon, projeto `monavero` → **Connect** → branch `production`, database `neondb`.
-2. Desligue **Connection pooling**. Copie somente para uso privado o **host direto**, usuário e senha. O host direto não contém `-pooler`.
-3. Converta o host para JDBC, sem colocar usuário e senha na URL. Exemplo ilustrativo:
-
-   ```text
-   jdbc:postgresql://HOST-DIRETO.us-east-2.aws.neon.tech:5432/neondb?sslmode=require
-   ```
-
-   Se a conexão do Neon exigir channel binding, o PostgreSQL JDBC aceita `channelBinding=require` como parâmetro adicional. Não copie `postgresql://usuario:senha@...` diretamente para a variável JDBC.
-4. Na Blitz, abra **Monavero API → Environment** e cadastre as três variáveis privadas:
-
-   | Variável | Conteúdo |
-   | --- | --- |
-   | `MONAVERO_DB_JDBC_URL` | URL JDBC direta (com `sslmode=require`) |
-   | `MONAVERO_DB_USERNAME` | role apresentada no Neon, por exemplo `neondb_owner` |
-   | `MONAVERO_DB_PASSWORD` | senha da role; **não compartilhe** |
-
-   Mantenha `MONAVERO_CORS_ALLOWED_ORIGINS=https://monavero.netlify.app` caso esse seja o domínio exato publicado. A variável `PORT` permanece opcional (padrão `8080`).
-5. Salve as variáveis. A versão antiga do backend ainda não precisa delas.
-6. Aplique a atualização de código na raiz do repositório, faça commit e envie para `main`. O GitHub Actions e o deploy automático na Blitz serão disparados.
-7. Acompanhe o **Backend Java CI**, os logs da Blitz e o status da aplicação. O primeiro início pode levar mais tempo por executar Flyway. **Não realize alterações manuais de schema no Neon**.
-8. Confirme os endpoints existentes e as tabelas via Neon SQL Editor; veja [Persistência](PERSISTENCIA.md).
-
-## Configurações preservadas da Blitz
-
-| Campo | Valor |
+| Variável | Uso |
 | --- | --- |
-| GitHub | `fidelmrodriguez/monavero` |
-| Branch | `main` |
-| Folder to build | `backend` |
-| Dockerfile | `Dockerfile` existente dentro de `backend/` |
-| Start command | Vazio, conforme Dockerfile |
-| Porta | `8080` por padrão, aceita `PORT` |
-| Banco nativo da Blitz | Nenhum: o PostgreSQL está no Neon |
+| `MONAVERO_DB_JDBC_URL` | JDBC da conexão PostgreSQL direta, incluindo `sslmode=require` |
+| `MONAVERO_DB_USERNAME` | Usuário do PostgreSQL |
+| `MONAVERO_DB_PASSWORD` | Senha do PostgreSQL |
+| `MONAVERO_CORS_ALLOWED_ORIGINS` | Origem exata do Netlify, sem barra final |
+| `MONAVERO_DEMO_ENABLED` | Opcional; `false` desabilita o login compartilhado de demonstração |
+| `PORT` | Opcional; porta HTTP, quando definida pelo provedor |
 
-O serviço continua HTTP (não um worker). A Blitz usa `backend/` como contexto de build, sem tentar compilar o Angular.
+Para obter os dados do Neon, use **Connect** na branch de produção, com conexão direta (sem `-pooler`). Converta o host para o formato JDBC, sem usuário ou senha na URL:
 
-## Verificações após deploy
+```text
+jdbc:postgresql://HOST-DIRETO:5432/neondb?sslmode=require
+```
 
-- Logs de inicialização: conexão PostgreSQL estabelecida, migração `V1` concluída ou reconhecida como aplicada, Hibernate validando o esquema, aplicação iniciada sem exceções.
-- <https://monavero-api.fidelmrodriguez.blitz.cloud/actuator/health> — JSON contendo `"status":"UP"`.
-- <https://monavero-api.fidelmrodriguez.blitz.cloud/api/v1/system/info> — identificação da API.
-- <https://monavero-api.fidelmrodriguez.blitz.cloud/swagger-ui.html> — contrato OpenAPI da versão publicada.
-- Neon SQL Editor: `flyway_schema_history`, `app_users`, `bank_accounts`, `account_holders`, `bank_payments`.
+Não coloque senhas, tokens, strings privadas de conexão ou segredos em commits, documentação ou frontend. Não faça DDL manual no Neon: migrações Flyway são aplicadas automaticamente pela API durante a inicialização. **Nunca modifique arquivos Flyway que já tenham sido executados**, mesmo para alterar comentários, pois isso pode invalidar os checksums.
 
-O health check pode retornar `DOWN` se o PostgreSQL estiver inacessível. Dados internos e credenciais nunca devem ser mostrados na resposta HTTP; o Actuator já está com detalhes desabilitados.
+## Publicação e verificação
+
+1. Faça push das alterações para `main` e confirme os workflows **Backend Java CI** e **Frontend Angular CI**.
+2. Confira o deploy do backend na Blitz e o da SPA no Netlify; o primeiro acesso pode demorar quando a hospedagem gratuita estiver em repouso.
+3. Verifique `GET /actuator/health` com `status: UP` e `GET /api/v1/system/info` na API publicada.
+4. Confirme o contrato em `/swagger-ui.html`, a autenticação e a separação de dados por usuário.
+5. Consulte `flyway_schema_history` no Neon para verificar se as migrações foram aplicadas com sucesso, sem executar `repair` indiscriminadamente.
+6. Valide login, logout, transferências, pagamentos, agendamentos, notificações, cartões e acesso por perfil no site publicado. Use [Testes](TESTES.md).
 
 ## Diagnóstico
 
-| Sintoma | Causa / verificação |
+| Sintoma | Verificação |
 | --- | --- |
-| `Could not resolve placeholder MONAVERO_DB_...` | Uma das três variáveis obrigatórias está ausente na Blitz |
-| `Connection refused`, timeout ou `password authentication failed` | Conferir host direto, porta 5432, role, senha e TLS, **sem publicar os valores** |
-| `Failed to validate schema` | Flyway não aplicou a migração ou mapeamento diverge do SQL; consultar logs e `flyway_schema_history` |
-| `Flyway checksum mismatch` | Arquivo V1 foi alterado depois de aplicado; restaurar o SQL original, não executar `repair` indiscriminadamente |
-| CI falha em Testcontainers/Docker | Conferir etapa Docker do runner e logs do Maven; não configurar secrets Neon no CI |
-| Nenhum endpoint novo no Swagger | Esperado: Etapa 3 só cria persistência e não expõe CRUD sem autenticação |
+| `Could not resolve placeholder` | Variáveis de banco ausentes no backend |
+| Falha de conexão PostgreSQL | Host direto, senha, porta e TLS, sem divulgar os valores |
+| `Failed to validate schema` | Histórico Flyway, esquema existente e mapeamento Hibernate |
+| `Flyway checksum mismatch` | Restaurar o arquivo SQL original já aplicado; não editar históricos |
+| Testcontainers indisponível no CI | Runner, Docker e logs do Maven |
+| Login ou endpoint retorna `401/403` | Sessão válida, papel demo selecionado e autorização do backend |
+| API lenta após inatividade | Reinicialização do serviço sob demanda; execução de jobs pendentes ocorre com API ativa |
 
-A Etapa 4 adicionará Spring Security e autorização. Nada neste deploy habilita transações bancárias reais.
-
-
-## Etapa 4 — publicação da autenticação
-
-A atualização adiciona Spring Security e a migração `V2__authentication_and_sessions.sql`. **Não altere V1 no banco**. Mantenha as quatro variáveis já existentes (`MONAVERO_DB_*` e CORS) e, se desejar desabilitar o login público demo, acrescente `MONAVERO_DEMO_ENABLED=false`. O padrão da aplicação é `true` para demonstração.
-
-1. Confirme que a variável CORS contém a URL **exata** do Netlify (sem barra final), por exemplo `https://monavero.netlify.app`.
-2. Aplique um único commit da Etapa 4 no monorepositório. A Blitz e o Netlify atualizam a partir da `main`.
-3. Confirme ambos os workflows GitHub Actions aprovados; em caso de falha, não considere a etapa validada.
-4. Nos logs da Blitz, verifique que o Flyway aplicou V2 e que Spring Boot terminou de iniciar. `GET /actuator/health` deve continuar `UP`.
-5. No Neon, execute `SELECT version, description, success FROM flyway_schema_history ORDER BY installed_rank;` e confirme V1 e V2 com `success = true`.
-6. Abra o Netlify: tente o acesso demo, crie uma conta pessoal com senha forte, saia, entre novamente com a mesma conta e recarregue a página. O backend deve atribuir `CLIENT`; o frontend não fornece papel admin ou gerente.
-
-**Sem segredos no Git:** não cole connection strings, senhas, tokens ou hashes em README, commits, prints ou logs. O frontend usa um endereço público da API definido em `src/app/core/config/monavero-api.ts`; se o domínio da Blitz mudar, atualize esse arquivo e faça novo build Netlify.
-
-O frontend utiliza `sessionStorage` para o token Bearer (não é cookie entre domínios). Não exponha código não confiável na página; limitação e próximos controles em [Segurança e autenticação](SEGURANCA_AUTENTICACAO.md). O banco financeiro pessoal ainda não foi conectado ao dashboard (Etapa 5).
-
-
-## Publicação da Etapa 8
-
-No GitHub Actions, os workflows **Backend Java CI** e **Frontend Angular CI** devem ficar verdes no commit mais recente. Na Blitz, acompanhar o Flyway até confirmar **versão 8**, sem editar V1–V7. O endpoint autenticado `/api/v1/banking/payments` passa a disponibilizar pagamento demonstrativo imediato, agendamento, consulta e cancelamento, sem movimentação real em instituições externas. Na Netlify, abrir `Pagamentos` e verificar histórico e débito no extrato.
-
-No plano gratuito da Blitz, `PaymentWorker` só roda enquanto o servidor está ativo. Pagamentos vencidos são recuperados após o despertar, e o produto não pode garantir a hora exata enquanto o serviço estiver dormindo.
+O produto é demonstrativo. O backend não realiza PIX, TED ou liquidação de pagamentos externos reais.

@@ -1,5 +1,5 @@
 import { tap } from 'rxjs';
-import { testLog } from '../utils/test-diagnostics';
+import { diagnosticLog } from '../utils/diagnostics';
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { MONAVERO_API_URL } from '../config/monavero-api';
@@ -58,19 +58,19 @@ export class AdminService {
   }
   users(page: number) {
     return this.readiness.recover(this.http.get<AdminUser[]>(`${this.url}/admin/users`, { params: { page } })).pipe(
-      tap(users => testLog('9', 'Usuários recebidos da API', { pagina: page + 1, total: users.length }))
+      tap(users => diagnosticLog('admin', 'Usuários recebidos da API', { pagina: page + 1, total: users.length }))
     );
   }
   update(id: string, change: AdminChange) {
     return this.http.patch<AdminUser>(`${this.url}/admin/users/${encodeURIComponent(id)}`, change).pipe(
-      tap(user => testLog('9', 'Alteração administrativa confirmada pela API', {
+      tap(user => diagnosticLog('admin', 'Alteração administrativa confirmada pela API', {
         referencia: user.id.slice(0, 8), perfil: user.role, status: user.status, versao: user.version
       }))
     );
   }
   events(page: number) {
     return this.readiness.recover(this.http.get<AuditEvent[]>(`${this.url}/audit/events`, { params: { page } })).pipe(
-      tap(events => testLog('9', 'Auditoria recebida da API', { pagina: page + 1, total: events.length }))
+      tap(events => diagnosticLog('admin', 'Auditoria recebida da API', { pagina: page + 1, total: events.length }))
     );
   }
 }

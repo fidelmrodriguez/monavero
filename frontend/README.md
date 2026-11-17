@@ -1,53 +1,53 @@
-# Frontend · Monavero
+# Frontend — Monavero
 
-Interface de banco digital desenvolvida com **Angular 19**, TypeScript e SCSS, publicada no Netlify como **SPA estática**. Este repositório mantém uma apresentação voltada ao usuário final; textos de testes, etapas e infraestrutura são exclusivos da documentação e dos diagnósticos de desenvolvimento.
+Interface de banco digital demonstrativo desenvolvida com **Angular 19**, TypeScript e SCSS, publicada no Netlify como **SPA estática**.
 
 [Visão geral](../README.md) · [Backend](../backend/README.md) · [Funcionalidades](../docs/FUNCIONALIDADES.md) · [Deploy](../docs/DEPLOY_NETLIFY.md)
 
-## Experiência do usuário
+## Interface e navegação
 
-- **Acesso:** login demonstrativo, cadastro pessoal, sessão autenticada, logout e navegação protegida.
-- **Painel:** saldos por conta, lançamentos recentes e indicadores financeiros. Cartões e investimentos sem implementação são mantidos indisponíveis, sem dados inventados no frontend.
-- **Extrato:** movimentações persistidas com filtros e pesquisa.
-- **Transferências:** formulário com origem, agência e número do destino, valor e descrição; confirmação apenas após resposta positiva da API, atualização de saldos e histórico.
-- **Pagamentos:** fluxo imediato e agendado, histórico, cancelamento e lançamento no extrato via API autenticada.
-- **Perfil e navegação:** temas claro/escuro, layout responsivo, notificações e áreas visuais de administração em evolução.
+- **Acesso:** login demonstrativo, cadastro pessoal, autenticação, logout e proteção de rotas.
+- **Cliente:** painel financeiro com contas, saldo, entradas/saídas, ações rápidas, gráficos e extrato recente.
+- **Gerente demonstrativo:** painel gerencial, indicadores reais, consulta de usuários e contas sem permissão de edição.
+- **Administrador demonstrativo:** painel administrativo, gestão de acessos e histórico de auditoria.
+- **Operações:** extrato, transferências imediatas e agendadas, pagamentos demonstrativos, notificações, cartões virtuais fictícios e perfil pessoal.
+- **Experiência:** tema claro/escuro, layout responsivo, formulários reativos, carregamento assíncrono e mensagens de erro orientadas ao usuário.
 
-Os campos de transferência exibem os dados da conta de origem. Quando há outra conta do mesmo titular, o usuário pode selecioná-la como destino. A validação não desloca os campos horizontalmente e a interface não apresenta comandos ou instruções de QA.
+O seletor do acesso compartilhado `User / 1234` define o **papel da sessão no backend**. Contas pessoais recebem as próprias permissões do servidor e não podem assumir papéis administrativos por mudança de rota ou estado da interface.
 
 ## Tecnologias
 
 | Componente | Utilização |
 | --- | --- |
-| Angular standalone + Router | Telas e navegação protegida sob demanda |
-| Signals + RxJS | Estado reativo e integração HTTP |
-| Reactive Forms | Validações de login, pagamentos e transferências |
-| TypeScript + SCSS | Tipos, estilos e responsividade |
-| API Java | Autenticação, contas, extrato, transferências e pagamentos |
-| Jasmine + Karma | Testes unitários e de interface |
+| Angular standalone e Router | Páginas e navegação protegida |
+| Signals e RxJS | Estado reativo e operações HTTP |
+| Reactive Forms | Validação dos formulários |
+| TypeScript e SCSS | Tipos, estilos e responsividade |
+| API Java | Autenticação, operações bancárias e gestão demonstrativa |
+| Jasmine e Karma | Testes automatizados |
 
-A API é publicada na Blitz; o frontend solicita `/api/monavero-readiness` pela própria origem Netlify, encaminhada ao health check da API. As rotas internas usam fallback SPA em `_redirects`. O carregamento inicial depende de a API estar disponível.
+O frontend usa `/api/monavero-readiness` na própria origem Netlify para consultar a disponibilidade do backend por proxy. Rotas internas usam fallback SPA; a API Java é hospedada na Blitz. O deploy usa `frontend/dist/monavero/browser`, sem SSR.
 
 ## Estrutura
 
 ```text
 frontend/
-├── public/                    # Recursos estáticos e redirecionamentos Netlify
+├── public/               # Recursos e redirecionamentos Netlify
 ├── src/app/
-│   ├── core/                  # Modelos, autenticação, API, estado e utilitários
-│   ├── features/              # Páginas e formulários de produto
-│   ├── layout/                # Shell, sidebar e navegação
-│   └── shared/                # Componentes compartilhados
-├── angular.json               # Build estático Angular
-├── proxy.conf.json            # Readiness na execução local
+│   ├── core/             # Autenticação, modelos, API e estado
+│   ├── features/         # Páginas e formulários
+│   ├── layout/           # Sidebar, cabeçalho e navegação
+│   └── shared/           # Componentes e diretivas
 └── package.json
 ```
 
-## Executar e validar
+## Execução e testes
+
+Requer Node.js 22 e Chrome/Chromium para testes Karma.
 
 ```bash
 cd frontend
-npm install
+npm install --no-audit --no-fund
 npm run dev
 ```
 
@@ -57,60 +57,10 @@ npm run build
 npm test
 ```
 
-Node.js 22 é a versão definida em `.nvmrc`. Os testes Karma requerem Chrome ou Chromium. O Netlify publica `frontend/dist/monavero/browser` e não deve usar o runtime SSR Angular nesse deploy.
+Veja [Testes](../docs/TESTES.md) para critérios de aceitação e verificação do site publicado.
 
-### Acesso
+## Limites do ambiente
 
-A demonstração aceita `User / 1234`. Contas pessoais devem entrar com seu e-mail de cadastro e senha próprios. O seletor de perfil do modo demonstração controla apenas a visualização; permissões bancárias são sempre verificadas na API.
+O Monavero não realiza PIX, TED, pagamentos externos, emissão real de cartões ou investimentos. Cartões, boletos de exemplo e créditos de abertura são demonstrativos. Os agendamentos dependem do backend ativo; na hospedagem gratuita, o processamento pode ocorrer após a reativação da API.
 
-### Diagnóstico técnico
-
-Logs estruturados dos fluxos de autenticação, contas, extrato e transferências são emitidos **somente no console do navegador**, sem senhas, e-mails, tokens ou identificadores completos de conta. As mensagens visíveis ao usuário apresentam apenas estados do produto, sem identificadores de etapas ou dependências internas.
-
-O roteiro de validação está em [docs/TESTE_ETAPAS_5_6_CONSOLE.md](../docs/TESTE_ETAPAS_5_6_CONSOLE.md). Informações sobre acesso à API, cold start e proxy estão em [deploy Netlify](../docs/DEPLOY_NETLIFY.md).
-
-## Limites
-
-O Monavero é um ambiente demonstrativo: não realiza PIX, TED, pagamento real ou investimento. Os módulos ainda não disponibilizados por API são apresentados como indisponíveis, não como operações bancárias reais. O roadmap registra o estado real de cada implementação.
-
-
-### Estados de carregamento e layout
-
-- As mudanças de rota têm indicação visual durante carregamento de módulos, guards e resolvers.
-- Extrato: spinner apenas durante a consulta, mensagem de falha com **Tentar novamente** e tabela após resposta válida; filtros aplicados localmente sem espera simulada.
-- Transferências: indicação ao carregar contas, processar operação e atualizar saldos; formulário permanece protegido contra reenvios durante a operação.
-- Tabelas de extrato e dashboard não devem expandir a página: os textos longos quebram linha, o contêiner limita a largura e o layout móvel usa cartões.
-- Os estados de carregamento são textos normais para o cliente, enquanto diagnósticos das etapas permanecem exclusivamente no console.
-
-### Transferências agendadas
-
-A rota `/app/agendamentos` permite criar, listar e cancelar agendamentos internos. As datas são informadas em horário local e enviadas à API em UTC. O processamento ocorre no backend e não depende de uma aba aberta. O saldo é debitado apenas no vencimento; em hospedagem sob demanda a execução pode ocorrer na próxima ativação do servidor. Não há componentes de QA nas telas.
-
-
-### Entrada de valores monetários
-
-A diretiva compartilhada `src/app/shared/directives/brl-currency.directive.ts`
-formata os campos de transferências imediatas e agendadas, pagamentos e filtros
-do extrato no padrão **R$ 1.234,56**. O controle reativo preserva os valores
-numéricos em reais; a máscara é somente de apresentação. Digite a parte inteira
-normalmente e use a vírgula para informar centavos. Também é possível colar
-valores já formatados.
-
-
-### Dados apresentados ao usuário
-A interface não cria notificações por temporizador, cartões, investimentos nem agendamentos de pagamentos em memória. A área de pagamentos utiliza endpoints persistentes da Etapa 8, incluindo agendamento e cancelamento; exige Flyway V8 aplicada no backend. Os agendamentos de **transferências** usam o serviço Java; a conta demonstrativa tem lançamentos ilustrativos históricos no backend. Um erro de carregamento de chunk após deploy gera uma tentativa limitada de atualização de página.
-
-### Pagamentos demonstrativos — Etapa 8
-
-A rota `/app/pagamentos` consulta contas autenticadas, registra pagamento imediato ou agendado, oferece cancelamento dos pendentes e lista o histórico persistido. Usa `BrlCurrencyDirective` e exibe loading real nas consultas. No console, os diagnósticos `[Monavero][Teste E8]` mostram status e valor, sem dados pessoais. **Não processa códigos bancários externos reais.**
-
-### Boletos demonstrativos
-
-Em **Pagamentos**, cole uma linha digitável do catálogo ou selecione um dos exemplos.
-A API retorna beneficiário, valor e vencimento para conferência. Selecione a conta,
-escolha pagar agora ou agendar e revise antes de confirmar. Pagamentos concluídos
-têm comprovante demonstrativo no histórico.
-
-Os exemplos de R$ 15,00, R$ 12,00 e R$ 5.000,00 permitem testar cancelamento,
-execução automática e saldo insuficiente. O exemplo vencido permite testar a
-recusa na consulta. Os códigos são fictícios e restritos ao catálogo do Monavero.
+Logs operacionais estruturados ficam no DevTools com categorias por domínio, sem dados bancários completos, senhas ou tokens. Os usuários visualizam apenas mensagens da aplicação, não diagnósticos internos.

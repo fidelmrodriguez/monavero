@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { NotificationStore } from './notification.store';
 
 // Verifica que o feed é remoto, que o titular anterior nunca vaza e que o estado de leitura persiste.
-describe('NotificationStore Etapa 10', () => {
+describe('NotificationStore', () => {
   let store: NotificationStore;
   let http: HttpTestingController;
 

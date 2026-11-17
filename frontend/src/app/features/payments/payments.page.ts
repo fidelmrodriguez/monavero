@@ -5,7 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AccountSummary } from '../../core/models/banking.models';
 import { BankingService } from '../../core/services/banking.service';
 import { DemoBoleto, PaymentItem, PaymentRequest, PaymentService } from '../../core/services/payment.service';
-import { maskedAccount, testLog } from '../../core/utils/test-diagnostics';
+import { maskedAccount, diagnosticLog } from '../../core/utils/diagnostics';
 import { BrlCurrencyDirective } from '../../shared/directives/brl-currency.directive';
 
 @Component({
@@ -128,7 +128,7 @@ export class PaymentsPage {
       this.form.markAllAsTouched();
       this.error.set(!validDate ? 'Escolha uma data entre um minuto e 90 dias a partir de agora.' :
         'Confira os campos do pagamento.');
-      testLog('8', 'Pagamento não enviado: campos inválidos', {
+      diagnosticLog('payments', 'Pagamento não enviado: campos inválidos', {
         formularioInvalido: this.form.invalid,
         dataValida: validDate,
         possuiConta: Boolean(this.selectedAccount())
@@ -162,7 +162,7 @@ export class PaymentsPage {
         ? old : { ...payload, idempotencyKey: crypto.randomUUID() };
     this.pendingRequest = request;
     this.submitting.set(true);
-    testLog('8', 'Enviando pagamento à API', {
+    diagnosticLog('payments', 'Enviando pagamento à API', {
       origem: maskedAccount(this.selectedAccount()!.number), tipo: request.paymentType,
       valor: request.amount, agendado: Boolean(request.scheduledFor),
       retryMesmaOperacao: old === request
@@ -173,7 +173,7 @@ export class PaymentsPage {
         const expected = request.scheduledFor ? 'agendado' : 'concluido';
         if (!item.id || item.status !== expected || Number(item.amount) !== request.amount) {
           this.error.set('A resposta do pagamento não pôde ser confirmada. Consulte o histórico antes de tentar novamente.');
-          testLog('8', 'Resposta inesperada do pagamento', { status: item.status, temReferencia: Boolean(item.id) }, true);
+          diagnosticLog('payments', 'Resposta inesperada do pagamento', { status: item.status, temReferencia: Boolean(item.id) }, true);
           this.reloadList();
           return;
         }
@@ -200,7 +200,7 @@ export class PaymentsPage {
           status === 401 ? 'Sua sessão expirou. Entre novamente para continuar.' :
           status === 409 ? 'Este boleto pode já estar pago ou agendado. Confira o histórico.' :
           'Não foi possível confirmar o pagamento. Confira o histórico antes de tentar novamente.');
-        testLog('8', 'Falha ao pagar ou agendar', { httpStatus: status }, true);
+        diagnosticLog('payments', 'Falha ao pagar ou agendar', { httpStatus: status }, true);
       }
     });
   }
@@ -209,7 +209,7 @@ export class PaymentsPage {
     if (item.status !== 'agendado' || this.cancelingId()) return;
     this.error.set(''); this.success.set('');
     this.cancelingId.set(item.id);
-    testLog('8', 'Solicitando cancelamento de pagamento', { referencia: item.id.slice(0, 8) });
+    diagnosticLog('payments', 'Solicitando cancelamento de pagamento', { referencia: item.id.slice(0, 8) });
     this.payments.cancel(item.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: result => {
         this.cancelingId.set(null);
@@ -220,7 +220,7 @@ export class PaymentsPage {
         this.cancelingId.set(null);
         this.error.set(Number(err?.status) === 409 ?
           'O pagamento já foi processado. Atualize o histórico.' : 'Não foi possível cancelar o pagamento.');
-        testLog('8', 'Falha no cancelamento', { httpStatus: Number(err?.status ?? 0) }, true);
+        diagnosticLog('payments', 'Falha no cancelamento', { httpStatus: Number(err?.status ?? 0) }, true);
         this.reloadList();
       }
     });
@@ -233,7 +233,7 @@ export class PaymentsPage {
       next: items => { this.items.set(items); this.listingLoading.set(false); },
       error: err => {
         this.listingLoading.set(false); this.listError.set(true);
-        testLog('8', 'Falha ao carregar histórico de pagamentos', { httpStatus: Number(err?.status ?? 0) }, true);
+        diagnosticLog('payments', 'Falha ao carregar histórico de pagamentos', { httpStatus: Number(err?.status ?? 0) }, true);
       }
     });
   }
@@ -254,12 +254,12 @@ export class PaymentsPage {
           this.form.controls.originAccountId.setValue(overview.accounts[0]?.id ?? '');
         }
         this.accountsLoading.set(false);
-        testLog('8', 'Contas disponíveis para pagamento', { contas: overview.accounts.length });
+        diagnosticLog('payments', 'Contas disponíveis para pagamento', { contas: overview.accounts.length });
       },
       error: err => {
         this.accountsLoading.set(false);
         this.error.set('Não foi possível carregar suas contas.');
-        testLog('8', 'Falha ao carregar contas', { httpStatus: Number(err?.status ?? 0) }, true);
+        diagnosticLog('payments', 'Falha ao carregar contas', { httpStatus: Number(err?.status ?? 0) }, true);
       }
     });
   }
@@ -268,11 +268,11 @@ export class PaymentsPage {
     this.banking.getOverview().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: overview => {
         this.accounts.set(overview.accounts);
-        testLog('8', 'Saldos atualizados após pagamento', {
+        diagnosticLog('payments', 'Saldos atualizados após pagamento', {
           contas: overview.accounts.length, lancamentos: overview.transactions.length
         });
       },
-      error: err => testLog('8', 'Falha ao atualizar saldo após pagamento', {
+      error: err => diagnosticLog('payments', 'Falha ao atualizar saldo após pagamento', {
         httpStatus: Number(err?.status ?? 0)
       }, true)
     });

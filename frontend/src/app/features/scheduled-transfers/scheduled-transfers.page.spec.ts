@@ -30,7 +30,7 @@ describe('ScheduledTransfersPage', () => {
   it('exibe agência, conta e agendamento sem detalhes técnicos', () => {
     expect(fixture.nativeElement.textContent).toContain('Agendar transferência');
     expect(fixture.nativeElement.textContent).toContain('MV1234567890');
-    expect(fixture.nativeElement.textContent).not.toContain('Teste da Etapa');
+    expect(fixture.nativeElement.textContent).not.toContain('[Monavero]');
     expect((fixture.nativeElement.querySelector('#schedule-number') as HTMLInputElement).value).toBe('MV0987654321');
   });
 
@@ -69,9 +69,9 @@ describe('ScheduledTransfersPage', () => {
     (fixture.componentInstance as any).reloadList();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalledWith(
-      '[Monavero][Teste E7] Falha ao consultar agendamentos', { httpStatus: 503 }
+      '[Monavero][scheduling] Falha ao consultar agendamentos', { httpStatus: 503 }
     );
-    expect(fixture.nativeElement.textContent).not.toContain('Teste E7');
+    expect(fixture.nativeElement.textContent).not.toContain('[Monavero]');
   });
 
 });

@@ -4,7 +4,7 @@ import { catchError, map, Observable, tap, throwError } from 'rxjs';
 import { MONAVERO_API_URL } from '../config/monavero-api';
 import { AccountSummary, DashboardOverview, FinancePoint, Transaction, TransferReceipt, TransferRequest } from '../models/banking.models';
 import { ApiReadinessService } from './api-readiness.service';
-import { testLog } from '../utils/test-diagnostics';
+import { diagnosticLog } from '../utils/diagnostics';
 
 interface BankingResponse {
   accounts: AccountSummary[];
@@ -22,11 +22,11 @@ export class BankingService {
   getOverview(): Observable<DashboardOverview> {
     return this.apiReadiness.recover(this.http.get<BankingResponse>(this.url)).pipe(
       map(response => this.toOverview(response)),
-      tap(overview => testLog('5', 'Dashboard/contas recebidos da API', {
+      tap(overview => diagnosticLog('accounts', 'Dashboard/contas recebidos da API', {
         contas: overview.accounts.length, lancamentos: overview.transactions.length,
         saldosDisponiveis: overview.accounts.every(account => Number.isFinite(account.balance))
       })),
-      catchError(error => this.logApiFailure('5', 'Falha no carregamento do dashboard', error))
+      catchError(error => this.logApiFailure('accounts', 'Falha no carregamento do dashboard', error))
     );
   }
 
@@ -45,27 +45,27 @@ export class BankingService {
         }
         return { ...receipt, amount: Number(receipt.amount) };
       }),
-      tap(receipt => testLog('6', 'API confirmou transferência', {
+      tap(receipt => diagnosticLog('transfers', 'API confirmou transferência', {
         status: receipt.status, valor: receipt.amount, comprovanteRecebido: Boolean(receipt.id),
         referencia: receipt.id.slice(0, 8)
       })),
-      catchError(error => this.logApiFailure('6', 'API não confirmou transferência', error))
+      catchError(error => this.logApiFailure('transfers', 'API não confirmou transferência', error))
     );
   }
 
   getTransactions(): Observable<Transaction[]> {
     return this.apiReadiness.recover(this.http.get<BankingResponse>(this.url)).pipe(
       map(response => response.transactions),
-      tap(transactions => testLog('5', 'Extrato recebido da API', { lancamentos: transactions.length,
+      tap(transactions => diagnosticLog('accounts', 'Extrato recebido da API', { lancamentos: transactions.length,
         debitos: transactions.filter(tx => tx.amount < 0).length,
         creditos: transactions.filter(tx => tx.amount > 0).length })),
-      catchError(error => this.logApiFailure('5', 'Falha no carregamento do extrato', error))
+      catchError(error => this.logApiFailure('accounts', 'Falha no carregamento do extrato', error))
     );
   }
 
-  private logApiFailure(etapa: '5' | '6', label: string, error: unknown): Observable<never> {
+  private logApiFailure(area: 'accounts' | 'transfers', label: string, error: unknown): Observable<never> {
     const status = Number((error as { status?: number })?.status ?? 0);
-    testLog(etapa, label, { httpStatus: status,
+    diagnosticLog(area, label, { httpStatus: status,
       orientacao: status === 0 ? 'Verificar conectividade/CORS da API' : 'Consultar a aba Rede (Network)' }, true);
     return throwError(() => error);
   }

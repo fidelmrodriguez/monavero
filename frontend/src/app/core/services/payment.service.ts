@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { MONAVERO_API_URL } from '../config/monavero-api';
 import { ApiReadinessService } from './api-readiness.service';
-import { maskedAccount, testLog } from '../utils/test-diagnostics';
+import { maskedAccount, diagnosticLog } from '../utils/diagnostics';
 
 export interface DemoBoleto {
   code: string;
@@ -51,7 +51,7 @@ export class PaymentService {
   list(): Observable<PaymentItem[]> {
     return this.readiness.recover(this.http.get<PaymentItem[]>(this.url)).pipe(
       tap(items => {
-        testLog('8', 'Lista de pagamentos recebida da API', {
+        diagnosticLog('payments', 'Lista de pagamentos recebida da API', {
           total: items.length,
           agendados: items.filter(i => i.status === 'agendado').length,
           concluidos: items.filter(i => i.status === 'concluido').length,
@@ -59,7 +59,7 @@ export class PaymentService {
           recusados: items.filter(i => i.status === 'recusado').length
         });
         for (const item of items.slice(0, 10)) {
-          testLog('8', 'Estado do pagamento na API', {
+          diagnosticLog('payments', 'Estado do pagamento na API', {
             referencia: item.id.slice(0, 8), status: item.status,
             valor: item.amount, tipo: item.paymentType,
             origem: maskedAccount(item.originAccountId),
@@ -72,7 +72,7 @@ export class PaymentService {
 
   create(request: PaymentRequest): Observable<PaymentItem> {
     return this.readiness.recover(this.http.post<PaymentItem>(this.url, request)).pipe(
-      tap(item => testLog('8', 'Pagamento confirmado pela API', {
+      tap(item => diagnosticLog('payments', 'Pagamento confirmado pela API', {
         referencia: item.id?.slice(0, 8) ?? 'ausente',
         status: item.status, valor: item.amount,
         agendado: Boolean(item.scheduledFor),
@@ -83,7 +83,7 @@ export class PaymentService {
 
   cancel(id: string): Observable<PaymentItem> {
     return this.readiness.recover(this.http.delete<PaymentItem>(`${this.url}/${encodeURIComponent(id)}`)).pipe(
-      tap(item => testLog('8', 'Cancelamento de pagamento confirmado pela API', {
+      tap(item => diagnosticLog('payments', 'Cancelamento de pagamento confirmado pela API', {
         referencia: item.id?.slice(0, 8) ?? 'ausente',
         status: item.status, cancelado: item.status === 'cancelado'
       }))
